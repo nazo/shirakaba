@@ -1,0 +1,34 @@
+{
+    "name": "shirakaba/migrations",
+    "description": "Versioned schema migrations in PHP for MySQL, PostgreSQL and SQLite, with a schema builder and CLI.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/database": "^0.1",
+        "shirakaba/query": "^0.1",
+        "shirakaba/time": "^0.1",
+        "psr/clock": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "suggest": {
+        "shirakaba/orm": "Generates migrations from entity mappings (shirakaba-migrate diff)"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Migrations\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Migrations\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

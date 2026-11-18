@@ -1,0 +1,29 @@
+{
+    "name": "shirakaba/validation",
+    "description": "Constraint attributes for Shirakaba parameters and DTO properties, described as JSON Schema keywords.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/core": "^0.1",
+        "shirakaba/time": "^0.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Validation\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Validation\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

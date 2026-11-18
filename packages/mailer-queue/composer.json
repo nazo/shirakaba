@@ -1,0 +1,33 @@
+{
+    "name": "shirakaba/mailer-queue",
+    "description": "Sends mail through the Shirakaba queue: queued in the caller's transaction, sent after it commits, retried when the server says so.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/core": "^0.1",
+        "shirakaba/database": "^0.1",
+        "shirakaba/json": "^0.1",
+        "shirakaba/mailer": "^0.1",
+        "shirakaba/queue": "^0.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/time": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\MailerQueue\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\MailerQueue\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

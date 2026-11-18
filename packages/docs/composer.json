@@ -1,0 +1,32 @@
+{
+    "name": "shirakaba/docs",
+    "description": "The Shirakaba guide, design documents and API index, installed for coding agents, with a command that points AGENTS.md at them.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/console": "^0.1",
+        "composer-runtime-api": "^2.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "bin": [
+        "bin/shirakaba-docs"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Docs\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Docs\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

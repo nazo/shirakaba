@@ -1,0 +1,58 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Applies, lists, lints and rolls back migrations (design/10-background-work.md).
+ *
+ * Usage: shirakaba-migrate <command> --config=<migrations.php> [options]
+ *
+ *   migrations.php  returns a Shirakaba\Migrations\Migrations
+ */
+
+use Shirakaba\Console\ConsoleBuilder;
+use Shirakaba\Console\UsageError;
+use Shirakaba\DatabaseBridge\MigrationCommands;
+use Shirakaba\Migrations\Migrations;
+
+$autoload = $GLOBALS['_composer_autoload_path'] ?? null;
+foreach ([dirname(__DIR__) . '/vendor/autoload.php', dirname(__DIR__, 3) . '/autoload.php', dirname(__DIR__, 3) . '/vendor/autoload.php'] as $candidate) {
+    if ($autoload === null && is_file($candidate)) {
+        $autoload = $candidate;
+    }
+}
+if (!is_string($autoload)) {
+    fwrite(STDERR, "Unable to find Composer's autoloader.\n");
+    exit(2);
+}
+require $autoload;
+
+// --config applies to every command, so it is taken off before the console parses the rest.
+$config = null;
+$arguments = [];
+foreach ($argv as $index => $argument) {
+    if ($index > 0 && str_starts_with($argument, '--config=')) {
+        $config = substr($argument, 9);
+        continue;
+    }
+    $arguments[] = $argument;
+}
+
+$cli = new ConsoleBuilder('shirakaba-migrate', 'Every command needs --config=<migrations.php>, a PHP file returning a Shirakaba\Migrations\Migrations.');
+MigrationCommands::register($cli, static function () use ($config): Migrations {
+    if ($config === null) {
+        throw new UsageError('--config=<migrations.php> is required.');
+    }
+    if (!is_file($config)) {
+        throw new UsageError(sprintf('The config file %s does not exist.', $config));
+    }
+    $migrations = require $config;
+    if (!$migrations instanceof Migrations) {
+        throw new UsageError(sprintf('%s must return a Shirakaba\Migrations\Migrations, got %s.', $config, get_debug_type($migrations)));
+    }
+
+    return $migrations;
+});
+
+exit($cli->build()->run($arguments));

@@ -1,0 +1,35 @@
+{
+    "name": "shirakaba/session-database",
+    "description": "A session store in the application's database, shared by every instance behind a load balancer.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/core": "^0.1",
+        "shirakaba/database": "^0.1",
+        "shirakaba/database-bridge": "^0.1",
+        "shirakaba/migrations": "^0.1",
+        "shirakaba/query": "^0.1",
+        "shirakaba/session": "^0.1",
+        "shirakaba/time": "^0.1",
+        "psr/clock": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\SessionDatabase\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\SessionDatabase\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

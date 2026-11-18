@@ -1,0 +1,31 @@
+{
+    "name": "shirakaba/json",
+    "description": "JSON request bodies mapped to DTOs, and JSON responses, for Shirakaba.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/core": "^0.1",
+        "shirakaba/time": "^0.1",
+        "psr/http-message": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/validation": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Json\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Json\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

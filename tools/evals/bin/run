@@ -1,0 +1,146 @@
+<?php
+
+declare(strict_types=1);
+
+// Runs the agent evaluation tasks. See tools/evals/README.md.
+//
+//   php tools/evals/bin/run --reference                       # check the tasks, no agent
+//   php tools/evals/bin/run --agent='cmd {prompt} {dir}' [--variant=docs|nodocs|both] [--runs=N] [--task=name] [--keep]
+
+$root = dirname(__DIR__, 3);
+$evals = dirname(__DIR__);
+$options = getopt('', ['agent:', 'variant:', 'runs:', 'task:', 'keep', 'reference', 'out:']);
+$reference = isset($options['reference']);
+$agent = is_string($options['agent'] ?? null) ? $options['agent'] : null;
+if (!$reference && $agent === null) {
+    fwrite(STDERR, "Pass --agent='command with {prompt} and {dir}', or --reference to check the tasks.\n");
+    exit(2);
+}
+$variants = match ($options['variant'] ?? ($reference ? 'nodocs' : 'both')) {
+    'docs' => ['docs'],
+    'nodocs' => ['nodocs'],
+    default => ['docs', 'nodocs'],
+};
+$runs = max(1, (int) ($options['runs'] ?? 1));
+$selected = $options['task'] ?? [];
+$selected = is_array($selected) ? $selected : [$selected];
+$tasks = array_values(array_filter(
+    array_map('basename', glob($evals . '/tasks/*', GLOB_ONLYDIR) ?: []),
+    static fn (string $task): bool => $selected === [] || in_array($task, $selected, true),
+));
+
+/**
+ * Copies a directory tree.
+ */
+function copyTree(string $from, string $to): void
+{
+    if (!is_dir($from)) {
+        return;
+    }
+    $items = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($from, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST);
+    foreach ($items as $item) {
+        $target = $to . '/' . substr($item->getPathname(), strlen($from) + 1);
+        if ($item->isDir()) {
+            @mkdir($target, 0777, true);
+        } else {
+            @mkdir(dirname($target), 0777, true);
+            copy($item->getPathname(), $target);
+            chmod($target, fileperms($item->getPathname()) & 0777);
+        }
+    }
+}
+
+/**
+ * Runs a command in $dir and returns its exit code and the tail of its output.
+ *
+ * @return array{int, string}
+ */
+function run(string $command, string $dir): array
+{
+    $output = [];
+    exec('cd ' . escapeshellarg($dir) . ' && ' . $command . ' 2>&1', $output, $code);
+
+    return [$code, implode("\n", array_slice($output, -15))];
+}
+
+$results = [];
+foreach ($tasks as $task) {
+    foreach ($variants as $variant) {
+        for ($n = 1; $n <= $runs; $n++) {
+            $dir = sys_get_temp_dir() . sprintf('/shirakaba-eval-%s-%s-%d-%s', $task, $variant, $n, bin2hex(random_bytes(3)));
+            copyTree($evals . '/template', $dir);
+            copyTree($evals . '/tasks/' . $task . '/overlay', $dir);
+            $composer = (string) file_get_contents($dir . '/composer.json');
+            $composer = str_replace('__SHIRAKABA__', $root, $composer);
+            if ($variant === 'docs') {
+                $composer = str_replace('"shirakaba/phpstan": "*"', '"shirakaba/docs": "*",' . "\n        " . '"shirakaba/phpstan": "*"', $composer);
+            }
+            file_put_contents($dir . '/composer.json', $composer);
+            // Composer runs from the repository, so tool managers configured there (mise, asdf) apply.
+            $install = 'composer install --no-interaction --no-progress --quiet --working-dir=' . escapeshellarg($dir);
+            [$installed, $installLog] = run($install, $root);
+            if ($installed !== 0) {
+                // Downloads fail now and then; one retry uses what the first attempt fetched.
+                [$installed, $installLog] = run($install, $root);
+            }
+            if ($installed !== 0) {
+                fwrite(STDERR, "composer install failed in {$dir}:\n{$installLog}\n");
+                exit(1);
+            }
+            if ($variant === 'docs') {
+                run(escapeshellarg(PHP_BINARY) . ' vendor/bin/shirakaba-docs agents:sync --claude', $dir);
+            }
+            $prompt = $dir . '/PROMPT.md';
+            copy($evals . '/tasks/' . $task . '/prompt.md', $prompt);
+
+            $started = microtime(true);
+            $agentExit = null;
+            if ($reference) {
+                copyTree($evals . '/tasks/' . $task . '/solution', $dir);
+            } elseif ($agent !== null) {
+                [$agentExit] = run(strtr($agent, ['{prompt}' => escapeshellarg($prompt), '{dir}' => escapeshellarg($dir)]), $dir);
+            }
+            $seconds = round(microtime(true) - $started, 1);
+
+            copyTree($evals . '/tasks/' . $task . '/hidden', $dir . '/tests/Eval');
+            [$phpstan, $phpstanLog] = run(escapeshellarg(PHP_BINARY) . ' vendor/bin/phpstan analyse --no-progress --memory-limit=1G', $dir);
+            [$phpunit, $phpunitLog] = run(escapeshellarg(PHP_BINARY) . ' vendor/bin/phpunit', $dir);
+            $passed = $phpstan === 0 && $phpunit === 0;
+            $results[] = [
+                'task' => $task,
+                'variant' => $variant,
+                'run' => $n,
+                'passed' => $passed,
+                'agentExit' => $agentExit,
+                'seconds' => $seconds,
+                'phpstan' => $phpstan === 0 ? 'ok' : $phpstanLog,
+                'phpunit' => $phpunit === 0 ? 'ok' : $phpunitLog,
+            ];
+            printf("%-16s %-6s run %d  %s\n", $task, $variant, $n, $passed ? 'PASS' : 'FAIL');
+            if (!$passed) {
+                printf("  workspace: %s\n", $dir);
+            } elseif (!isset($options['keep'])) {
+                exec('rm -rf ' . escapeshellarg($dir));
+            }
+        }
+    }
+}
+
+$summary = [];
+foreach ($results as $result) {
+    $key = $result['variant'];
+    $summary[$key] ??= ['passed' => 0, 'total' => 0];
+    $summary[$key]['total']++;
+    $summary[$key]['passed'] += $result['passed'] ? 1 : 0;
+}
+foreach ($summary as $variant => $counts) {
+    printf("%s: %d/%d passed\n", $variant, $counts['passed'], $counts['total']);
+}
+if (!$reference) {
+    $out = is_string($options['out'] ?? null) ? $options['out'] : $root . '/docs/research/evals';
+    @mkdir($out, 0777, true);
+    $file = $out . '/' . date('Ymd-His') . '.json';
+    file_put_contents($file, json_encode(['agent' => $agent, 'summary' => $summary, 'results' => $results], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+    echo "Results: {$file}\n";
+}
+exit(array_all($results, static fn (array $result): bool => $result['passed']) ? 0 : 1);

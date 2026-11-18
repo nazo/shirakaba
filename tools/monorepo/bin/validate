@@ -1,0 +1,27 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Shirakaba\Tools\Monorepo\ValidationFailure;
+use Shirakaba\Tools\Monorepo\Validator;
+
+$rootDir = dirname(__DIR__, 3);
+require $rootDir . '/vendor/autoload.php';
+
+try {
+    $errors = new Validator($rootDir)->validate();
+} catch (ValidationFailure $e) {
+    fwrite(STDERR, $e->getMessage() . PHP_EOL);
+    exit(2);
+}
+
+foreach ($errors as $error) {
+    fwrite(STDERR, $error . PHP_EOL);
+}
+
+if ($errors !== []) {
+    exit(1);
+}
+
+fwrite(STDOUT, 'Monorepo manifests are consistent.' . PHP_EOL);

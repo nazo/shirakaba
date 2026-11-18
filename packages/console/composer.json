@@ -1,0 +1,32 @@
+{
+    "name": "shirakaba/console",
+    "description": "Typed command-line applications: commands as callables with argument and option attributes, help, exit codes and signal-driven cancellation.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/core": "^0.1",
+        "shirakaba/time": "^0.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "suggest": {
+        "ext-pcntl": "Requests a command's Cancellation on SIGINT and SIGTERM"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Console\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Console\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

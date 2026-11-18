@@ -1,0 +1,30 @@
+{
+    "name": "shirakaba/streaming",
+    "description": "Streamed response bodies and Server-Sent Events for Shirakaba.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/core": "^0.1",
+        "psr/http-message": "^2.0",
+        "shirakaba/json": "^0.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Streaming\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Streaming\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

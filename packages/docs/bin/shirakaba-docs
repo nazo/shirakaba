@@ -1,0 +1,30 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Points coding agents at the bundled Shirakaba documentation (design/13-static-analysis-and-agents.md).
+ *
+ * Usage: shirakaba-docs agents:sync [--check] [--claude]
+ */
+
+use Shirakaba\Console\ConsoleBuilder;
+use Shirakaba\Docs\AgentCommands;
+
+$autoload = $GLOBALS['_composer_autoload_path'] ?? null;
+foreach ([dirname(__DIR__) . '/vendor/autoload.php', dirname(__DIR__, 3) . '/autoload.php', dirname(__DIR__, 3) . '/vendor/autoload.php'] as $candidate) {
+    if ($autoload === null && is_file($candidate)) {
+        $autoload = $candidate;
+    }
+}
+if (!is_string($autoload)) {
+    fwrite(STDERR, "Unable to find Composer's autoloader.\n");
+    exit(2);
+}
+require $autoload;
+
+$cli = new ConsoleBuilder('shirakaba-docs', 'Run from the project root.');
+AgentCommands::register($cli, (string) getcwd());
+
+exit($cli->build()->run($argv));

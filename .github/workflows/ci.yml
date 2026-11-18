@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.5']
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: shirakaba
+          MYSQL_DATABASE: shirakaba
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd "mysqladmin ping -pshirakaba"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: shirakaba
+          POSTGRES_DB: shirakaba
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      mailpit:
+        image: axllent/mailpit:v1.27
+        ports: ['1025:1025', '8025:8025']
+    env:
+      SHIRAKABA_TEST_REDIS_URL: redis://:shirakaba@127.0.0.1:6379/1
+      SHIRAKABA_TEST_SMTP_DSN: smtp://127.0.0.1:1025?tls=none
+      SHIRAKABA_TEST_MAILPIT_API: http://127.0.0.1:8025
+      SHIRAKABA_TEST_MYSQL_DSN: mysql:host=127.0.0.1;port=3306;dbname=shirakaba
+      SHIRAKABA_TEST_MYSQL_USER: root
+      SHIRAKABA_TEST_MYSQL_PASSWORD: shirakaba
+      SHIRAKABA_TEST_PGSQL_DSN: pgsql:host=127.0.0.1;port=5432;dbname=shirakaba
+      SHIRAKABA_TEST_PGSQL_USER: postgres
+      SHIRAKABA_TEST_PGSQL_PASSWORD: shirakaba
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          # Swoole runs the Swoole conformance tests in the same PHP.
+          extensions: pdo_mysql, pdo_pgsql, pdo_sqlite, swoole
+          tools: composer:v2
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ matrix.php }}-
+      - name: Validate every manifest
+        run: |
+          composer validate --strict
+          for manifest in packages/*/composer.json; do
+            composer validate --strict --no-check-publish "$manifest"
+          done
+      - run: composer install --no-interaction --no-progress
+      - run: composer audit
+      - name: Install FrankenPHP for the runtime conformance suite
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/frankenphp" https://github.com/php/frankenphp/releases/download/v1.13.5/frankenphp-linux-x86_64
+          # The digest GitHub lists for this release asset; update it together with the version.
+          echo "ec34db1c536056279725d560a7302d9d48dd1763ec38883778cce737781655b7  $RUNNER_TEMP/frankenphp" | sha256sum --check
+          chmod +x "$RUNNER_TEMP/frankenphp"
+          echo "FRANKENPHP_BINARY=$RUNNER_TEMP/frankenphp" >> "$GITHUB_ENV"
+      - name: Install RoadRunner for the runtime conformance suite
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/rr.tar.gz" https://github.com/roadrunner-server/roadrunner/releases/download/v3.0.1/roadrunner-3.0.1-linux-amd64.tar.gz
+          # The digest GitHub lists for this release asset; update it together with the version.
+          echo "a6156d34a08cfdfba4934e737ed3208b11c6eab666def5c81f1b640ef43568e7  $RUNNER_TEMP/rr.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/rr.tar.gz" -C "$RUNNER_TEMP"
+          echo "RR_BINARY=$RUNNER_TEMP/roadrunner-3.0.1-linux-amd64/rr" >> "$GITHUB_ENV"
+      - name: Start Redis with a password
+        # A step, not a service: service containers cannot be given the --requirepass argument.
+        run: |
+          docker run -d --name redis -p 6379:6379 redis:8.8.4-alpine --requirepass shirakaba
+          for i in $(seq 1 30); do
+            docker exec redis redis-cli -a shirakaba --no-auth-warning ping | grep -q PONG && exit 0
+            sleep 1
+          done
+          exit 1
+      - run: composer check
+
+  standalone:
+    name: Standalone packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.5'
+          coverage: none
+          tools: composer:v2
+      - run: composer install --no-interaction --no-progress
+      - run: composer monorepo:standalone
+
+  steins:
+    name: Steins (non-blocking)
+    runs-on: ubuntu-latest
+    # design/13-static-analysis-and-agents.md: Steins runs pinned and never blocks a merge until it is released.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.5'
+          coverage: none
+          tools: composer:v2
+      - run: composer install --no-interaction --no-progress
+      - run: composer steins

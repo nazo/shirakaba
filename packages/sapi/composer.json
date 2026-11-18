@@ -1,0 +1,29 @@
+{
+    "name": "shirakaba/sapi",
+    "description": "Builds PSR-7 requests from SAPI superglobals and emits PSR-7 responses through the SAPI; shared by Shirakaba runtimes.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/http-message": "^0.1",
+        "psr/http-message": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Sapi\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Sapi\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

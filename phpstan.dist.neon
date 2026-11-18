@@ -1,0 +1,26 @@
+includes:
+    - phpstan.common.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+    - packages/phpstan/extension.neon
+    - packages/runtime-swoole/phpstan.package.neon
+
+parameters:
+    shirakaba:
+        longRunningPaths:
+            - '#/packages/[^/]+/src/#'
+        clockPaths:
+            - '#/packages/[^/]+/src/#'
+    tmpDir: .phpstan.cache
+    paths:
+        - packages
+        - tools/monorepo
+        - tools/docs
+        - tools/repository
+        - examples
+        - tools/bench
+        - tests/conformance
+    excludePaths:
+        - packages/*/vendor/*
+        - packages/phpstan/tests/data/*

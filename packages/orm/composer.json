@@ -1,0 +1,37 @@
+{
+    "name": "shirakaba/orm",
+    "description": "Entity mapping for Shirakaba: plain readonly entities, explicit writes, relations loaded into projections, no unit of work.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/database": "^0.1",
+        "shirakaba/query": "^0.1",
+        "shirakaba/time": "^0.1",
+        "psr/clock": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/migrations": "^0.1",
+        "shirakaba/json": "^0.1"
+    },
+    "suggest": {
+        "shirakaba/json": "#[Json] columns with DTO types",
+        "shirakaba/database-bridge": "Requests, #[Db] parameters, 404 and 409 for entity errors, and the entities commands"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Orm\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Orm\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

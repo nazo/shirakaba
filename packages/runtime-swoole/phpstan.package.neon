@@ -1,0 +1,5 @@
+# Package-specific analysis settings, included by the monorepo and the standalone analysis.
+parameters:
+    scanDirectories:
+        # Stubs for the Swoole extension; %rootDir% is vendor/phpstan/phpstan.
+        - %rootDir%/../../swoole/ide-helper/src/swoole

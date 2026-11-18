@@ -1,0 +1,43 @@
+{
+    "name": "shirakaba/pubsub",
+    "description": "Publish/subscribe with transactional publishing and subscriptions that end with the request scope, on PostgreSQL LISTEN/NOTIFY, a Mercure hub or in memory.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/core": "^0.1",
+        "shirakaba/database": "^0.1",
+        "shirakaba/database-bridge": "^0.1",
+        "shirakaba/json": "^0.1",
+        "shirakaba/time": "^0.1",
+        "psr/clock": "^1.0",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.1",
+        "psr/http-message": "^2.0",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/http-client": "^0.1",
+        "shirakaba/http-message": "^0.1",
+        "shirakaba/openapi": "^0.1"
+    },
+    "suggest": {
+        "ext-pdo_pgsql": "For PostgresPubSub"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\PubSub\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\PubSub\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

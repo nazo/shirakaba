@@ -1,0 +1,33 @@
+{
+    "name": "shirakaba/form",
+    "description": "HTML form bodies and file uploads mapped to DTOs, for Shirakaba.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "ext-fileinfo": "*",
+        "shirakaba/core": "^0.1",
+        "shirakaba/time": "^0.1",
+        "psr/http-message": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/http-message": "^0.1",
+        "shirakaba/validation": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Form\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Form\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

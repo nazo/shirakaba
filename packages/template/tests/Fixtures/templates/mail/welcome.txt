@@ -1,0 +1,16 @@
+{% layout "mail/layout" %}
+Hello {{ user.name }},
+
+{% if user.admin %}
+You are an administrator.
+{% elseif not user.verified %}
+Please verify your address.
+{% else %}
+Welcome aboard.
+{% endif %}
+{# the list of items #}
+{% for item in items %}
+{{ loop.index }}. {{ item.title }}{% if loop.last %} (last){% endif %}
+{% else %}
+No items.
+{% endfor %}

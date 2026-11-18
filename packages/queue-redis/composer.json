@@ -1,0 +1,33 @@
+{
+    "name": "shirakaba/queue-redis",
+    "description": "A Redis driver for the Shirakaba queue: jobs pushed after commit, reserved with leases and reservation tokens.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/database": "^0.1",
+        "shirakaba/queue": "^0.1",
+        "shirakaba/redis": "^0.1",
+        "shirakaba/time": "^0.1",
+        "psr/clock": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/json": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\QueueRedis\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\QueueRedis\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

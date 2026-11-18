@@ -1,0 +1,14 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+// The example's console: php examples/tasks/bin/tasks help
+
+use Shirakaba\Examples\Tasks\TaskConsole;
+use Shirakaba\Examples\Tasks\TaskSchema;
+
+require dirname(__DIR__, 3) . '/vendor/autoload.php';
+
+$file = getenv('TASKS_DATABASE');
+exit(TaskConsole::builder(TaskSchema::database(is_string($file) && $file !== '' ? $file : sys_get_temp_dir() . '/shirakaba-example-tasks.sqlite'))->build()->run($argv));

@@ -1,0 +1,12 @@
+# Strictness shared by the monorepo analysis and the standalone package analysis.
+parameters:
+    level: max
+    phpVersion: 80500
+    treatPhpDocTypesAsCertain: false
+    checkUninitializedProperties: true
+    checkImplicitMixed: true
+    checkBenevolentUnionTypes: true
+    reportPossiblyNonexistentGeneralArrayOffset: true
+    reportPossiblyNonexistentConstantArrayOffset: true
+    reportAlwaysTrueInLastCondition: true
+    reportAnyTypeWideningInVarTag: true

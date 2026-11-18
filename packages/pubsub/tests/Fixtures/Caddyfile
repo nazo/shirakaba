@@ -1,0 +1,22 @@
+{
+	auto_https off
+	admin off
+	storage file_system {$HUB_DIR}
+}
+
+http://127.0.0.1:{$HUB_PORT} {
+	mercure {
+		issuer https://shirakaba.test {
+			publisher {
+				jwt {$HUB_KEY}
+			}
+			subscriber {
+				jwt {$HUB_KEY}
+			}
+		}
+		resource_identifier http://127.0.0.1:{$HUB_PORT}/.well-known/mercure
+		anonymous
+		transport local
+	}
+	respond "ok"
+}

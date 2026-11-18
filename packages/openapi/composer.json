@@ -1,0 +1,42 @@
+{
+    "name": "shirakaba/openapi",
+    "description": "Generates OpenAPI 3.1 documents from Shirakaba route metadata, ahead of time.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/console": "^0.1",
+        "shirakaba/core": "^0.1",
+        "shirakaba/http-message": "^0.1",
+        "psr/http-factory": "^1.1",
+        "psr/http-message": "^2.0",
+        "psr/http-server-handler": "^1.0",
+        "psr/http-server-middleware": "^1.0"
+    },
+    "require-dev": {
+        "opis/json-schema": "^2.6",
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/auth": "^0.1",
+        "shirakaba/json": "^0.1",
+        "shirakaba/streaming": "^0.1",
+        "shirakaba/validation": "^0.1"
+    },
+    "bin": [
+        "bin/shirakaba-openapi"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\OpenApi\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\OpenApi\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

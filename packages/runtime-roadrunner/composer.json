@@ -1,0 +1,35 @@
+{
+    "name": "shirakaba/runtime-roadrunner",
+    "description": "Runs a Shirakaba (or any PSR-15) application as a RoadRunner HTTP worker.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "psr/http-message": "^2.0",
+        "psr/http-server-handler": "^1.0",
+        "roadrunner/worker": "^3.8",
+        "shirakaba/core": "^0.1",
+        "shirakaba/http-message": "^0.1",
+        "shirakaba/sapi": "^0.1",
+        "spiral/roadrunner-http": "^4.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/streaming": "^0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Runtime\\RoadRunner\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Runtime\\RoadRunner\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

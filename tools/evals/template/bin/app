@@ -1,0 +1,25 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use App\App;
+use App\Schema;
+use Shirakaba\Console\ConsoleBuilder;
+use Shirakaba\Console\RouteCommands;
+use Shirakaba\Database\Database;
+use Shirakaba\DatabaseBridge\MigrationCommands;
+use Shirakaba\Migrations\Migrations;
+use Shirakaba\DatabaseBridge\EntityCommands;
+use Shirakaba\Queue\Jobs;
+use Shirakaba\Queue\Testing\InMemoryQueue;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$database = new Database(static fn (): PDO => PDO::connect('sqlite:' . dirname(__DIR__) . '/var/app.sqlite'));
+$cli = new ConsoleBuilder('app', 'The application console.');
+MigrationCommands::register($cli, static fn (): Migrations => Schema::migrations($database), prefix: 'db:');
+RouteCommands::register($cli, static fn () => App::builder($database, new Jobs(new InMemoryQueue())));
+EntityCommands::register($cli, static fn (): array => Schema::entities(), static fn () => $database->connect()->reader());
+
+exit($cli->build()->run($argv));

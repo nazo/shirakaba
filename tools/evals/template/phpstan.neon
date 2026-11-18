@@ -1,0 +1,9 @@
+includes:
+    - vendor/shirakaba/phpstan/extension.neon
+
+parameters:
+    level: max
+    paths: [src, tests]
+    shirakaba:
+        longRunningPaths: ['#/src/#']
+        reportQueriesInLoops: true

@@ -1,0 +1,39 @@
+{
+    "name": "shirakaba/rate-limit",
+    "description": "Rate limits per route or per call, keyed by client address, authenticated subject or any key, in fixed windows stored in the database or in memory.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/auth": "^0.1",
+        "shirakaba/core": "^0.1",
+        "shirakaba/database": "^0.1",
+        "shirakaba/database-bridge": "^0.1",
+        "shirakaba/migrations": "^0.1",
+        "shirakaba/query": "^0.1",
+        "shirakaba/time": "^0.1",
+        "shirakaba/trusted-proxy": "^0.1",
+        "psr/clock": "^1.0",
+        "psr/http-message": "^2.0",
+        "psr/http-server-handler": "^1.0",
+        "psr/http-server-middleware": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\RateLimit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\RateLimit\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

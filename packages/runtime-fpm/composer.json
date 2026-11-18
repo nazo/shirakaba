@@ -1,0 +1,32 @@
+{
+    "name": "shirakaba/runtime-fpm",
+    "description": "Runs a Shirakaba (or any PSR-15) application under PHP-FPM and other classic SAPIs.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "shirakaba/core": "^0.1",
+        "shirakaba/http-message": "^0.1",
+        "shirakaba/sapi": "^0.1",
+        "psr/http-message": "^2.0",
+        "psr/http-server-handler": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Runtime\\Fpm\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Runtime\\Fpm\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "name": "shirakaba/http-client",
+    "description": "A PSR-18 HTTP client for calling other servers safely: timeouts, response size limits, controlled redirects, SSRF protection on resolved addresses, request cancellation and observation.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "ext-curl": "*",
+        "shirakaba/core": "^0.1",
+        "shirakaba/http-message": "^0.1",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.1",
+        "psr/http-message": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "provide": {
+        "psr/http-client-implementation": "1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\HttpClient\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\HttpClient\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

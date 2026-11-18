@@ -1,0 +1,43 @@
+{
+    "name": "shirakaba-eval/app",
+    "description": "A fresh Shirakaba application for agent evaluation tasks.",
+    "type": "project",
+    "license": "proprietary",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {"type": "path", "url": "__SHIRAKABA__/packages/*", "options": {"symlink": true}}
+    ],
+    "require": {
+        "php": "^8.5",
+        "shirakaba/console": "*",
+        "shirakaba/core": "*",
+        "shirakaba/database": "*",
+        "shirakaba/database-bridge": "*",
+        "shirakaba/http-message": "*",
+        "shirakaba/json": "*",
+        "shirakaba/migrations": "*",
+        "shirakaba/orm": "*",
+        "shirakaba/query": "*",
+        "shirakaba/queue": "*",
+        "shirakaba/time": "*",
+        "shirakaba/validation": "*"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.3",
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/phpstan": "*"
+    },
+    "autoload": {
+        "psr-4": {"App\\": "src/"}
+    },
+    "autoload-dev": {
+        "psr-4": {"App\\Tests\\": "tests/"}
+    },
+    "scripts": {
+        "check": ["phpstan analyse --no-progress --memory-limit=1G", "phpunit"]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

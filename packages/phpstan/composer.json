@@ -1,0 +1,45 @@
+{
+    "name": "shirakaba/phpstan",
+    "description": "PHPStan rules for Shirakaba applications: long-running safety, safe-method handlers, explicit clocks, ORM queries and query result shapes.",
+    "type": "phpstan-extension",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "phpstan/phpstan": "^2.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4",
+        "shirakaba/core": "^0.1",
+        "shirakaba/database": "^0.1",
+        "shirakaba/database-bridge": "^0.1",
+        "shirakaba/orm": "^0.1",
+        "shirakaba/query": "^0.1",
+        "psr/clock": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\PHPStan\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\PHPStan\\Tests\\": "tests/",
+            "Shirakaba\\PHPStan\\Tests\\Fixtures\\": "tests/data/routes/",
+            "Shirakaba\\PHPStan\\Tests\\Orm\\": "tests/data/orm/",
+            "Shirakaba\\PHPStan\\Tests\\Scopes\\": "tests/data/scopes/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        },
+        "phpstan": {
+            "includes": [
+                "extension.neon"
+            ]
+        }
+    },
+    "suggest": {
+        "shirakaba/orm": "Checks ORM queries against entity mappings"
+    }
+}

@@ -1,0 +1,697 @@
+{
+    "openapi": "3.1.1",
+    "info": {
+        "title": "Tasks",
+        "version": "1.0.0",
+        "description": "Example application of the Shirakaba framework."
+    },
+    "paths": {
+        "/tasks": {
+            "get": {
+                "operationId": "tasks.list",
+                "summary": "List tasks",
+                "tags": [
+                    "tasks"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "open",
+                                "done"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TaskPage"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/Problem"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "tasks.create",
+                "summary": "Create a task",
+                "tags": [
+                    "tasks"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewTask"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The created task; its URL is in Location.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Task"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "413": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "415": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/Problem"
+                    }
+                }
+            }
+        },
+        "/tasks/complete-all": {
+            "post": {
+                "operationId": "tasks.completeAll",
+                "responses": {
+                    "200": {
+                        "description": "How many open tasks were completed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompletedTasks"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/Problem"
+                    }
+                }
+            }
+        },
+        "/tasks/{id}": {
+            "get": {
+                "operationId": "tasks.show",
+                "summary": "Show a task",
+                "tags": [
+                    "tasks"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Task"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem",
+                        "description": "The task does not exist."
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/Problem"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "tasks.replace",
+                "summary": "Replace a task",
+                "tags": [
+                    "tasks"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaskUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Task"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem",
+                        "description": "The task does not exist."
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem",
+                        "description": "The task changed since the version that was sent."
+                    },
+                    "413": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "415": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/Problem"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "tasks.update",
+                "summary": "Update some fields of a task",
+                "tags": [
+                    "tasks"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaskPatch"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Task"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem",
+                        "description": "The task does not exist."
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem",
+                        "description": "The task changed since the version that was sent."
+                    },
+                    "413": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "415": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/Problem"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "tasks.delete",
+                "summary": "Delete a task",
+                "tags": [
+                    "tasks"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "The task was deleted."
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem",
+                        "description": "The task does not exist."
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/Problem"
+                    }
+                }
+            }
+        },
+        "/tasks/{id}/complete": {
+            "post": {
+                "operationId": "tasks.complete",
+                "summary": "Mark a task as done",
+                "tags": [
+                    "tasks"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Task"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem",
+                        "description": "The task does not exist."
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/Problem"
+                    }
+                }
+            }
+        },
+        "/tasks/{id}/attachments": {
+            "post": {
+                "operationId": "tasks.attach",
+                "summary": "Attach a file to a task",
+                "tags": [
+                    "tasks"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NewAttachment"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AttachmentReceipt"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem",
+                        "description": "The task does not exist."
+                    },
+                    "413": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "415": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem"
+                    },
+                    "default": {
+                        "$ref": "#/components/responses/Problem"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "responses": {
+            "Problem": {
+                "description": "An error, as RFC 9457 Problem Details.",
+                "content": {
+                    "application/problem+json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Problem"
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "AttachmentReceipt": {
+                "type": "object",
+                "properties": {
+                    "task": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "size": {
+                        "type": "integer"
+                    },
+                    "note": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "task",
+                    "name",
+                    "size",
+                    "note"
+                ]
+            },
+            "CompletedTasks": {
+                "type": "object",
+                "properties": {
+                    "completed": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "completed"
+                ]
+            },
+            "NewAttachment": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary"
+                    },
+                    "note": {
+                        "type": "string",
+                        "maxLength": 200,
+                        "default": ""
+                    }
+                },
+                "required": [
+                    "file"
+                ],
+                "additionalProperties": false
+            },
+            "NewTask": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "maxLength": 200
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 2000,
+                        "default": ""
+                    }
+                },
+                "required": [
+                    "title"
+                ],
+                "additionalProperties": false
+            },
+            "Problem": {
+                "type": "object",
+                "description": "RFC 9457 Problem Details.",
+                "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "integer"
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "A stable code for the problem, such as invalid-body."
+                    },
+                    "errors": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "pointer": {
+                                    "type": "string"
+                                },
+                                "detail": {
+                                    "type": "string"
+                                },
+                                "code": {
+                                    "type": "string",
+                                    "description": "A stable code for the field error, such as required or invalid-date-time."
+                                }
+                            },
+                            "required": [
+                                "pointer",
+                                "detail"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "type",
+                    "title",
+                    "status"
+                ]
+            },
+            "Task": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "open",
+                            "done"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "id",
+                    "title",
+                    "description",
+                    "status",
+                    "created_at",
+                    "version"
+                ]
+            },
+            "TaskPage": {
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Task"
+                        }
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "per_page": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "items",
+                    "page",
+                    "per_page",
+                    "total"
+                ]
+            },
+            "TaskPatch": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "maxLength": 200
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 2000
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "open",
+                            "done"
+                        ]
+                    },
+                    "version": {
+                        "type": "integer"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "TaskUpdate": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "maxLength": 200
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 2000
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "open",
+                            "done"
+                        ]
+                    },
+                    "version": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "title",
+                    "description",
+                    "status",
+                    "version"
+                ],
+                "additionalProperties": false
+            }
+        }
+    }
+}

@@ -1,0 +1,11 @@
+# Steins (design/13-static-analysis-and-agents.md): run with `composer steins`, which passes the paths.
+[check]
+profile = "shirakaba"
+
+# The strict profile, with one id shown as a warning: Steins 0.1.8 does not relate a thrown
+# class to the interfaces it implements, so an implementation of PSR-18 declaring exceptions
+# that implement ClientExceptionInterface reads as widening its interface. The warnings stay
+# in the report; revisit when Steins relates interfaces.
+[profile.shirakaba]
+extends = "strict"
+warn = ["throw.liskov-widened"]

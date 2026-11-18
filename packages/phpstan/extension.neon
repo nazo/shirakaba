@@ -1,0 +1,59 @@
+# Shirakaba's PHPStan rules. Include this file, or install phpstan/extension-installer.
+#
+# parameters:
+#     shirakaba:
+#         # Regular expressions of paths checked for state shared between requests
+#         # (design/03-runtimes-and-scopes.md). Empty: every analysed file.
+#         longRunningPaths: []
+#         # Regular expressions of paths where the wall clock must come from a PSR-20
+#         # clock. Empty: the rule is off.
+#         clockPaths: []
+#         # Report database calls inside loops (N+1 queries).
+#         reportQueriesInLoops: false
+
+parametersSchema:
+    shirakaba: structure([
+        longRunningPaths: listOf(string())
+        clockPaths: listOf(string())
+        reportQueriesInLoops: bool()
+    ])
+
+parameters:
+    shirakaba:
+        longRunningPaths: []
+        clockPaths: []
+        reportQueriesInLoops: false
+
+services:
+    -
+        class: Shirakaba\PHPStan\PackageSource
+        arguments:
+            patterns: %shirakaba.longRunningPaths%
+    -
+        class: Shirakaba\PHPStan\NoSharedMutableStateRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Shirakaba\PHPStan\NoStateInAppScopedObjectRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Shirakaba\PHPStan\SafeMethodHandlerRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Shirakaba\PHPStan\NoAmbientClockRule
+        arguments:
+            patterns: %shirakaba.clockPaths%
+        tags: [phpstan.rules.rule]
+    -
+        class: Shirakaba\PHPStan\EntityQueryRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Shirakaba\PHPStan\RequiredScopeRule
+        tags: [phpstan.rules.rule]
+    -
+        class: Shirakaba\PHPStan\QueryInLoopRule
+        arguments:
+            enabled: %shirakaba.reportQueriesInLoops%
+        tags: [phpstan.rules.rule]
+    -
+        class: Shirakaba\PHPStan\SelectResultTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]

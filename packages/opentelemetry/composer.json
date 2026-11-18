@@ -1,0 +1,36 @@
+{
+    "name": "shirakaba/opentelemetry",
+    "description": "OpenTelemetry tracing for Shirakaba applications through the core observer interface.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "open-telemetry/api": "^1.11",
+        "shirakaba/core": "^0.1"
+    },
+    "require-dev": {
+        "open-telemetry/sdk": "^1.16",
+        "phpunit/phpunit": "^13.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\OpenTelemetry\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\OpenTelemetry\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false,
+            "tbachert/spi": false
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

@@ -1,0 +1,41 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Shirakaba\Tools\Repository\RepositoryBuilder;
+use Shirakaba\Tools\Repository\RepositoryFailure;
+
+// Builds the static Composer repository of design/01-principles.md:
+//
+//     php tools/repository/bin/build --url=https://example.github.io/shirakaba/ --output=_site [--branch=main]
+//
+// The URL is where the output directory will be served; it ends up in every archive URL.
+
+$rootDir = dirname(__DIR__, 3);
+require $rootDir . '/vendor/autoload.php';
+
+$options = getopt('', ['url:', 'output:', 'branch:']);
+$url = $options['url'] ?? null;
+$output = $options['output'] ?? null;
+$branch = $options['branch'] ?? 'main';
+if (!is_string($url) || !is_string($output) || !is_string($branch)
+    || preg_match('#^https?://#', $url) !== 1) {
+    fwrite(STDERR, 'Usage: build --url=<https URL the output is served at> --output=<directory> [--branch=main]' . PHP_EOL);
+    exit(2);
+}
+if (is_dir($output) && scandir($output) !== ['.', '..']) {
+    fwrite(STDERR, sprintf('%s is not empty.', $output) . PHP_EOL);
+    exit(2);
+}
+
+try {
+    $packages = new RepositoryBuilder($rootDir, rtrim($url, '/') . '/', $branch)->build($output);
+} catch (RepositoryFailure $e) {
+    fwrite(STDERR, $e->getMessage() . PHP_EOL);
+    exit(1);
+}
+
+foreach ($packages as $name => $versions) {
+    fwrite(STDOUT, sprintf('%s: %s', $name, implode(', ', $versions)) . PHP_EOL);
+}

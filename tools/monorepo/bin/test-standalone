@@ -1,0 +1,132 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Installs, analyses and tests each package on its own, as a user would get it from its
+ * split repository. Internal dependencies come from path repositories pointing at this
+ * monorepo; everything else comes from Packagist. A package that uses a dependency it
+ * does not declare fails here even though it passes in the monorepo.
+ *
+ * Usage: tools/monorepo/bin/test-standalone [package ...]
+ */
+
+$rootDir = dirname(__DIR__, 3);
+$root = json_decode((string) file_get_contents($rootDir . '/composer.json'), true, 512, JSON_THROW_ON_ERROR);
+$version = $root['extra']['branch-alias']['dev-main'] ?? throw new RuntimeException('Root branch alias is missing.');
+$devTools = array_intersect_key($root['require-dev'] ?? [], array_flip(['phpstan/phpstan', 'phpstan/phpstan-strict-rules', 'phpunit/phpunit']));
+
+$packageDirs = glob($rootDir . '/packages/*', GLOB_ONLYDIR) ?: [];
+$selected = array_slice($argv, 1);
+$workDir = sys_get_temp_dir() . '/shirakaba-standalone-' . bin2hex(random_bytes(6));
+mkdir($workDir);
+
+$run = static function (string $command, string $cwd): void {
+    fwrite(STDOUT, sprintf("\$ %s\n", $command));
+    $process = proc_open($command, [STDIN, STDOUT, STDERR], $pipes, $cwd);
+    if (!is_resource($process) || proc_close($process) !== 0) {
+        throw new RuntimeException(sprintf('Command failed: %s', $command));
+    }
+};
+
+$copy = static function (string $from, string $to) use (&$copy): void {
+    mkdir($to, 0777, true);
+    foreach (scandir($from) ?: [] as $entry) {
+        if (in_array($entry, ['.', '..', 'vendor', 'composer.lock'], true)) {
+            continue;
+        }
+        is_dir("$from/$entry") ? $copy("$from/$entry", "$to/$entry") : copy("$from/$entry", "$to/$entry");
+    }
+};
+
+$remove = static function (string $path) use (&$remove): void {
+    if (is_dir($path) && !is_link($path)) {
+        foreach (scandir($path) ?: [] as $entry) {
+            if ($entry !== '.' && $entry !== '..') {
+                $remove("$path/$entry");
+            }
+        }
+        rmdir($path);
+    } elseif (file_exists($path) || is_link($path)) {
+        unlink($path);
+    }
+};
+
+$failures = [];
+try {
+    foreach ($packageDirs as $packageDir) {
+        $name = basename($packageDir);
+        if ($selected !== [] && !in_array($name, $selected, true)) {
+            continue;
+        }
+        fwrite(STDOUT, sprintf("\n== shirakaba/%s ==\n", $name));
+        $dir = "$workDir/$name";
+        $copy($packageDir, $dir);
+
+        try {
+            $manifest = json_decode((string) file_get_contents("$dir/composer.json"), true, 512, JSON_THROW_ON_ERROR);
+            $manifest['repositories'] = array_map(
+                static fn (string $other): array => [
+                    'type' => 'path',
+                    'url' => $other,
+                    'options' => ['symlink' => false, 'versions' => ['shirakaba/' . basename($other) => $version]],
+                ],
+                array_values(array_filter($packageDirs, static fn (string $other): bool => $other !== $packageDir)),
+            );
+            $manifest['minimum-stability'] = 'dev';
+            $manifest['prefer-stable'] = true;
+            // The analyser and test runner are added here so packages need not declare PHPStan.
+            $manifest['require-dev'] = [...array_diff_key($devTools, $manifest['require'] ?? []), ...$manifest['require-dev'] ?? []];
+            file_put_contents("$dir/composer.json", json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+
+            $run('composer validate --strict --no-check-publish', $dir);
+            $run('composer install --no-interaction --no-progress', $dir);
+
+            $sources = glob("$dir/src/*.php") ?: [];
+            if ($sources !== []) {
+                copy($rootDir . '/phpstan.common.neon', "$dir/phpstan.common.neon");
+                // A package's own settings, such as stubs for an extension, live in phpstan.package.neon.
+                $packageConfig = is_file("$dir/phpstan.package.neon") ? "    - phpstan.package.neon\n" : '';
+                file_put_contents(
+                    "$dir/phpstan.neon",
+                    "includes:\n    - phpstan.common.neon\n    - vendor/phpstan/phpstan-strict-rules/rules.neon\n" . $packageConfig . "\n"
+                    // A private cache: PHPStan's shared default cache can point into deleted temporary copies.
+                    . "parameters:\n    tmpDir: .phpstan.cache\n    paths:\n        - src\n",
+                );
+                $run('vendor/bin/phpstan analyse --no-progress --memory-limit=1G', $dir);
+            }
+
+            $tests = glob("$dir/tests/*Test.php") ?: [];
+            if ($tests !== []) {
+                $bootstrap = "<?php\nrequire __DIR__ . '/vendor/autoload.php';\n"
+                    . "if (is_file(__DIR__ . '/tests/bootstrap.php')) {\n    require __DIR__ . '/tests/bootstrap.php';\n}\n";
+                file_put_contents("$dir/standalone-bootstrap.php", $bootstrap);
+                file_put_contents("$dir/phpunit.xml", <<<'XML'
+                    <?xml version="1.0" encoding="UTF-8"?>
+                    <phpunit bootstrap="standalone-bootstrap.php" failOnRisky="true" failOnWarning="true"
+                             failOnDeprecation="true" failOnNotice="true" beStrictAboutOutputDuringTests="true">
+                        <testsuites>
+                            <testsuite name="package"><directory>tests</directory></testsuite>
+                        </testsuites>
+                        <source restrictNotices="true" restrictWarnings="true">
+                            <include><directory>src</directory></include>
+                        </source>
+                    </phpunit>
+                    XML);
+                $run('php -d allow_url_fopen=0 vendor/bin/phpunit', $dir);
+            }
+        } catch (RuntimeException $e) {
+            $failures[] = sprintf('shirakaba/%s: %s', $name, $e->getMessage());
+        }
+    }
+} finally {
+    $remove($workDir);
+}
+
+if ($failures !== []) {
+    fwrite(STDERR, "\n" . implode("\n", $failures) . "\n");
+    exit(1);
+}
+
+fwrite(STDOUT, "\nEvery package installs, analyses and passes its tests on its own.\n");

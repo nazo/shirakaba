@@ -1,0 +1,21 @@
+# Updates wait five days after a release (cooldown), so a release that turns out to be malicious
+# or broken is likely to be withdrawn before it is proposed here. Security updates are not delayed.
+version: 2
+updates:
+  # The actions in .github/workflows are pinned to commits; this keeps the pins current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 5
+
+  # Only composer.lock: constraints in composer.json must match the packages' own
+  # (composer monorepo:validate), so they are changed by hand.
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+    versioning-strategy: lockfile-only
+    cooldown:
+      default-days: 5

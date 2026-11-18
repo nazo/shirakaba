@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+// Writes packages/docs/api.md, llms.txt and llms-full.txt (design/13-static-analysis-and-agents.md): composer docs:generate
+
+use Shirakaba\Tools\Docs\ApiIndex;
+use Shirakaba\Tools\Docs\LlmsTxt;
+
+require dirname(__DIR__, 3) . '/vendor/autoload.php';
+
+$root = dirname(__DIR__, 3);
+$docs = $root . '/packages/docs';
+file_put_contents($docs . '/api.md', ApiIndex::generate($root . '/packages'));
+file_put_contents($docs . '/llms.txt', LlmsTxt::index($docs));
+file_put_contents($docs . '/llms-full.txt', LlmsTxt::full($docs));
+fwrite(STDOUT, "Wrote packages/docs/api.md, llms.txt and llms-full.txt\n");

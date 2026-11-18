@@ -1,0 +1,36 @@
+{
+    "name": "shirakaba/mailer",
+    "description": "Mail for Shirakaba: an Email value, a MIME writer and an SMTP transport with TLS, written without third-party dependencies.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.5",
+        "ext-openssl": "*",
+        "shirakaba/core": "^0.1",
+        "shirakaba/template": "^0.1",
+        "shirakaba/time": "^0.1",
+        "psr/clock": "^1.0",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    },
+    "suggest": {
+        "ext-intl": "Sending to internationalised domain names (IDNA)"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shirakaba\\Mailer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shirakaba\\Mailer\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}

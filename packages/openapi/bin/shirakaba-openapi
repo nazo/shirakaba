@@ -1,0 +1,60 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Writes an OpenAPI document for a Shirakaba application (design/06-json-and-openapi.md and design/10-background-work.md).
+ *
+ * Usage: shirakaba-openapi <app.php> [--config=<openapi.php>] [--output=<file>] [--strict]
+ *
+ *   app.php      returns the application's AppBuilder
+ *   openapi.php  returns a Shirakaba\OpenApi\Generator (title, version, operations)
+ */
+
+use Shirakaba\Console\Argument;
+use Shirakaba\Console\ConsoleBuilder;
+use Shirakaba\Console\Option;
+use Shirakaba\Console\Output;
+use Shirakaba\Console\UsageError;
+use Shirakaba\Core\AppBuilder;
+use Shirakaba\OpenApi\Generator;
+use Shirakaba\OpenApi\Info;
+use Shirakaba\OpenApi\OpenApiCommand;
+
+// Composer's bin proxy sets the path; otherwise look where the package can be installed:
+// standalone (package root), in a project (vendor/shirakaba/openapi) or in the monorepo.
+$autoload = $GLOBALS['_composer_autoload_path'] ?? null;
+foreach ([dirname(__DIR__) . '/vendor/autoload.php', dirname(__DIR__, 3) . '/autoload.php', dirname(__DIR__, 3) . '/vendor/autoload.php'] as $candidate) {
+    if ($autoload === null && is_file($candidate)) {
+        $autoload = $candidate;
+    }
+}
+if (!is_string($autoload)) {
+    fwrite(STDERR, "Unable to find Composer's autoloader.\n");
+    exit(2);
+}
+require $autoload;
+
+$cli = new ConsoleBuilder('shirakaba-openapi');
+$cli->command('generate', static function (
+    Output $out,
+    #[Argument('A PHP file returning the application\'s AppBuilder')] string $app,
+    #[Option('A PHP file returning a Shirakaba\OpenApi\Generator')] ?string $config = null,
+    #[Option('The file to write; standard output when omitted')] ?string $output = null,
+    #[Option('Exit with 1 when anything could not be described')] bool $strict = false,
+): int {
+    $builder = is_file($app) ? require $app : null;
+    if (!$builder instanceof AppBuilder) {
+        throw new UsageError(sprintf('%s must return a %s.', $app, AppBuilder::class));
+    }
+    $generator = $config === null ? new Generator(new Info('API', '0.0.0')) : (is_file($config) ? require $config : null);
+    if (!$generator instanceof Generator) {
+        throw new UsageError(sprintf('%s must return a %s.', $config ?? '', Generator::class));
+    }
+
+    return OpenApiCommand::write($builder, $generator, $output, $strict, $out);
+}, 'Writes the OpenAPI document of a Shirakaba application.');
+$cli->default('generate');
+
+exit($cli->build()->run($argv));
