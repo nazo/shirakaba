@@ -25,6 +25,7 @@ final class SessionSettingTest extends TestCase
 {
     public function testAppliesASettingOnlyWhenItChangesAndAgainAfterARollback(): void
     {
+        \Shirakaba\Database\Tests\Fixtures\CountingDialect::skipUnlessSupported($this);
         $dialect = new CountingDialect();
         $lease = new Database(static fn (): PDO => PDO::connect('sqlite::memory:'), $dialect)->lease();
         $connection = $lease->connection;

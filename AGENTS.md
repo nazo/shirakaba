@@ -59,7 +59,9 @@ shirakaba/pubsub) run when `FRANKENPHP_BINARY` points at a FrankenPHP binary (a 
 github.com/php/frankenphp) and are skipped otherwise. The RoadRunner conformance tests run when
 `rr` is on the PATH or `RR_BINARY` names it (a release from github.com/roadrunner-server/roadrunner),
 and the Swoole ones when the Swoole extension is loaded or `SWOOLE_PHP_BINARY` names a PHP binary
-that has it.
+that has it. CI runs the Swoole tests in the image of `tools/swoole/Dockerfile` (Swoole from PECL)
+and keeps the extension out of the PHP that runs everything else, because Swoole builds that
+bring their own PDO drivers change what `PDO::connect()` returns.
 
 ## Conventions
 

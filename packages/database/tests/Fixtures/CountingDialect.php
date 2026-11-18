@@ -35,6 +35,17 @@ final class CountingDialect implements Dialect
         return 'sqlite';
     }
 
+    /**
+     * Counting needs functions registered on the connection, which only Pdo\Sqlite offers;
+     * Swoole's coroutine SQLite driver hands out plain PDO objects without them.
+     */
+    public static function skipUnlessSupported(\PHPUnit\Framework\TestCase $test): void
+    {
+        if (!PDO::connect('sqlite::memory:') instanceof \Pdo\Sqlite) {
+            $test::markTestSkipped('PDO::connect() does not return Pdo\Sqlite here (Swoole\'s SQLite driver), so statements cannot be counted.');
+        }
+    }
+
     public function configure(PDO $pdo): void
     {
         $this->sqlite->configure($pdo);

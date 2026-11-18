@@ -3252,6 +3252,12 @@ next request. `RequestDatabase::setting()` sets it per request from middleware r
 authentication. Only PostgreSQL has row-level security; on MySQL and SQLite `setSetting()` refuses
 instead of pretending to protect. It is a defence in depth behind ORM scopes, not a replacement.
 
+**Notifications.** `Connection::waitForNotification()` waits for PostgreSQL LISTEN/NOTIFY messages,
+which publish/subscribe and the queue's worker wake-ups use. It reads them through `Pdo\Pgsql`
+when `PDO::connect()` returns one, and through the plain `PDO` that Swoole's coroutine PostgreSQL
+driver returns otherwise, so both work under Swoole. CI runs the database, queue and pub/sub tests
+under such a Swoole build.
+
 ## Dialects and errors
 
 The dialect is detected from the driver and configures each connection: exceptions, native prepared

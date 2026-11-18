@@ -89,28 +89,29 @@ final class DatabaseQueue implements Queue, WaitsForJobs
     public function waitForJobs(array $queues, float $seconds, Cancellation $cancellation): void
     {
         $deadline = hrtime(true) + (int) ($seconds * 1e9);
-        $pdo = $this->notify ? $this->listen() : null;
+        $connection = $this->notify ? $this->listen() : null;
         while (!$cancellation->isRequested() && hrtime(true) < $deadline) {
             $step = (int) min(100, max(1, ($deadline - hrtime(true)) / 1e6));
-            if ($pdo === null) {
+            if ($connection === null) {
                 usleep($step * 1000);
                 continue;
             }
-            $notification = $pdo->getNotify(\PDO::FETCH_ASSOC, $step);
-            if (is_array($notification) && in_array($notification['payload'] ?? null, $queues, true)) {
+            $notification = $connection->waitForNotification($step);
+            if ($notification !== null && in_array($notification['payload'], $queues, true)) {
                 return;
             }
         }
     }
 
     /**
-     * LISTENs on the worker's connection once, on PostgreSQL with a Pdo\Pgsql connection.
+     * LISTENs on the worker's connection once, on PostgreSQL with a connection that receives
+     * notifications.
      */
-    private function listen(): ?\Pdo\Pgsql
+    private function listen(): ?Connection
     {
         $db = $this->writer();
-        $pdo = $this->connection?->pdo;
-        if ($db->dialect()->name() !== 'pgsql' || !$pdo instanceof \Pdo\Pgsql) {
+        $connection = $this->connection;
+        if ($connection === null || !$connection->receivesNotifications()) {
             return null;
         }
         if (!$this->listening) {
@@ -118,7 +119,7 @@ final class DatabaseQueue implements Queue, WaitsForJobs
             $this->listening = true;
         }
 
-        return $pdo;
+        return $connection;
     }
 
     /**

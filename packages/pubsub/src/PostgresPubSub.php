@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Shirakaba\PubSub;
 
 use LogicException;
-use PDO;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Database\Connection;
 use Shirakaba\Database\Database;
@@ -42,19 +41,14 @@ final readonly class PostgresPubSub implements Publisher, Subscriber
         $channels = Channels::check($channels);
         $connection = RequestDatabase::connection($this->database, $scope);
         self::requirePostgres($connection->dialect->name());
-        $pdo = $connection->pdo;
-        if (!$pdo instanceof \Pdo\Pgsql) {
-            throw new LogicException('PostgresPubSub needs a Pdo\Pgsql connection; open it with PDO::connect().');
-        }
         $writer = $connection->writer();
         foreach ($channels as $channel) {
             $writer->execute('LISTEN ' . $connection->dialect->quoteIdentifier($channel));
         }
-        $receiver = new class ($pdo, $connection) implements Receiver {
+        $receiver = new class ($connection) implements Receiver {
             private bool $listening = true;
 
             public function __construct(
-                private readonly \Pdo\Pgsql $pdo,
                 private readonly Connection $connection,
             ) {}
 
@@ -63,14 +57,9 @@ final readonly class PostgresPubSub implements Publisher, Subscriber
                 if (!$this->listening) {
                     return null;
                 }
-                $notification = $this->pdo->getNotify(PDO::FETCH_ASSOC, $timeoutMilliseconds);
-                if (!is_array($notification)) {
-                    return null;
-                }
-                $channel = $notification['message'] ?? '';
-                $payload = $notification['payload'] ?? '';
+                $notification = $this->connection->waitForNotification($timeoutMilliseconds);
 
-                return new Message(is_string($channel) ? $channel : '', is_string($payload) ? $payload : '');
+                return $notification === null ? null : new Message($notification['channel'], $notification['payload']);
             }
 
             public function close(): void

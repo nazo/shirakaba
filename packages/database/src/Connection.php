@@ -109,6 +109,51 @@ final class Connection
     }
 
     /**
+     * Whether waitForNotification() works here: on PostgreSQL, with a Pdo\Pgsql connection
+     * (PDO::connect()) or a plain PDO, which Swoole's coroutine PostgreSQL driver hands out
+     * (design/08-database.md).
+     */
+    public function receivesNotifications(): bool
+    {
+        return $this->dialect->name() === 'pgsql';
+    }
+
+    /**
+     * Waits up to $timeoutMilliseconds for a notification on a channel this connection LISTENs
+     * on (PostgreSQL LISTEN/NOTIFY), and returns it, or null when none arrived.
+     *
+     * @return array{channel: string, payload: string}|null
+     * @throws \LogicException when receivesNotifications() is false, or after the lease ended
+     * @throws DatabaseError when the driver fails
+     * @phpstan-impure io.db, nondet.time
+     */
+    public function waitForNotification(int $timeoutMilliseconds): ?array
+    {
+        if (!$this->receivesNotifications()) {
+            throw new \LogicException(sprintf('%s has no notifications; LISTEN/NOTIFY needs PostgreSQL.', $this->dialect->name()));
+        }
+        if ($this->released) {
+            throw new \LogicException('The connection was released with its lease; a Reader or Writer must not outlive the lease (for a request, the request itself).');
+        }
+        $pdo = $this->pdo;
+        $notification = $this->guard(static function () use ($pdo, $timeoutMilliseconds): mixed {
+            if ($pdo instanceof \Pdo\Pgsql) {
+                return $pdo->getNotify(PDO::FETCH_ASSOC, max(0, $timeoutMilliseconds));
+            }
+            // Swoole's coroutine PostgreSQL driver hands out plain PDO objects. They keep the
+            // driver method that Pdo\Pgsql::getNotify() replaced, deprecated since PHP 8.5.
+            return @$pdo->pgsqlGetNotify(PDO::FETCH_ASSOC, max(0, $timeoutMilliseconds));
+        });
+        if (!is_array($notification)) {
+            return null;
+        }
+        $channel = $notification['message'] ?? '';
+        $payload = $notification['payload'] ?? '';
+
+        return ['channel' => is_string($channel) ? $channel : '', 'payload' => is_string($payload) ? $payload : ''];
+    }
+
+    /**
      * Sets a custom session setting for every following statement of this lease, such as the
      * tenant a PostgreSQL row-level security policy reads with current_setting() (design/08-database.md).
      * It is applied before the next statement, only when it changed, again after a rollback,

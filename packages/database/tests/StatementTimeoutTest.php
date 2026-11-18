@@ -90,6 +90,7 @@ final class StatementTimeoutTest extends TestCase
 
     public function testSetsTheLimitOnlyWhenItChanges(): void
     {
+        \Shirakaba\Database\Tests\Fixtures\CountingDialect::skipUnlessSupported($this);
         $dialect = new \Shirakaba\Database\Tests\Fixtures\CountingDialect();
         $db = new Database(static fn (): \PDO => \PDO::connect('sqlite::memory:'), $dialect)->connect()->writer();
         $limited = $db->withTimeout(0.5);

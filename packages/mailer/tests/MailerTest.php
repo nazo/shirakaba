@@ -262,7 +262,14 @@ final class MailerTest extends TestCase
         self::assertSame($id, $sent->messageId);
         $api = getenv('SHIRAKABA_TEST_MAILPIT_API');
         if (is_string($api) && $api !== '') {
-            $search = @file_get_contents($api . '/api/v1/search?query=' . rawurlencode('message-id:' . $id));
+            // A socket, because the suite runs with allow_url_fopen=0.
+            $host = (string) parse_url($api, PHP_URL_HOST);
+            $socket = stream_socket_client(sprintf('tcp://%s:%d', $host, (int) (parse_url($api, PHP_URL_PORT) ?? 80)), timeout: 5.0);
+            self::assertIsResource($socket);
+            stream_set_timeout($socket, 5);
+            fwrite($socket, sprintf("GET /api/v1/search?query=%s HTTP/1.0\r\nHost: %s\r\n\r\n", rawurlencode('message-id:' . $id), $host));
+            $search = stream_get_contents($socket);
+            fclose($socket);
             self::assertIsString($search);
             self::assertStringContainsString('ようこそ、白樺へ', $search);
             self::assertStringContainsString('山田 花子', $search);

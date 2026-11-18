@@ -144,6 +144,9 @@ final class DescriptionTest extends TestCase
 
         $client = new TestClient($app->build());
         self::assertSame(201, $client->post('/items')->getStatusCode());
+        if (ini_get('zend.assertions') !== '1') {
+            self::markTestIncomplete('Set zend.assertions=1 to check that an undeclared success status is caught.');
+        }
         self::assertSame(500, $client->post('/items?wrong=true')->getStatusCode(), 'An undeclared success status fails the assertion in development.');
     }
 

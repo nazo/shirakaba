@@ -54,8 +54,9 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: none
-          # Swoole runs the Swoole conformance tests in the same PHP.
-          extensions: pdo_mysql, pdo_pgsql, pdo_sqlite, swoole
+          extensions: pdo_mysql, pdo_pgsql, pdo_sqlite
+          # Tests check what assert() catches in development.
+          ini-values: zend.assertions=1
           tools: composer:v2
       - name: Get Composer cache directory
         id: composer-cache
@@ -107,9 +108,42 @@ jobs:
         with:
           php-version: '8.5'
           coverage: none
+          ini-values: zend.assertions=1
           tools: composer:v2
       - run: composer install --no-interaction --no-progress
       - run: composer monorepo:standalone
+
+  swoole:
+    name: Swoole
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: shirakaba
+          POSTGRES_DB: shirakaba
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.5'
+          coverage: none
+          tools: composer:v2
+      - run: composer install --no-interaction --no-progress
+      # Swoole with its coroutine PostgreSQL and SQLite drivers (tools/swoole/Dockerfile).
+      - run: docker build -t shirakaba-swoole tools/swoole
+      - name: Run the Swoole runtime and the database packages under Swoole
+        run: >-
+          docker run --rm --network "${{ job.services.postgres.network }}" -v "$PWD":/app:ro -w /app
+          -e SHIRAKABA_TEST_PGSQL_DSN='pgsql:host=postgres;dbname=shirakaba'
+          -e SHIRAKABA_TEST_PGSQL_USER=postgres -e SHIRAKABA_TEST_PGSQL_PASSWORD=shirakaba
+          shirakaba-swoole
+          php -d memory_limit=1G -d zend.assertions=1 -d allow_url_fopen=0 vendor/bin/phpunit -c phpunit.dist.xml
+          --do-not-record-test-run-history
+          tests/conformance packages/runtime-swoole/tests packages/database/tests packages/pubsub/tests packages/queue/tests
 
   steins:
     name: Steins (non-blocking)
