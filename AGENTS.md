@@ -33,7 +33,8 @@ Run both before saying a change is finished:
 
 - `composer check`: the monorepo validator, PHPStan over everything, and PHPUnit.
 - `composer monorepo:standalone`: installs, analyses and tests each package on its own, which
-  catches a dependency a package uses but does not declare.
+  catches a dependency a package uses but does not declare. Packages run in parallel, one per
+  CPU; `composer monorepo:standalone -- --jobs=1 <package>` checks one at a time.
 
 `composer steins` runs Steins ([static analysis and agents](packages/docs/design/13-static-analysis-and-agents.md)); CI runs it without blocking, but keep it free of errors.
 

@@ -9,7 +9,10 @@ declare(strict_types=1);
  * monorepo; everything else comes from Packagist. A package that uses a dependency it
  * does not declare fails here even though it passes in the monorepo.
  *
- * Usage: tools/monorepo/bin/test-standalone [package ...]
+ * Usage: tools/monorepo/bin/test-standalone [--jobs=N] [package ...]
+ *
+ * Packages are checked in parallel, N at a time (the number of CPUs by default); each one's
+ * output is printed in one piece when it finishes. --jobs=1 checks them one after another.
  */
 
 $rootDir = dirname(__DIR__, 3);
@@ -18,7 +21,62 @@ $version = $root['extra']['branch-alias']['dev-main'] ?? throw new RuntimeExcept
 $devTools = array_intersect_key($root['require-dev'] ?? [], array_flip(['phpstan/phpstan', 'phpstan/phpstan-strict-rules', 'phpunit/phpunit']));
 
 $packageDirs = glob($rootDir . '/packages/*', GLOB_ONLYDIR) ?: [];
-$selected = array_slice($argv, 1);
+$arguments = array_slice($argv, 1);
+$jobs = null;
+foreach ($arguments as $index => $argument) {
+    if (preg_match('/\A--jobs=([1-9][0-9]*)\z/', $argument, $match) === 1) {
+        $jobs = (int) $match[1];
+        unset($arguments[$index]);
+    }
+}
+$selected = array_values($arguments);
+
+if ($jobs !== 1) {
+    // Parallel: each package runs in a child process of this script with --jobs=1.
+    $cpus = (int) trim((string) (shell_exec('nproc 2>/dev/null') ?: shell_exec('sysctl -n hw.ncpu 2>/dev/null')));
+    $jobs ??= max(1, $cpus);
+    $names = array_values(array_filter(
+        array_map('basename', $packageDirs),
+        static fn (string $name): bool => $selected === [] || in_array($name, $selected, true),
+    ));
+    $failed = [];
+    $running = [];
+    while ($names !== [] || $running !== []) {
+        while ($names !== [] && count($running) < $jobs) {
+            $name = array_shift($names);
+            $log = tempnam(sys_get_temp_dir(), 'shirakaba-standalone-log-');
+            if ($log === false) {
+                throw new RuntimeException('Unable to create a temporary file.');
+            }
+            // Append mode: the child and the commands it runs all write to the end of the log.
+            $process = proc_open([PHP_BINARY, __FILE__, '--jobs=1', $name], [0 => ['file', '/dev/null', 'r'], 1 => ['file', $log, 'a'], 2 => ['file', $log, 'a']], $pipes, $rootDir);
+            if (!is_resource($process)) {
+                throw new RuntimeException('Unable to start the check of ' . $name);
+            }
+            $running[$name] = [$process, $log];
+        }
+        foreach ($running as $name => [$process, $log]) {
+            $status = proc_get_status($process);
+            if ($status['running']) {
+                continue;
+            }
+            proc_close($process);
+            fwrite(STDOUT, (string) file_get_contents($log));
+            unlink($log);
+            if ($status['exitcode'] !== 0) {
+                $failed[] = 'shirakaba/' . $name;
+            }
+            unset($running[$name]);
+        }
+        usleep(50_000);
+    }
+    if ($failed !== []) {
+        fwrite(STDERR, "\nFailed: " . implode(', ', $failed) . "\n");
+        exit(1);
+    }
+    fwrite(STDOUT, "\nEvery package installs, analyses and passes its tests on its own.\n");
+    exit(0);
+}
 $workDir = sys_get_temp_dir() . '/shirakaba-standalone-' . bin2hex(random_bytes(6));
 mkdir($workDir);
 

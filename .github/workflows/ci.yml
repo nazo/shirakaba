@@ -8,14 +8,16 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels the run for its previous commit. Runs on main are never
+# cancelled: the Composer repository is published after each of them.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
-    name: PHP ${{ matrix.php }}
+    name: PHP 8.5
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.5']
     services:
       mysql:
         image: mysql:8.4
@@ -52,7 +54,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
-          php-version: ${{ matrix.php }}
+          php-version: '8.5'
           coverage: none
           extensions: pdo_mysql, pdo_pgsql, pdo_sqlite
           # Tests check what assert() catches in development.
@@ -64,14 +66,10 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-${{ matrix.php }}-
-      - name: Validate every manifest
-        run: |
-          composer validate --strict
-          for manifest in packages/*/composer.json; do
-            composer validate --strict --no-check-publish "$manifest"
-          done
+          key: composer-files-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-files-
+      # The packages' own manifests are validated by composer monorepo:standalone.
+      - run: composer validate --strict
       - run: composer install --no-interaction --no-progress
       - run: composer audit
       - name: Install FrankenPHP for the runtime conformance suite
@@ -110,7 +108,17 @@ jobs:
           coverage: none
           ini-values: zend.assertions=1
           tools: composer:v2
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-dir)" >> "$GITHUB_OUTPUT"
+      # The whole cache, metadata included: each package resolves its dependencies on its own.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-standalone-${{ hashFiles('composer.lock', 'packages/*/composer.json') }}
+          restore-keys: composer-standalone-
       - run: composer install --no-interaction --no-progress
+      # Packages are checked in parallel, one per CPU.
       - run: composer monorepo:standalone
 
   swoole:
@@ -133,8 +141,19 @@ jobs:
           coverage: none
           tools: composer:v2
       - run: composer install --no-interaction --no-progress
-      # Swoole with its coroutine PostgreSQL and SQLite drivers (tools/swoole/Dockerfile).
-      - run: docker build -t shirakaba-swoole tools/swoole
+      # Swoole with its coroutine PostgreSQL and SQLite drivers (tools/swoole/Dockerfile). Building
+      # it takes minutes, so the image is cached until the Dockerfile changes.
+      - id: swoole-image
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/swoole-image.tar
+          key: swoole-image-${{ hashFiles('tools/swoole/Dockerfile') }}
+      - if: steps.swoole-image.outputs.cache-hit == 'true'
+        run: docker load --input "$RUNNER_TEMP/swoole-image.tar"
+      - if: steps.swoole-image.outputs.cache-hit != 'true'
+        run: |
+          docker build -t shirakaba-swoole tools/swoole
+          docker save --output "$RUNNER_TEMP/swoole-image.tar" shirakaba-swoole
       - name: Run the Swoole runtime and the database packages under Swoole
         run: >-
           docker run --rm --network "${{ job.services.postgres.network }}" -v "$PWD":/app:ro -w /app
