@@ -76,7 +76,9 @@ jobs:
         run: |
           curl -fsSL -o "$RUNNER_TEMP/frankenphp" https://github.com/php/frankenphp/releases/download/v1.13.5/frankenphp-linux-x86_64
           # The digest GitHub lists for this release asset; update it together with the version.
-          echo "ec34db1c536056279725d560a7302d9d48dd1763ec38883778cce737781655b7  $RUNNER_TEMP/frankenphp" | sha256sum --check
+          # FrankenPHP's CI rebuilds the binaries of its latest release, so the digest also changes
+          # while this is the latest release; check that the asset's uploader is github-actions[bot].
+          echo "1eac8bbaca19c6ffd751baba70a2390eaa826484a57db9cc46439662b68ea952  $RUNNER_TEMP/frankenphp" | sha256sum --check
           chmod +x "$RUNNER_TEMP/frankenphp"
           echo "FRANKENPHP_BINARY=$RUNNER_TEMP/frankenphp" >> "$GITHUB_ENV"
       - name: Install RoadRunner for the runtime conformance suite
