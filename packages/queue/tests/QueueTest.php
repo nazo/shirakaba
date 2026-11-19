@@ -9,12 +9,15 @@ use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Shirakaba\Database\Database;
 use Shirakaba\Database\Testing\TestDatabases;
 use Shirakaba\Database\Writer;
 use Shirakaba\Migrations\Migrator;
+use Shirakaba\Query\Insert;
 use Shirakaba\Queue\CreateJobsTable;
 use Shirakaba\Queue\DatabaseQueue;
+use Shirakaba\Queue\JobFailed;
 use Shirakaba\Queue\JobOutcome;
 use Shirakaba\Queue\JobRunner;
 use Shirakaba\Queue\Jobs;
@@ -22,10 +25,7 @@ use Shirakaba\Queue\PushOptions;
 use Shirakaba\Queue\RetryPolicy;
 use Shirakaba\Queue\Testing\InMemoryQueue;
 use Shirakaba\Queue\Tests\Fixtures\SendWelcome;
-use Shirakaba\Query\Insert;
 use Shirakaba\Time\FrozenClock;
-use RuntimeException;
-use Shirakaba\Queue\JobFailed;
 
 #[CoversClass(DatabaseQueue::class)]
 #[CoversClass(Jobs::class)]
@@ -69,12 +69,16 @@ final class QueueTest extends TestCase
     private static function jobs(DatabaseQueue|InMemoryQueue $queue, ArrayObject $log, int $failUntil = 0): Jobs
     {
         $jobs = new Jobs($queue);
-        $jobs->handle(SendWelcome::class, static function (SendWelcome $job) use ($log, $failUntil): void {
-            $log->append(sprintf('mail %d', $job->userId));
-            if (count($log) <= $failUntil) {
-                throw new RuntimeException('SMTP is down');
-            }
-        }, name: 'mail.welcome');
+        $jobs->handle(
+            SendWelcome::class,
+            static function (SendWelcome $job) use ($log, $failUntil): void {
+                $log->append(sprintf('mail %d', $job->userId));
+                if (count($log) <= $failUntil) {
+                    throw new RuntimeException('SMTP is down');
+                }
+            },
+            name: 'mail.welcome',
+        );
 
         return $jobs;
     }
@@ -158,11 +162,19 @@ final class QueueTest extends TestCase
     {
         $queue = new InMemoryQueue();
         $jobs = new Jobs($queue);
-        $jobs->handle(SendWelcome::class, static function (): void {
-            throw new JobFailed('The address does not exist.');
-        }, name: 'mail.welcome');
+        $jobs->handle(
+            SendWelcome::class,
+            static function (): void {
+                throw new JobFailed('The address does not exist.');
+            },
+            name: 'mail.welcome',
+        );
         $runner = new JobRunner($jobs);
-        $jobs->push(new SendWelcome(7, 'nobody@example.com'), new Database(static fn (): \PDO => new \PDO('sqlite::memory:'))->connect()->writer(), new PushOptions(maxAttempts: 5));
+        $jobs->push(
+            new SendWelcome(7, 'nobody@example.com'),
+            new Database(static fn (): \PDO => new \PDO('sqlite::memory:'))->connect()->writer(),
+            new PushOptions(maxAttempts: 5),
+        );
 
         self::assertSame(JobOutcome::Failed, $runner->runNext()[1] ?? null);
         self::assertNull($runner->runNext(), 'Nothing is left to retry.');
@@ -182,10 +194,17 @@ final class QueueTest extends TestCase
         new JobRunner($jobs)->runPending();
         self::assertTrue($jobs->push(new SendWelcome(1, 'a@example.com'), $db, $options), 'The key is free once the job ran.');
 
-        Insert::into('shirakaba_jobs')->values([
-            'queue' => 'default', 'type' => 'evil.code', 'payload' => '{}', 'attempts' => 0, 'max_attempts' => 5,
-            'available_at' => $clock->now(), 'created_at' => $clock->now(),
-        ])->execute($db);
+        Insert::into('shirakaba_jobs')
+            ->values([
+                'queue' => 'default',
+                'type' => 'evil.code',
+                'payload' => '{}',
+                'attempts' => 0,
+                'max_attempts' => 5,
+                'available_at' => $clock->now(),
+                'created_at' => $clock->now(),
+            ])
+            ->execute($db);
         $runner = new JobRunner($jobs);
         $outcomes = [];
         while (($result = $runner->runNext()) !== null) {

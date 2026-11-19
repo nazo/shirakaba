@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Shirakaba\Json\Internal;
 
 use BackedEnum;
+use ReflectionAttribute;
+use ReflectionClass;
+use ReflectionEnum;
+use ReflectionNamedType;
+use ReflectionParameter;
 use Shirakaba\Core\Description\DocComment;
 use Shirakaba\Core\Extraction\Constraint;
 use Shirakaba\Core\InvalidApplication;
@@ -14,11 +19,6 @@ use Shirakaba\Json\ListOf;
 use Shirakaba\Json\MapOf;
 use Shirakaba\Json\Optional;
 use Shirakaba\Json\OptionalOf;
-use ReflectionAttribute;
-use ReflectionClass;
-use ReflectionEnum;
-use ReflectionNamedType;
-use ReflectionParameter;
 
 /**
  * Builds the mapping plan for a DTO class from reflection, once, at build time (design/06-json-and-openapi.md).
@@ -62,7 +62,7 @@ final readonly class Planner
     private function unionNode(string $class, bool $nullable, array $stack): UnionNode
     {
         $union = self::union($class);
-        if ($union === null || (!class_exists($class) && !interface_exists($class))) {
+        if ($union === null || !class_exists($class) && !interface_exists($class)) {
             throw new InvalidApplication(sprintf('%s: %s is not a #[JsonUnion].', $this->context, $class));
         }
         if (in_array($class, $stack, true)) {
@@ -76,7 +76,12 @@ final readonly class Planner
         foreach ($union->members as $tag => $member) {
             $where = sprintf('#[JsonUnion] on %s, member "%s"', $class, $tag);
             if ($tag === '' || !class_exists($member) || !is_a($member, $class, true)) {
-                throw new InvalidApplication(sprintf('%s: %s must be a non-empty value naming a class that extends or implements %s.', $this->context, $where, $class));
+                throw new InvalidApplication(sprintf(
+                    '%s: %s must be a non-empty value naming a class that extends or implements %s.',
+                    $this->context,
+                    $where,
+                    $class,
+                ));
             }
             if (new ReflectionClass($member)->getAttributes(\Shirakaba\Json\JsonDto::class) === []) {
                 throw new InvalidApplication(sprintf('%s: %s is %s, which must be a #[JsonDto] so Json can write it.', $this->context, $where, $member));
@@ -191,7 +196,11 @@ final readonly class Planner
                 return new MapNode($this->typeNode($mapOf->newInstance()->type, false, $where, $stack), $type->allowsNull());
             }
             if ($listOf === null) {
-                throw new InvalidApplication(sprintf('%s: %s is an array; add #[ListOf(...)] for a JSON array or #[MapOf(...)] for an object with arbitrary keys.', $this->context, $where));
+                throw new InvalidApplication(sprintf(
+                    '%s: %s is an array; add #[ListOf(...)] for a JSON array or #[MapOf(...)] for an object with arbitrary keys.',
+                    $this->context,
+                    $where,
+                ));
             }
 
             return new ListNode($this->typeNode($listOf->newInstance()->type, false, $where, $stack), $type->allowsNull());
@@ -215,7 +224,10 @@ final readonly class Planner
             return new TimeNode('date', $nullable);
         }
         if (is_a($name, \DateTimeInterface::class, true)) {
-            throw new InvalidApplication(sprintf('%s: %s is %s; use DateTimeImmutable for instants (design/07-date-and-time.md).', $this->context, $where, $name) . \Shirakaba\Core\Messages::see('mutable-date-time'));
+            throw new InvalidApplication(
+                sprintf('%s: %s is %s; use DateTimeImmutable for instants (design/07-date-and-time.md).', $this->context, $where, $name)
+                    . \Shirakaba\Core\Messages::see('mutable-date-time'),
+            );
         }
         if (enum_exists($name) && is_subclass_of($name, BackedEnum::class)) {
             return new EnumNode($name, (string) new ReflectionEnum($name)->getBackingType() === 'int', $nullable);

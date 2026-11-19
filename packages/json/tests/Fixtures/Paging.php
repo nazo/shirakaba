@@ -9,7 +9,6 @@ use Shirakaba\Json\JsonName;
 final readonly class Paging
 {
     public function __construct(
-        #[JsonName('per_page')]
-        public int $perPage,
+        #[JsonName('per_page')] public int $perPage,
     ) {}
 }

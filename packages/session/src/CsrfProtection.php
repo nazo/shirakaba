@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Shirakaba\Session;
 
-use Shirakaba\Core\Http\HttpFailure;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Core\Http\HttpFailure;
 
 /**
  * Rejects cross-site requests that change state (POST, PUT, PATCH, DELETE).
@@ -83,7 +83,7 @@ final readonly class CsrfProtection implements MiddlewareInterface
         $given = $request->getHeaderLine(self::HEADER);
         if ($given === '') {
             $parsed = $request->getParsedBody();
-            $field = is_array($parsed) ? ($parsed[self::FIELD] ?? '') : '';
+            $field = is_array($parsed) ? $parsed[self::FIELD] ?? '' : '';
             $given = is_string($field) ? $field : '';
         }
         if (!is_string($expected) || $expected === '' || !hash_equals($expected, $given)) {

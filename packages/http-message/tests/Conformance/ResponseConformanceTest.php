@@ -6,8 +6,8 @@ namespace Shirakaba\Http\Message\Tests\Conformance;
 
 use Http\Psr7Test\ResponseIntegrationTest;
 use PHPUnit\Framework\Attributes\CoversClass;
-use Shirakaba\Http\Message\Response;
 use Psr\Http\Message\ResponseInterface;
+use Shirakaba\Http\Message\Response;
 
 #[CoversClass(Response::class)]
 final class ResponseConformanceTest extends ResponseIntegrationTest

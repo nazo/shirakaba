@@ -49,7 +49,14 @@ final readonly class CheckContext
                             default => false,
                         };
                         if (!$ok) {
-                            $problems[] = $this->problem($condition->path, sprintf('%s may be %s; conditions test booleans, strings, lists and null.', $condition->path->toString(), self::describe($atom)));
+                            $problems[] = $this->problem(
+                                $condition->path,
+                                sprintf(
+                                    '%s may be %s; conditions test booleans, strings, lists and null.',
+                                    $condition->path->toString(),
+                                    self::describe($atom),
+                                ),
+                            );
                             break;
                         }
                     }
@@ -64,10 +71,13 @@ final readonly class CheckContext
                         /** @var list<array{string, mixed}> $itemTypes */
                         $itemTypes = $atom[1];
                         $items = [...$items, ...$itemTypes];
-                    } elseif ($atom[0] === 'mixed' || ($atom[0] === 'scalar' && $atom[1] === 'array')) {
+                    } elseif ($atom[0] === 'mixed' || $atom[0] === 'scalar' && $atom[1] === 'array') {
                         $items[] = ['mixed', ''];
                     } else {
-                        $problems[] = $this->problem($node->list, sprintf('%s may be %s; {%% for %%} iterates over lists.', $node->list->toString(), self::describe($atom)));
+                        $problems[] = $this->problem(
+                            $node->list,
+                            sprintf('%s may be %s; {%% for %%} iterates over lists.', $node->list->toString(), self::describe($atom)),
+                        );
                     }
                 }
                 $inner = [...$scope, $node->variable => $items === [] ? [['mixed', '']] : $items, 'loop' => [['class', Loop::class]]];
@@ -143,11 +153,17 @@ final readonly class CheckContext
             $ok = match ($atom[0]) {
                 'mixed' => true,
                 'scalar' => in_array($atom[1], ['string', 'int', 'content'], true),
-                'class' => is_string($atom[1]) && (is_a($atom[1], Stringable::class, true) || ($atom[1] === Html::class && $this->template->html)),
+                'class' => is_string($atom[1]) && (is_a($atom[1], Stringable::class, true) || $atom[1] === Html::class && $this->template->html),
                 default => false,
             };
             if (!$ok) {
-                return [$this->problem($path, sprintf('%s may be %s, which %s template cannot print; print string, int, Stringable%s.', $path->toString(), self::describe($atom), $this->template->html ? 'an HTML' : 'a text', $this->template->html ? ' or Html' : ''))];
+                return [$this->problem($path, sprintf(
+                    '%s may be %s, which %s template cannot print; print string, int, Stringable%s.',
+                    $path->toString(),
+                    self::describe($atom),
+                    $this->template->html ? 'an HTML' : 'a text',
+                    $this->template->html ? ' or Html' : '',
+                ))];
             }
         }
 

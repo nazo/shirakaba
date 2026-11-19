@@ -7,11 +7,13 @@ namespace Shirakaba\Session\Tests;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Shirakaba\Time\FrozenClock;
+use Psr\Http\Message\ResponseInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Http\NoContent;
 use Shirakaba\Core\Http\Text;
+use Shirakaba\Core\Scope\Cancellation;
 use Shirakaba\Core\Scope\RequestScope;
+use Shirakaba\Core\Scope\ScopedWork;
 use Shirakaba\Core\Testing\TestClient;
 use Shirakaba\Session\CsrfProtection;
 use Shirakaba\Session\FileSessionStore;
@@ -19,12 +21,10 @@ use Shirakaba\Session\InMemorySessionStore;
 use Shirakaba\Session\JsonData;
 use Shirakaba\Session\Session;
 use Shirakaba\Session\SessionMiddleware;
-use Shirakaba\Session\SetCookie;
-use Psr\Http\Message\ResponseInterface;
-use Shirakaba\Core\Scope\Cancellation;
-use Shirakaba\Core\Scope\ScopedWork;
 use Shirakaba\Session\SessionStore;
+use Shirakaba\Session\SetCookie;
 use Shirakaba\Session\Testing\SessionStoreChecks;
+use Shirakaba\Time\FrozenClock;
 
 #[CoversClass(Session::class)]
 #[CoversClass(SessionMiddleware::class)]
@@ -192,7 +192,6 @@ final class SessionTest extends TestCase
         $client = $this->client();
         $tokenResponse = $client->get('/token');
         $id = self::sessionId($tokenResponse);
-        $token = (string) $tokenResponse->getBody();
         $cookie = ['Cookie' => '__Host-session=' . $id];
 
         self::assertSame(403, $client->post('/login', '', [...$cookie, 'Sec-Fetch-Site' => 'cross-site'])->getStatusCode());
@@ -239,12 +238,18 @@ final class SessionTest extends TestCase
     public function testStoresPassTheChecks(): void
     {
         $clock = new FrozenClock(new \DateTimeImmutable('2026-11-18T00:00:00Z'));
-        self::assertSame([], self::inScope(static fn (RequestScope $scope): array => SessionStoreChecks::run(new InMemorySessionStore($clock), $clock, $scope)));
+        self::assertSame(
+            [],
+            self::inScope(static fn (RequestScope $scope): array => SessionStoreChecks::run(new InMemorySessionStore($clock), $clock, $scope)),
+        );
 
         $directory = sys_get_temp_dir() . '/shirakaba-sessions-' . bin2hex(random_bytes(4));
         mkdir($directory);
         try {
-            self::assertSame([], self::inScope(static fn (RequestScope $scope): array => SessionStoreChecks::run(new FileSessionStore($directory, $clock), $clock, $scope)));
+            self::assertSame(
+                [],
+                self::inScope(static fn (RequestScope $scope): array => SessionStoreChecks::run(new FileSessionStore($directory, $clock), $clock, $scope)),
+            );
         } finally {
             $files = glob($directory . '/*');
             array_map(unlink(...), $files === false ? [] : $files);
@@ -317,7 +322,10 @@ final class SessionTest extends TestCase
 
     public function testCookieAttributes(): void
     {
-        self::assertSame('theme=dark%20mode; Max-Age=60; Path=/; Secure; HttpOnly; SameSite=Strict', new SetCookie('theme', 'dark mode', 60, sameSite: 'Strict')->header());
+        self::assertSame(
+            'theme=dark%20mode; Max-Age=60; Path=/; Secure; HttpOnly; SameSite=Strict',
+            new SetCookie('theme', 'dark mode', 60, sameSite: 'Strict')->header(),
+        );
 
         $this->expectException(InvalidArgumentException::class);
         new SetCookie('__Host-id', 'x', domain: 'example.com');

@@ -7,6 +7,4 @@ namespace Shirakaba\Database\Error;
 /**
  * The connection to the server failed or was dropped.
  */
-final class ConnectionLost extends DatabaseError
-{
-}
+final class ConnectionLost extends DatabaseError {}

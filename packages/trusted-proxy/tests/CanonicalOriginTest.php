@@ -18,7 +18,10 @@ final class CanonicalOriginTest extends TestCase
         $origin = new CanonicalOrigin('https://App.Example.com:8443/');
 
         self::assertSame('https://app.example.com:8443', (string) $origin);
-        self::assertSame('https://app.example.com:8443/password-reset?token=a%2Fb%20c&next=%2Fhome', $origin->url('/password-reset', ['token' => 'a/b c', 'next' => '/home']));
+        self::assertSame('https://app.example.com:8443/password-reset?token=a%2Fb%20c&next=%2Fhome', $origin->url('/password-reset', [
+            'token' => 'a/b c',
+            'next' => '/home',
+        ]));
         self::assertSame('https://app.example.com:8443/files/a%20b', $origin->url('/files/a b'));
         // A path that looks protocol-relative stays on the origin.
         self::assertSame('https://app.example.com:8443//evil.example/x', $origin->url('//evil.example/x'));

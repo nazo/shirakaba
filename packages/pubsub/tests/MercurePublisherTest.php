@@ -7,12 +7,12 @@ namespace Shirakaba\PubSub\Tests;
 use PDO;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Shirakaba\Database\Database;
 use Shirakaba\Database\Writer;
 use Shirakaba\Http\Message\HttpFactory;
 use Shirakaba\PubSub\MercurePublisher;
 use Shirakaba\PubSub\Tests\Fixtures\RecordingClient;
-use RuntimeException;
 
 #[CoversClass(MercurePublisher::class)]
 final class MercurePublisherTest extends TestCase

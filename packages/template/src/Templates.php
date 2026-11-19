@@ -64,7 +64,11 @@ final readonly class Templates
      */
     private function load(string $name, ?string $locale): Parsed
     {
-        $path = $this->directory->find($name, $locale) ?? throw new TemplateError(sprintf('There is no template "%s"%s.', $name, $locale === null ? '' : sprintf(' for locale "%s"', $locale)));
+        $path = $this->directory->find($name, $locale) ?? throw new TemplateError(sprintf(
+            'There is no template "%s"%s.',
+            $name,
+            $locale === null ? '' : sprintf(' for locale "%s"', $locale),
+        ));
 
         return $this->parsed->get($path, $this->directory->nameOf($path));
     }

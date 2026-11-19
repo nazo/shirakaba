@@ -35,7 +35,15 @@ final readonly class SessionStoreChecks
         $second = Session::newId();
         $expect($store->load($scope, $first) === null, 'An unknown ID must load as null.');
 
-        $data = ['user' => 'alice', 'roles' => ['admin', 'editor'], 'name' => '白樺', 'count' => 3, 'flag' => true, 'nothing' => null, 'nested' => ['a' => ['b' => 1.5]]];
+        $data = [
+            'user' => 'alice',
+            'roles' => ['admin', 'editor'],
+            'name' => '白樺',
+            'count' => 3,
+            'flag' => true,
+            'nothing' => null,
+            'nested' => ['a' => ['b' => 1.5]],
+        ];
         $store->save($scope, $first, $data, 60);
         $expect($store->load($scope, $first) === $data, 'Saved data must load back unchanged, including nested arrays, Unicode, numbers, booleans and null.');
         $expect($store->load($scope, $second) === null, 'Sessions must not share data.');

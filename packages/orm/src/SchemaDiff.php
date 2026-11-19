@@ -6,12 +6,12 @@ namespace Shirakaba\Orm;
 
 use BackedEnum;
 use DateTimeImmutable;
+use ReflectionEnum;
 use Shirakaba\Database\Error\DatabaseError;
 use Shirakaba\Database\Reader;
 use Shirakaba\Orm\Mapping\EntityMap;
 use Shirakaba\Orm\Mapping\Field;
 use Shirakaba\Time\LocalDate;
-use ReflectionEnum;
 
 /**
  * Writes a migration for the difference between entity mappings and the live schema
@@ -62,8 +62,18 @@ final readonly class SchemaDiff
                         sprintf('$table->bigInteger(%s);', var_export($relation->foreignKey, true)),
                         ...($relation->orderBy === null ? [] : [sprintf('$table->integer(%s)->default(0);', var_export($relation->orderBy, true))]),
                         sprintf('$table->primary([%s, %s]);', var_export($local, true), var_export($relation->foreignKey, true)),
-                        sprintf('$table->foreign(%s)->references(%s, %s)->onDelete(\'cascade\');', var_export($local, true), var_export($map->table, true), var_export(($map->ids()[0] ?? null)->column ?? 'id', true)),
-                        sprintf('$table->foreign(%s)->references(%s, %s)->onDelete(\'cascade\');', var_export($relation->foreignKey, true), var_export($related->table, true), var_export(($related->ids()[0] ?? null)->column ?? 'id', true)),
+                        sprintf(
+                            '$table->foreign(%s)->references(%s, %s)->onDelete(\'cascade\');',
+                            var_export($local, true),
+                            var_export($map->table, true),
+                            var_export(($map->ids()[0] ?? null)->column ?? 'id', true),
+                        ),
+                        sprintf(
+                            '$table->foreign(%s)->references(%s, %s)->onDelete(\'cascade\');',
+                            var_export($relation->foreignKey, true),
+                            var_export($related->table, true),
+                            var_export(($related->ids()[0] ?? null)->column ?? 'id', true),
+                        ),
                     ]);
                 }
             }
@@ -164,7 +174,7 @@ final readonly class SchemaDiff
             }
             // Timestamps are nullable in PHP so new entities can omit them, but the ORM always
             // writes them, so their columns are NOT NULL.
-            $flat[] = [$field, $parentNullable || (($field->nullable || $field->generated) && !$field->createdAt && !$field->updatedAt && !$field->id)];
+            $flat[] = [$field, $parentNullable || ($field->nullable || $field->generated) && !$field->createdAt && !$field->updatedAt && !$field->id];
         }
 
         return $flat;
@@ -173,16 +183,23 @@ final readonly class SchemaDiff
     private static function column(Field $field, bool $nullable): string
     {
         $name = var_export($field->column, true);
-        $type = $field->kind === 'wrapper' ? ($field->innerType ?? 'string') : $field->type;
+        $type = $field->kind === 'wrapper' ? $field->innerType ?? 'string' : $field->type;
         $call = match (true) {
             $field->kind === 'json' => sprintf('json(%s)', $name),
-            $field->kind === 'custom' => sprintf('text(%s) /* TODO: check the type for %s */', $name, $field->converter === null ? 'its ColumnType' : $field->converter::class),
+            $field->kind === 'custom' => sprintf(
+                'text(%s) /* TODO: check the type for %s */',
+                $name,
+                $field->converter === null ? 'its ColumnType' : $field->converter::class,
+            ),
             $type === 'int' => sprintf('bigInteger(%s)', $name),
             $type === 'float' => sprintf('float(%s)', $name),
             $type === 'bool' => sprintf('boolean(%s)', $name),
             $type === DateTimeImmutable::class => sprintf('instant(%s)', $name),
             $type === LocalDate::class => sprintf('date(%s)', $name),
-            enum_exists($type) && is_subclass_of($type, BackedEnum::class) && (string) new ReflectionEnum($type)->getBackingType() === 'int' => sprintf('integer(%s)', $name),
+            enum_exists($type) && is_subclass_of($type, BackedEnum::class) && (string) new ReflectionEnum($type)->getBackingType() === 'int' => sprintf(
+                'integer(%s)',
+                $name,
+            ),
             enum_exists($type) => sprintf('string(%s, 50)', $name),
             default => sprintf('string(%s)', $name),
         };

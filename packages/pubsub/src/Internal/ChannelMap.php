@@ -45,7 +45,11 @@ final readonly class ChannelMap
             ?? throw new InvalidArgumentException(sprintf('%s is not an #[EventChannel].', $class));
         $template = $attribute->channel;
         if (preg_match('#\A([A-Za-z0-9_.~-]+|\{[A-Za-z_][A-Za-z0-9_]*\})(/([A-Za-z0-9_.~-]+|\{[A-Za-z_][A-Za-z0-9_]*\}))*\z#', $template) !== 1) {
-            throw new InvalidArgumentException(sprintf('%s: "%s" is not a channel template; use path segments of letters, digits, "_", ".", "~", "-" and {variables}.', $class, $template));
+            throw new InvalidArgumentException(sprintf(
+                '%s: "%s" is not a channel template; use path segments of letters, digits, "_", ".", "~", "-" and {variables}.',
+                $class,
+                $template,
+            ));
         }
         preg_match_all('/\{([A-Za-z_][A-Za-z0-9_]*)\}/', $template, $matches);
         $variables = $matches[1];
@@ -58,7 +62,11 @@ final readonly class ChannelMap
             $type = $parameter->getType();
             $name = $type instanceof ReflectionNamedType && !$type->allowsNull() ? $type->getName() : null;
             if (!$parameter->isPromoted() || $name === null || !(in_array($name, ['string', 'int'], true) || is_subclass_of($name, BackedEnum::class))) {
-                throw new InvalidArgumentException(sprintf('%s: parameter $%s must be a promoted string, int or backed enum, as channel parameters are.', $class, $parameter->getName()));
+                throw new InvalidArgumentException(sprintf(
+                    '%s: parameter $%s must be a promoted string, int or backed enum, as channel parameters are.',
+                    $class,
+                    $parameter->getName(),
+                ));
             }
             $parameters[$parameter->getName()] = $name === 'string' || $name === 'int' ? $name : self::enum($name);
         }
@@ -69,7 +77,10 @@ final readonly class ChannelMap
                 '%s: the template "%s" and the constructor must name the same parameters; %s.',
                 $class,
                 $template,
-                implode('; ', [...($missing === [] ? [] : ['missing from the constructor: ' . implode(', ', $missing)]), ...($extra === [] ? [] : ['missing from the template: ' . implode(', ', $extra)])]),
+                implode('; ', [
+                    ...($missing === [] ? [] : ['missing from the constructor: ' . implode(', ', $missing)]),
+                    ...($extra === [] ? [] : ['missing from the template: ' . implode(', ', $extra)]),
+                ]),
             ));
         }
 
@@ -120,13 +131,17 @@ final readonly class ChannelMap
      */
     public function topic(object $channel): string
     {
-        return (string) preg_replace_callback('/\{([A-Za-z_][A-Za-z0-9_]*)\}/', static function (array $match) use ($channel): string {
-            /** @var mixed $value */
-            $value = (new \ReflectionProperty($channel, $match[1]))->getValue($channel);
-            $value = $value instanceof BackedEnum ? $value->value : $value;
+        return (string) preg_replace_callback(
+            '/\{([A-Za-z_][A-Za-z0-9_]*)\}/',
+            static function (array $match) use ($channel): string {
+                /** @var mixed $value */
+                $value = new \ReflectionProperty($channel, $match[1])->getValue($channel);
+                $value = $value instanceof BackedEnum ? $value->value : $value;
 
-            return rawurlencode(is_int($value) || is_string($value) ? (string) $value : '');
-        }, $this->template);
+                return rawurlencode(is_int($value) || is_string($value) ? (string) $value : '');
+            },
+            $this->template,
+        );
     }
 
     /**
@@ -138,7 +153,12 @@ final readonly class ChannelMap
     {
         $type = array_search($event::class, $this->events, true);
         if (!is_string($type)) {
-            throw new InvalidArgumentException(sprintf('%s does not declare an event of class %s; add #[ChannelEvent(..., %s::class)].', $this->class, $event::class, $event::class));
+            throw new InvalidArgumentException(sprintf(
+                '%s does not declare an event of class %s; add #[ChannelEvent(..., %s::class)].',
+                $this->class,
+                $event::class,
+                $event::class,
+            ));
         }
 
         return $type;

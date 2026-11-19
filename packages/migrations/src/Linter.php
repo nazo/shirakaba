@@ -64,16 +64,32 @@ final readonly class Linter
                 'dropTable' => sprintf('drops table "%s" and its data', $operation->table),
                 'dropColumn' => sprintf('drops column "%s.%s" and its data', $operation->table, $operation->subject),
                 'renameTable' => sprintf('renames table %s; code still running with the old name fails until it is deployed', $operation->subject),
-                'renameColumn' => sprintf('renames column "%s" %s; code still running with the old name fails until it is deployed', $operation->table, $operation->subject),
-                'addRequiredColumn' => sprintf('adds NOT NULL column "%s.%s" without a default, which fails on a table with rows', $operation->table, $operation->subject),
-                'addUniqueIndex' => sprintf('adds unique index "%s" to existing table "%s", which fails if rows already conflict', $operation->subject, $operation->table),
+                'renameColumn' => sprintf(
+                    'renames column "%s" %s; code still running with the old name fails until it is deployed',
+                    $operation->table,
+                    $operation->subject,
+                ),
+                'addRequiredColumn' => sprintf(
+                    'adds NOT NULL column "%s.%s" without a default, which fails on a table with rows',
+                    $operation->table,
+                    $operation->subject,
+                ),
+                'addUniqueIndex' => sprintf(
+                    'adds unique index "%s" to existing table "%s", which fails if rows already conflict',
+                    $operation->subject,
+                    $operation->table,
+                ),
                 'addIndex' => sprintf(
                     'adds index "%s" to existing table "%s", which locks writes while it builds%s',
                     $operation->subject,
                     $operation->table,
                     $this->dialect->name() === 'pgsql' ? '; consider CREATE INDEX CONCURRENTLY in a migration of its own' : '',
                 ),
-                'addForeignKey' => sprintf('adds foreign key "%s" to existing table "%s", which checks every row while holding a lock', $operation->subject, $operation->table),
+                'addForeignKey' => sprintf(
+                    'adds foreign key "%s" to existing table "%s", which checks every row while holding a lock',
+                    $operation->subject,
+                    $operation->table,
+                ),
                 'sql' => 'runs raw SQL, which the linter cannot check: ' . strtok($operation->subject, "\n"),
                 default => null,
             };

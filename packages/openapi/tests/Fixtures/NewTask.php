@@ -13,11 +13,9 @@ final readonly class NewTask
      * @param list<string> $labels
      */
     public function __construct(
-        #[Length(min: 1, max: 100)]
-        public string $title,
+        #[Length(min: 1, max: 100)] public string $title,
         public ?Owner $owner = null,
-        #[ListOf('string')]
-        public array $labels = [],
+        #[ListOf('string')] public array $labels = [],
         public Status $status = Status::Open,
     ) {}
 }

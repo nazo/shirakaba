@@ -10,8 +10,8 @@ use Shirakaba\Console\ConsoleBuilder;
 use Shirakaba\Console\Testing\ConsoleTester;
 use Shirakaba\Template\Html;
 use Shirakaba\Template\Internal\CheckContext;
-use Shirakaba\Template\Internal\Parser;
 use Shirakaba\Template\Internal\ParsedTemplates;
+use Shirakaba\Template\Internal\Parser;
 use Shirakaba\Template\Internal\Renderer;
 use Shirakaba\Template\Internal\Types;
 use Shirakaba\Template\TemplateChecker;
@@ -189,18 +189,24 @@ final class TemplatesTest extends TestCase
         $directory = sys_get_temp_dir() . '/shirakaba-templates-' . bin2hex(random_bytes(4));
         mkdir($directory);
         try {
-            file_put_contents($directory . '/w.txt', "{{ user.nmae }}\n{% for item in items %}{{ item.titel }}{% endfor %}\n{{ user.score }}\n{% if user %}{% endif %}\n{% for x in site %}{% endfor %}\n");
+            file_put_contents(
+                $directory . '/w.txt',
+                "{{ user.nmae }}\n{% for item in items %}{{ item.titel }}{% endfor %}\n{{ user.score }}\n{% if user %}{% endif %}\n{% for x in site %}{% endfor %}\n",
+            );
             file_put_contents($directory . '/w.html', '{{ signature }}');
             file_put_contents($directory . '/broken.txt', '{% if %}');
 
-            self::assertSame([
-                'broken.txt:1:1: Write {% if path %} or {% if not path %}; conditions test a value, not an expression.',
-                'w.txt:1:1: user.nmae does not exist: ' . User::class . ' has no property "nmae".',
-                'w.txt:2:24: item.titel does not exist: ' . Item::class . ' has no property "titel".',
-                'w.txt:3:1: user.score may be float, which a text template cannot print; print string, int, Stringable.',
-                'w.txt:4:1: user may be ' . User::class . '; conditions test booleans, strings, lists and null.',
-                'w.txt:5:1: site may be string; {% for %} iterates over lists.',
-            ], new TemplateChecker(new TemplateDirectory($directory))->check(['w' => Welcome::class]));
+            self::assertSame(
+                [
+                    'broken.txt:1:1: Write {% if path %} or {% if not path %}; conditions test a value, not an expression.',
+                    'w.txt:1:1: user.nmae does not exist: ' . User::class . ' has no property "nmae".',
+                    'w.txt:2:24: item.titel does not exist: ' . Item::class . ' has no property "titel".',
+                    'w.txt:3:1: user.score may be float, which a text template cannot print; print string, int, Stringable.',
+                    'w.txt:4:1: user may be ' . User::class . '; conditions test booleans, strings, lists and null.',
+                    'w.txt:5:1: site may be string; {% for %} iterates over lists.',
+                ],
+                new TemplateChecker(new TemplateDirectory($directory))->check(['w' => Welcome::class]),
+            );
         } finally {
             exec('rm -rf ' . escapeshellarg($directory));
         }

@@ -14,11 +14,17 @@ final class ScopeMissing extends LogicException
 {
     public static function of(string $entity, string $scope): self
     {
-        return new self(sprintf('Queries of %s need ->scoped(new %s(...)), or ->withoutScope(%s::class) to read across it.', $entity, $scope, $scope) . \Shirakaba\Orm\Internal\Messages::see('scope-missing'));
+        return new self(
+            sprintf('Queries of %s need ->scoped(new %s(...)), or ->withoutScope(%s::class) to read across it.', $entity, $scope, $scope)
+                . \Shirakaba\Orm\Internal\Messages::see('scope-missing'),
+        );
     }
 
     public static function onInsert(string $entity, string $scope): self
     {
-        return new self(sprintf('Inserting %s needs its scope: Entities::insert($entity, $db, scopes: [new %s(...)]).', $entity, $scope) . \Shirakaba\Orm\Internal\Messages::see('scope-missing'));
+        return new self(
+            sprintf('Inserting %s needs its scope: Entities::insert($entity, $db, scopes: [new %s(...)]).', $entity, $scope)
+                . \Shirakaba\Orm\Internal\Messages::see('scope-missing'),
+        );
     }
 }

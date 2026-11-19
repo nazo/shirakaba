@@ -34,7 +34,7 @@ final readonly class Quoting
         if ($limit === null && $offset === null) {
             return '';
         }
-        if (($limit !== null && $limit < 0) || ($offset !== null && $offset < 0)) {
+        if ($limit !== null && $limit < 0 || $offset !== null && $offset < 0) {
             throw new InvalidArgumentException('Limit and offset must not be negative.');
         }
         $clause = 'LIMIT ' . ($limit ?? $unlimited);

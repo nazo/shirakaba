@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Shirakaba\Core\Tests\Fixtures;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Shirakaba\Core\Http\ErrorRenderer;
 use Shirakaba\Core\Http\Failure;
 use Shirakaba\Http\Message\Response;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * An HTML error renderer that "forgets" headers, to prove the core re-applies them.

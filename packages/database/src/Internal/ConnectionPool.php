@@ -42,7 +42,7 @@ final class ConnectionPool
         [$pdo, $dialect, $opened, $since, $uses] = $idle;
         $now = hrtime(true);
         $idleSeconds = ($now - $since) / 1e9;
-        if ($idleSeconds > $this->maxIdleSeconds || ($now - $opened) / 1e9 > $this->maxLifetimeSeconds) {
+        if ($idleSeconds > $this->maxIdleSeconds || (($now - $opened) / 1e9) > $this->maxLifetimeSeconds) {
             return null;
         }
         if ($idleSeconds > $this->checkAfterSeconds) {

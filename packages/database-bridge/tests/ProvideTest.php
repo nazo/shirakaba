@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use PDO;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Clock\ClockInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Http\Text;
 use Shirakaba\Core\InvalidApplication;
@@ -19,7 +20,6 @@ use Shirakaba\DatabaseBridge\Db;
 use Shirakaba\DatabaseBridge\Internal\DbResolver;
 use Shirakaba\DatabaseBridge\Tests\Fixtures\StampedNotes;
 use Shirakaba\Time\FrozenClock;
-use Psr\Clock\ClockInterface;
 
 #[CoversClass(Provide::class)]
 #[CoversClass(Db::class)]

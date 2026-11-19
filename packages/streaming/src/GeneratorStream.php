@@ -6,9 +6,9 @@ namespace Shirakaba\Streaming;
 
 use Closure;
 use Generator;
-use Shirakaba\Core\Scope\ScopeOwningBody;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
+use Shirakaba\Core\Scope\ScopeOwningBody;
 use Throwable;
 
 /**
@@ -20,6 +20,7 @@ use Throwable;
  */
 final class GeneratorStream implements StreamInterface, ScopeOwningBody
 {
+    /** @var Generator<mixed, mixed, mixed, void>|null */
     private ?Generator $chunks;
     private string $buffer = '';
     private int $position = 0;
@@ -86,7 +87,7 @@ final class GeneratorStream implements StreamInterface, ScopeOwningBody
 
     public function eof(): bool
     {
-        return $this->buffer === '' && ($this->chunks === null || ($this->started && !$this->chunks->valid()));
+        return $this->buffer === '' && ($this->chunks === null || $this->started && !$this->chunks->valid());
     }
 
     public function isSeekable(): bool

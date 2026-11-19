@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Shirakaba\Queue\Testing;
 
+use Psr\Clock\ClockInterface;
 use Shirakaba\Database\Writer;
 use Shirakaba\Queue\PushOptions;
 use Shirakaba\Queue\Queue;
 use Shirakaba\Queue\ReservedJob;
 use Shirakaba\Time\SystemClock;
-use Psr\Clock\ClockInterface;
 
 /**
  * A queue in process memory for tests. Like queues outside the database, it accepts a job
@@ -41,7 +41,7 @@ final class InMemoryQueue implements Queue
                 'type' => $type,
                 'payload' => $payload,
                 'queue' => $options->queue,
-                'availableAt' => $options->availableAt?->getTimestamp() ?? $now + $options->delay,
+                'availableAt' => $options->availableAt?->getTimestamp() ?? ($now + $options->delay),
                 'attempts' => 0,
                 'maxAttempts' => $options->maxAttempts,
                 'reservation' => null,
@@ -62,7 +62,13 @@ final class InMemoryQueue implements Queue
     {
         $now = $this->clock->now()->getTimestamp();
         foreach ($this->jobs as $id => $job) {
-            if ($job['failed'] !== null || !in_array($job['queue'], $queues, true) || $job['availableAt'] > $now || ($job['reservation'] !== null && $job['until'] >= $now)) {
+            if (
+                $job['failed'] !== null
+                || !in_array($job['queue'], $queues, true)
+                || $job['availableAt'] > $now
+                || $job['reservation'] !== null
+                && $job['until'] >= $now
+            ) {
                 continue;
             }
             $token = bin2hex(random_bytes(16));
@@ -115,7 +121,10 @@ final class InMemoryQueue implements Queue
      */
     public function pendingTypes(): array
     {
-        return array_values(array_map(static fn (array $job): string => $job['type'], array_filter($this->jobs, static fn (array $job): bool => $job['failed'] === null)));
+        return array_values(array_map(
+            static fn (array $job): string => $job['type'],
+            array_filter($this->jobs, static fn (array $job): bool => $job['failed'] === null),
+        ));
     }
 
     /**

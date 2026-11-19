@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Shirakaba\OpenApi;
 
 use Shirakaba\Core\Description\ApplicationDescription;
-use Shirakaba\Core\Description\DescribesResponse;
 use Shirakaba\Core\Description\ConstType;
+use Shirakaba\Core\Description\DescribesResponse;
 use Shirakaba\Core\Description\EnumType;
 use Shirakaba\Core\Description\EventChannelDescription;
 use Shirakaba\Core\Description\EventStreamType;
@@ -81,7 +81,9 @@ final readonly class Generator
                 $entry['summary'] = $channel->summary;
             }
             $entry['channel'] = $channel->channel;
-            $entry['parameters'] = $channel->parameters === [] ? new stdClass() : array_map(fn (Type $type): array => $this->schema($type, $state), $channel->parameters);
+            $entry['parameters'] = $channel->parameters === []
+                ? new stdClass()
+                : array_map(fn (Type $type): array => $this->schema($type, $state), $channel->parameters);
             $entry['private'] = $channel->private;
             $entry['content'] = ['application/json' => ['schema' => $this->schema($channel->payload, $state)]];
             $channels[$channel->name] = $entry;
@@ -125,10 +127,12 @@ final readonly class Generator
         $document['paths'] = $paths === [] ? new stdClass() : $paths;
         $components = [];
         if ($state->problemResponse) {
-            $components['responses'] = ['Problem' => [
-                'description' => 'An error, as RFC 9457 Problem Details.',
-                'content' => ['application/problem+json' => ['schema' => ['$ref' => '#/components/schemas/Problem']]],
-            ]];
+            $components['responses'] = [
+                'Problem' => [
+                    'description' => 'An error, as RFC 9457 Problem Details.',
+                    'content' => ['application/problem+json' => ['schema' => ['$ref' => '#/components/schemas/Problem']]],
+                ],
+            ];
         }
         $components['schemas'] = $state->schemas;
         if ($state->bearer) {
@@ -148,7 +152,7 @@ final readonly class Generator
     private function operation(RouteDescription $route, GeneratorState $state): array
     {
         $operation = [];
-        $documentation = $route->name === null ? null : ($this->operations[$route->name] ?? null);
+        $documentation = $route->name === null ? null : $this->operations[$route->name] ?? null;
         if ($route->name !== null) {
             $operation['operationId'] = $route->name;
         }
@@ -198,7 +202,8 @@ final readonly class Generator
         foreach ($route->templateParameters as $name) {
             if (!isset($documented[$name])) {
                 // OpenAPI requires every template parameter; the handler simply does not read it.
-                $parameters[] = ['name' => $name, 'in' => 'path', 'required' => true, 'schema' => ['type' => 'string']]
+                $parameters[] =
+                    ['name' => $name, 'in' => 'path', 'required' => true, 'schema' => ['type' => 'string']]
                     + self::catchAllNote($route->template, $name);
             }
         }
@@ -405,7 +410,13 @@ final readonly class Generator
     {
         // schema() writes a nullable reference as anyOf: [{$ref}, {type: null}].
         $anyOf = $schema['anyOf'] ?? null;
-        if (is_array($anyOf) && count($anyOf) === 2 && ($anyOf[1] ?? null) === ['type' => 'null'] && is_array($anyOf[0] ?? null) && is_string($anyOf[0]['$ref'] ?? null)) {
+        if (
+            is_array($anyOf)
+            && count($anyOf) === 2
+            && ($anyOf[1] ?? null) === ['type' => 'null']
+            && is_array($anyOf[0] ?? null)
+            && is_string($anyOf[0]['$ref'] ?? null)
+        ) {
             return ['$ref' => $anyOf[0]['$ref']];
         }
         if (is_array($schema['type'] ?? null)) {
@@ -551,8 +562,10 @@ final readonly class Generator
      */
     private static function catchAllNote(string $template, string $name): array
     {
-        return str_contains($template, '{' . $name . '...}')
-            ? ['description' => 'Matches the rest of the path, including slashes.']
-            : [];
+        return (
+            str_contains($template, '{' . $name . '...}')
+                ? ['description' => 'Matches the rest of the path, including slashes.']
+                : []
+        );
     }
 }

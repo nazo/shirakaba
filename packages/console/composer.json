@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.5",
+        "ext-mbstring": "*",
         "shirakaba/core": "^0.1",
         "shirakaba/time": "^0.1"
     },

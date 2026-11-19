@@ -20,7 +20,10 @@ final class ProblemPagesTest extends TestCase
         $directory = dirname(__DIR__, 3) . '/packages/docs/problems';
         $pages = glob($directory . '/*.md');
         self::assertIsArray($pages);
-        $named = array_values(array_filter(array_map(static fn (string $page): string => basename($page, '.md'), $pages), static fn (string $name): bool => $name !== 'README'));
+        $named = array_values(array_filter(
+            array_map(static fn (string $page): string => basename($page, '.md'), $pages),
+            static fn (string $name): bool => $name !== 'README',
+        ));
         $codes = ProblemCode::all();
         sort($named);
         sort($codes);

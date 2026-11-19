@@ -149,7 +149,11 @@ final readonly class Renderer
             is_string($value) => $value,
             is_int($value) => (string) $value,
             $value instanceof Stringable => (string) $value,
-            default => throw $this->error($path, sprintf('%s is %s; templates print string, int, Stringable and Html, so format other values in PHP.', $path->toString(), get_debug_type($value))),
+            default => throw $this->error($path, sprintf(
+                '%s is %s; templates print string, int, Stringable and Html, so format other values in PHP.',
+                $path->toString(),
+                get_debug_type($value),
+            )),
         };
 
         return $this->template->html ? htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8') : $text;
@@ -165,7 +169,11 @@ final readonly class Renderer
             $value === null => false,
             is_string($value) => $value !== '',
             is_array($value) && array_is_list($value) => $value !== [],
-            default => throw $this->error($path, sprintf('%s is %s; conditions test booleans, strings, lists and null.', $path->toString(), get_debug_type($value))),
+            default => throw $this->error($path, sprintf(
+                '%s is %s; conditions test booleans, strings, lists and null.',
+                $path->toString(),
+                get_debug_type($value),
+            )),
         };
     }
 

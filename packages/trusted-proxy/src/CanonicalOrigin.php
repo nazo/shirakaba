@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Shirakaba\TrustedProxy;
 
 use InvalidArgumentException;
-use Shirakaba\Http\Message\Uri;
 use Psr\Http\Message\UriInterface;
+use Shirakaba\Http\Message\Uri;
 
 /**
  * The origin the application is reached at, configured rather than taken from the request,

@@ -31,11 +31,18 @@ final readonly class Introspection
     {
         $name = match (true) {
             $type instanceof ScalarType => $type->name . ($type->format === null ? '' : '(' . $type->format . ')'),
-            $type instanceof EnumType => 'enum(' . implode('|', array_map(static fn (int|string $value): string => var_export($value, true), $type->values)) . ')',
+            $type instanceof EnumType => 'enum('
+                . implode('|', array_map(static fn (int|string $value): string => var_export($value, true), $type->values))
+                . ')',
             $type instanceof ListType => 'list<' . self::typeName($type->items) . '>',
             $type instanceof MapType => 'map<string, ' . self::typeName($type->values) . '>',
             $type instanceof ObjectType => $type->name ?? self::shortName($type->class),
-            $type instanceof UnionType => ($type->name ?? self::shortName($type->class)) . ' (by ' . $type->discriminator . ': ' . implode(', ', array_keys($type->members)) . ')',
+            $type instanceof UnionType => ($type->name ?? self::shortName($type->class))
+                . ' (by '
+                . $type->discriminator
+                . ': '
+                . implode(', ', array_keys($type->members))
+                . ')',
             $type instanceof ConstType => var_export($type->value, true),
             $type instanceof FileType => 'file',
             $type instanceof EventStreamType => 'events(' . implode(', ', array_keys($type->events)) . ')',

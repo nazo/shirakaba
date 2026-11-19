@@ -51,7 +51,7 @@ final class DialectConformanceTest extends TestCase
      */
     private static function int(mixed $value): int
     {
-        self::assertTrue(is_int($value) || is_bool($value) || (is_string($value) && is_numeric($value)), 'Expected an integer, got ' . var_export($value, true));
+        self::assertTrue(is_int($value) || is_bool($value) || is_string($value) && is_numeric($value), 'Expected an integer, got ' . var_export($value, true));
 
         return (int) $value;
     }
@@ -72,8 +72,19 @@ final class DialectConformanceTest extends TestCase
             'pgsql' => 'TIMESTAMPTZ(6)',
             default => 'TEXT',
         };
-        $db->execute(sprintf('CREATE TABLE shirakaba_parents (id %s, %s VARCHAR(50) NOT NULL UNIQUE, %s %s NULL, %s DATE NULL, %s BOOLEAN NOT NULL DEFAULT FALSE)', $id, $q('name'), $q('at'), $instant, $q('day'), $q('flag')));
-        $db->execute(sprintf('CREATE TABLE shirakaba_children (id %s, parent_id BIGINT NOT NULL, FOREIGN KEY (parent_id) REFERENCES shirakaba_parents (id))', $id));
+        $db->execute(sprintf(
+            'CREATE TABLE shirakaba_parents (id %s, %s VARCHAR(50) NOT NULL UNIQUE, %s %s NULL, %s DATE NULL, %s BOOLEAN NOT NULL DEFAULT FALSE)',
+            $id,
+            $q('name'),
+            $q('at'),
+            $instant,
+            $q('day'),
+            $q('flag'),
+        ));
+        $db->execute(sprintf(
+            'CREATE TABLE shirakaba_children (id %s, parent_id BIGINT NOT NULL, FOREIGN KEY (parent_id) REFERENCES shirakaba_parents (id))',
+            $id,
+        ));
 
         return $db;
     }
@@ -94,7 +105,10 @@ final class DialectConformanceTest extends TestCase
         self::assertSame('2026-11-11T00:30:00.123456+00:00', $read->format('Y-m-d\TH:i:s.uP'));
         self::assertSame('2026-11-11', $row['day'] ?? null);
         self::assertSame(1, self::int($row['flag'] ?? null));
-        self::assertSame(1, self::int($db->fetchValue('SELECT COUNT(*) FROM shirakaba_parents WHERE at < ?', [new DateTimeImmutable('2026-11-11T09:30:01+09:00')])));
+        self::assertSame(
+            1,
+            self::int($db->fetchValue('SELECT COUNT(*) FROM shirakaba_parents WHERE at < ?', [new DateTimeImmutable('2026-11-11T09:30:01+09:00')])),
+        );
         self::assertSame(0, self::int($db->fetchValue('SELECT COUNT(*) FROM shirakaba_parents WHERE at < ?', [new DateTimeImmutable('2026-11-11T00:30:00Z')])));
     }
 
@@ -107,7 +121,10 @@ final class DialectConformanceTest extends TestCase
     {
         $db = self::prepare($database);
         foreach (['123000', '120000', '100000', '000000'] as $index => $micro) {
-            $db->execute('INSERT INTO shirakaba_parents (name, at) VALUES (?, ?)', ['m' . $index, new DateTimeImmutable('2026-11-11T11:20:33.' . $micro . 'Z')]);
+            $db->execute('INSERT INTO shirakaba_parents (name, at) VALUES (?, ?)', [
+                'm' . $index,
+                new DateTimeImmutable('2026-11-11T11:20:33.' . $micro . 'Z'),
+            ]);
             $at = $db->fetchValue('SELECT at FROM shirakaba_parents WHERE name = ?', ['m' . $index]);
             self::assertIsString($at);
             self::assertSame('2026-11-11T11:20:33.' . $micro . '+00:00', $db->dialect()->parseInstant($at)?->format('Y-m-d\TH:i:s.uP'), $at);
@@ -192,7 +209,12 @@ final class DialectConformanceTest extends TestCase
         $dialect = $db->dialect();
         $name = $dialect->quoteIdentifier('name');
         $flag = $dialect->quoteIdentifier('flag');
-        $sql = sprintf('INSERT INTO shirakaba_parents (%s, %s) VALUES (?, ?) %s', $name, $flag, $dialect->upsert('shirakaba_parents', [$name], [$flag => 'excluded.' . $flag]));
+        $sql = sprintf(
+            'INSERT INTO shirakaba_parents (%s, %s) VALUES (?, ?) %s',
+            $name,
+            $flag,
+            $dialect->upsert('shirakaba_parents', [$name], [$flag => 'excluded.' . $flag]),
+        );
         $db->execute($sql, ['a', false]);
         $db->execute($sql, ['a', true]);
         $db->execute('INSERT INTO shirakaba_parents (name) VALUES (?), (?), (?)', ['b', 'c', 'd']);
@@ -200,7 +222,10 @@ final class DialectConformanceTest extends TestCase
         self::assertSame(1, self::int($db->fetchValue('SELECT flag FROM shirakaba_parents WHERE name = ?', ['a'])));
         self::assertSame(['b', 'c'], array_column($db->fetchAll('SELECT name FROM shirakaba_parents ORDER BY name ' . $dialect->limit(2, 1)), 'name'));
         self::assertSame(['c', 'd'], array_column($db->fetchAll('SELECT name FROM shirakaba_parents ORDER BY name ' . $dialect->limit(null, 2)), 'name'));
-        self::assertSame(['a', 'b', 'c', 'd'], array_column(iterator_to_array($db->iterate('SELECT name FROM shirakaba_parents ORDER BY name'), false), 'name'));
+        self::assertSame(
+            ['a', 'b', 'c', 'd'],
+            array_column(iterator_to_array($db->iterate('SELECT name FROM shirakaba_parents ORDER BY name'), false), 'name'),
+        );
     }
 
     #[DataProvider('databases')]

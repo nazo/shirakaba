@@ -64,12 +64,21 @@ final class DatabaseConformanceTest extends TestCase
         $db = self::tasks($database);
         $created = new DateTimeImmutable('2026-11-11T09:00:00.5+09:00');
         $first = Insert::into('query_tasks')
-            ->values(['title' => 'Write', 'done' => false, 'status' => Status::Open, 'created_at' => $created, 'due_on' => LocalDate::of(2026, 12, 1), 'weight' => 2.5])
+            ->values([
+                'title' => 'Write',
+                'done' => false,
+                'status' => Status::Open,
+                'created_at' => $created,
+                'due_on' => LocalDate::of(2026, 12, 1),
+                'weight' => 2.5,
+            ])
             ->executeAndGetId($db);
-        Insert::into('query_tasks')->rows([
-            ['title' => 'Test', 'done' => true, 'status' => Status::Done, 'created_at' => $created, 'due_on' => null, 'weight' => 1],
-            ['title' => 'Ship', 'done' => false, 'status' => Status::Open, 'created_at' => $created->modify('+1 day'), 'due_on' => null, 'weight' => 1],
-        ])->execute($db);
+        Insert::into('query_tasks')
+            ->rows([
+                ['title' => 'Test', 'done' => true, 'status' => Status::Done, 'created_at' => $created, 'due_on' => null, 'weight' => 1],
+                ['title' => 'Ship', 'done' => false, 'status' => Status::Open, 'created_at' => $created->modify('+1 day'), 'due_on' => null, 'weight' => 1],
+            ])
+            ->execute($db);
 
         $open = Select::from('query_tasks')->where('done', '=', false)->orderBy('id')->fetchInto(TaskRow::class, $db);
 
@@ -105,13 +114,22 @@ final class DatabaseConformanceTest extends TestCase
         self::assertSame('open', Select::from('query_tasks')->columns('status')->fetchValue($db));
 
         // An expression on the stored and the inserted row: weight 1 + 3 + 2.
-        Insert::into('query_tasks')->values([...$row, 'weight' => 3])->onConflict(['title'], ['weight' => Sql::raw('query_tasks.weight + excluded.weight + ?', [2])])->execute($db);
+        Insert::into('query_tasks')
+            ->values([...$row, 'weight' => 3])
+            ->onConflict(['title'], ['weight' => Sql::raw('query_tasks.weight + excluded.weight + ?', [2])])
+            ->execute($db);
         $added = Select::from('query_tasks')->columns('weight')->fetchValue($db);
         self::assertTrue(is_numeric($added));
         self::assertSame(6.0, (float) $added);
         Update::table('query_tasks')->set(['weight' => 1])->where('title', '=', 'Write')->execute($db);
 
-        self::assertSame(1, Update::table('query_tasks')->set(['weight' => Sql::raw('weight + 1')])->where('title', '=', 'Write')->execute($db));
+        self::assertSame(
+            1,
+            Update::table('query_tasks')
+                ->set(['weight' => Sql::raw('weight + 1')])
+                ->where('title', '=', 'Write')
+                ->execute($db),
+        );
         $weight = Select::from('query_tasks')->columns('weight')->fetchValue($db);
         self::assertTrue(is_numeric($weight));
         self::assertSame(2.0, (float) $weight);

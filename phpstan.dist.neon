@@ -5,8 +5,20 @@ includes:
     - vendor/phpstan/phpstan-phpunit/rules.neon
     - packages/phpstan/extension.neon
     - packages/runtime-swoole/phpstan.package.neon
+    - vendor/shipmonk/dead-code-detector/rules.neon
+
+services:
+    # Unused code is reported only where nothing outside the monorepo can reach it (tools/phpstan).
+    -
+        class: Shirakaba\Tools\PHPStan\PublicApiUsageProvider
+        tags:
+            - shipmonk.deadCode.memberUsageProvider
 
 parameters:
+    shipmonkDeadCode:
+        usageExcluders:
+            tests:
+                enabled: true
     shirakaba:
         longRunningPaths:
             - '#/packages/[^/]+/src/#'
@@ -18,6 +30,7 @@ parameters:
         - tools/monorepo
         - tools/docs
         - tools/repository
+        - tools/phpstan
         - examples
         - tools/bench
         - tests/conformance

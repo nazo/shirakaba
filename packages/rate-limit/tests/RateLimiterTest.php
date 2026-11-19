@@ -6,6 +6,10 @@ namespace Shirakaba\RateLimit\Tests;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Shirakaba\Auth\Authentication;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Http\Text;
@@ -19,10 +23,6 @@ use Shirakaba\RateLimit\RateLimitMiddleware;
 use Shirakaba\RateLimit\RateLimitResult;
 use Shirakaba\RateLimit\TooManyRequests;
 use Shirakaba\Time\FrozenClock;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 #[CoversClass(RateLimiter::class)]
 #[CoversClass(RateLimitMiddleware::class)]
@@ -37,16 +37,21 @@ final class RateLimiterTest extends TestCase
         $app = new AppBuilder();
         $app->post('/signin', static fn (): Text => new Text('ok'))->middleware($limiter->limit('sign-in', 2, 60, RateKey::address()));
         $app->post('/posts', static fn (): Text => new Text('ok'))
-            ->middleware(new class implements MiddlewareInterface {
-                public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-                {
-                    if ($request->getHeaderLine('X-User') !== '') {
-                        RequestScope::of($request)->set(new Authentication((object) ['id' => $request->getHeaderLine('X-User')]));
-                    }
+            ->middleware(
+                new class implements MiddlewareInterface {
+                    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+                    {
+                        if ($request->getHeaderLine('X-User') !== '') {
+                            RequestScope::of($request)->set(new Authentication((object) ['id' => $request->getHeaderLine('X-User')]));
+                        }
 
-                    return $handler->handle($request);
-                }
-            }, $limiter->limit('posting', 1, 10, RateKey::subject(static fn (object $user): string => property_exists($user, 'id') && is_string($user->id) ? $user->id : '')));
+                        return $handler->handle($request);
+                    }
+                },
+                $limiter->limit('posting', 1, 10, RateKey::subject(static fn (object $user): string => property_exists($user, 'id') && is_string($user->id)
+                    ? $user->id
+                    : '')),
+            );
         $app->post('/report', static function (RequestScope $scope) use ($limiter): Text {
             $limiter->hit($scope, 'reports', 1, 3600, 'everyone');
 

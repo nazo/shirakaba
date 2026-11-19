@@ -24,10 +24,20 @@ final class UndocumentedAndMediaTypesTest extends TestCase
     private static function paths(): array
     {
         $app = new AppBuilder();
-        $app->get('/users/{name}', #[Responds(200, 'The actor.', contentType: 'application/activity+json; charset=utf-8')] static fn (#[Path] string $name): Json => new Json([]));
+        $app->get(
+            '/users/{name}',
+            #[Responds(200, 'The actor.', contentType: 'application/activity+json; charset=utf-8')] static fn (#[Path] string $name): Json => new Json([]),
+        );
         $app->get('/robots.txt', #[Responds(200, contentType: 'text/plain')] static fn (): Text => new Text(''));
         $app->get('/.well-known/webfinger', static fn (): Json => new Json([]))->undocumented();
-        $json = json_decode(new Generator(new Info('Paths', '1'))->generate($app->describe())->toJson(), true, 512, JSON_THROW_ON_ERROR);
+        $json = json_decode(
+            new Generator(new Info('Paths', '1'))
+                ->generate($app->describe())
+                ->toJson(),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
         self::assertIsArray($json);
         self::assertIsArray($json['paths'] ?? null);
 

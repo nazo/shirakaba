@@ -71,7 +71,8 @@ final class Parser
                 // A block tag or comment alone on its line removes the line.
                 $lineStart = strrpos($text, "\n");
                 $indent = $lineStart === false ? $text : substr($text, $lineStart + 1);
-                $atLineStart = ($lineStart !== false || $offset === 0 || ($this->tokens !== [] && str_ends_with($this->lastText(), "\n"))) && trim($indent, " \t") === '';
+                $atLineStart =
+                    ($lineStart !== false || $offset === 0 || $this->tokens !== [] && str_ends_with($this->lastText(), "\n")) && trim($indent, " \t") === '';
                 $rest = substr($source, $after);
                 if ($atLineStart && preg_match('/\A[ \t]*(\r?\n|\z)/', $rest, $match) === 1) {
                     $text = substr($text, 0, strlen($text) - strlen($indent));
@@ -82,7 +83,11 @@ final class Parser
                 $this->tokens[] = ['text', $text, $this->position($source, $offset)];
             }
             if ($opener !== '{#') {
-                $this->tokens[] = [$opener === '{{' ? 'print' : 'block', trim(substr($source, $start + 2, $end - $start - 2)), $this->position($source, $start)];
+                $this->tokens[] = [
+                    $opener === '{{' ? 'print' : 'block',
+                    trim(substr($source, $start + 2, $end - $start - 2)),
+                    $this->position($source, $start),
+                ];
             }
             $offset = $after;
         }
@@ -293,7 +298,10 @@ final class Parser
     private function path(string $text, Position $at): Path
     {
         if (preg_match('/\A' . self::NAME . '(\.' . self::NAME . ')*\z/', $text) !== 1) {
-            throw $this->error($at, sprintf('"%s" is not a property path; templates print and test paths such as user.name, without calls, filters or arithmetic.', $text));
+            throw $this->error($at, sprintf(
+                '"%s" is not a property path; templates print and test paths such as user.name, without calls, filters or arithmetic.',
+                $text,
+            ));
         }
         $segments = explode('.', $text);
 

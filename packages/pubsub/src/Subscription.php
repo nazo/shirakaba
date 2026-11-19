@@ -6,10 +6,10 @@ namespace Shirakaba\PubSub;
 
 use DateTimeImmutable;
 use Generator;
+use Psr\Clock\ClockInterface;
 use Shirakaba\Core\Scope\Cancellation;
 use Shirakaba\PubSub\Internal\Receiver;
 use Shirakaba\Time\SystemClock;
-use Psr\Clock\ClockInterface;
 
 /**
  * Messages on the subscribed channels, from the moment of subscribing until close() or the

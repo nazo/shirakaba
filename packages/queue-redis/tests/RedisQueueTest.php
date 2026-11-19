@@ -95,9 +95,13 @@ final class RedisQueueTest extends TestCase
         [$queue, , $db] = self::queue();
         $log = new ArrayObject();
         $jobs = new Jobs($queue);
-        $jobs->handle(Ping::class, static function (Ping $ping) use ($log): void {
-            $log->append($ping->n);
-        }, name: 'ping');
+        $jobs->handle(
+            Ping::class,
+            static function (Ping $ping) use ($log): void {
+                $log->append($ping->n);
+            },
+            name: 'ping',
+        );
         $jobs->push(new Ping(7), $db);
 
         self::assertSame(JobOutcome::Succeeded, new JobRunner($jobs, new RetryPolicy())->runNext()[1] ?? null);

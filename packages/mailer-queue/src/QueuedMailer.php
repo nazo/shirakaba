@@ -6,8 +6,8 @@ namespace Shirakaba\MailerQueue;
 
 use Shirakaba\Database\Writer;
 use Shirakaba\Mailer\Email;
-use Shirakaba\Mailer\MailError;
 use Shirakaba\Mailer\Mailer;
+use Shirakaba\Mailer\MailError;
 use Shirakaba\Mailer\MimeWriter;
 use Shirakaba\Mailer\SentEmail;
 use Shirakaba\Queue\Jobs;
@@ -57,7 +57,11 @@ final readonly class QueuedMailer implements Mailer
     {
         $size = array_sum(array_map(static fn ($attachment): int => strlen($attachment->content), $email->attachments));
         if ($size > $this->maxAttachmentBytes) {
-            throw new MailError(sprintf('The attachments (%d bytes) are larger than %d bytes, too large to queue; build them in an application job.', $size, $this->maxAttachmentBytes));
+            throw new MailError(sprintf(
+                'The attachments (%d bytes) are larger than %d bytes, too large to queue; build them in an application job.',
+                $size,
+                $this->maxAttachmentBytes,
+            ));
         }
         $messageId = $this->writer->messageId($email);
         $this->jobs->push(SendEmail::of($email, $messageId), $this->db, $this->options);

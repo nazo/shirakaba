@@ -16,10 +16,12 @@ use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Runtime\RoadRunner\Internal\RequestConverter;
 use Shirakaba\Runtime\RoadRunner\RoadRunnerRuntime;
 use Shirakaba\Streaming\Streamed;
+use Spiral\Goridge\Frame;
+use Spiral\Goridge\RelayInterface;
 use Spiral\RoadRunner\Http\Exception\StreamStoppedException;
 use Spiral\RoadRunner\Http\HttpWorkerInterface;
 use Spiral\RoadRunner\Http\Request;
-use Spiral\RoadRunner\Payload;
+use Spiral\RoadRunner\Worker;
 use Spiral\RoadRunner\WorkerInterface;
 
 /**
@@ -106,7 +108,12 @@ final class RoadRunnerRuntimeTest extends TestCase
         self::assertSame('192.0.2.1', $request->getServerParams()['REMOTE_ADDR'] ?? null);
         $file = $request->getUploadedFiles()['doc'] ?? null;
         self::assertInstanceOf(UploadedFileInterface::class, $file);
-        self::assertSame(['a.txt', 'text/plain', 5, UPLOAD_ERR_OK], [$file->getClientFilename(), $file->getClientMediaType(), $file->getSize(), $file->getError()]);
+        self::assertSame(['a.txt', 'text/plain', 5, UPLOAD_ERR_OK], [
+            $file->getClientFilename(),
+            $file->getClientMediaType(),
+            $file->getSize(),
+            $file->getError(),
+        ]);
     }
 
     public function testSendsSmallBodiesWhole(): void
@@ -133,11 +140,14 @@ final class RoadRunnerRuntimeTest extends TestCase
                 $log->entries[] = $cancellation->isRequested() ? 'cancelled' : 'finished';
             });
 
-            return new Streamed((static function (): Generator {
-                foreach (['one', 'two', 'three'] as $chunk) {
-                    yield $chunk . "\n";
-                }
-            })(), 'text/plain');
+            return new Streamed(
+                (static function (): Generator {
+                    foreach (['one', 'two', 'three'] as $chunk) {
+                        yield $chunk . "\n";
+                    }
+                })(),
+                'text/plain',
+            );
         });
         $request = self::request('http://localhost/stream', ['Host' => ['localhost']]);
 
@@ -166,8 +176,8 @@ final class RoadRunnerRuntimeTest extends TestCase
         new RoadRunnerRuntime($worker)->run($failing);
 
         self::assertSame([], $worker->responses);
-        self::assertCount(1, $worker->worker->errors);
-        self::assertStringContainsString('boom', implode("\n", $worker->worker->errors));
+        self::assertCount(1, $worker->relay->errors);
+        self::assertStringContainsString('boom', implode("\n", $worker->relay->errors));
     }
 }
 
@@ -180,7 +190,9 @@ final class FakeHttpWorker implements HttpWorkerInterface
     /** @var list<array{status: int, body: string, headers: array<array-key, array<array-key, string>>, streamed: bool}> */
     public array $responses = [];
 
-    public readonly FakeWorker $worker;
+    public readonly FakeRelay $relay;
+
+    private readonly Worker $worker;
 
     /**
      * @param list<Request> $requests
@@ -189,7 +201,8 @@ final class FakeHttpWorker implements HttpWorkerInterface
         private array $requests,
         private readonly bool $stopStreams,
     ) {
-        $this->worker = new FakeWorker();
+        $this->relay = new FakeRelay();
+        $this->worker = new Worker($this->relay, interceptSideEffects: false);
     }
 
     public function getWorker(): WorkerInterface
@@ -228,32 +241,29 @@ final class Log
     public array $entries = [];
 }
 
-final class FakeWorker implements WorkerInterface
+/**
+ * Records the frames a real RoadRunner worker sends, so the test does not depend on the
+ * worker's internal payload classes.
+ */
+final class FakeRelay implements RelayInterface
 {
     /** @var list<string> */
     public array $errors = [];
 
-    public function waitPayload(): ?Payload
+    public function waitFrame(): Frame
     {
-        return null;
+        throw new RuntimeException('The runtime reads requests through the HTTP worker.');
     }
 
-    public function respond(Payload $payload): void {}
-
-    public function error(string $error): void
+    public function send(Frame $frame): void
     {
-        $this->errors[] = $error;
+        if ($frame->hasFlag(Frame::ERROR)) {
+            $this->errors[] = (string) $frame->payload;
+        }
     }
 
-    public function stop(): void {}
-
-    public function hasPayload(?string $class = null): bool
+    public function hasFrame(): bool
     {
         return false;
-    }
-
-    public function getPayload(?string $class = null): ?Payload
-    {
-        return null;
     }
 }

@@ -18,11 +18,9 @@ final readonly class TaskPage
      * @param list<TaskView> $items
      */
     public function __construct(
-        #[ListOf(TaskView::class)]
-        public array $items,
+        #[ListOf(TaskView::class)] public array $items,
         public int $page,
-        #[JsonName('per_page')]
-        public int $perPage,
+        #[JsonName('per_page')] public int $perPage,
         public int $total,
     ) {}
 }

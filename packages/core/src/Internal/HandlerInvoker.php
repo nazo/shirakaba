@@ -5,6 +5,15 @@ declare(strict_types=1);
 namespace Shirakaba\Core\Internal;
 
 use Closure;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use ReflectionAttribute;
+use ReflectionFunction;
+use ReflectionIntersectionType;
+use ReflectionNamedType;
+use ReflectionType;
+use ReflectionUnionType;
 use Shirakaba\Core\Description\DescribesParameter;
 use Shirakaba\Core\Description\ResponseDeclaration;
 use Shirakaba\Core\Description\ResponseDescription;
@@ -17,15 +26,6 @@ use Shirakaba\Core\Http\ResponseContext;
 use Shirakaba\Core\Http\ResponseValue;
 use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Core\Scope\RequestScope;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-use ReflectionAttribute;
-use ReflectionFunction;
-use ReflectionIntersectionType;
-use ReflectionNamedType;
-use ReflectionType;
-use ReflectionUnionType;
 use Throwable;
 use UnexpectedValueException;
 
@@ -182,7 +182,8 @@ final readonly class HandlerInvoker implements RequestHandlerInterface
                 $parameter->describe(),
                 ServerRequestInterface::class,
                 RequestScope::class,
-            ) . \Shirakaba\Core\Messages::see('handler-parameter')),
+            )
+                . \Shirakaba\Core\Messages::see('handler-parameter')),
         };
     }
 

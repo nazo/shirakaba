@@ -7,11 +7,11 @@ namespace Shirakaba\Queue;
 use Closure;
 use InvalidArgumentException;
 use LogicException;
+use ReflectionClass;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Database\Writer;
 use Shirakaba\Json\Json;
 use Shirakaba\Json\JsonDto;
-use ReflectionClass;
 
 /**
  * Maps job classes to stable type names and handlers, and pushes jobs (design/10-background-work.md):

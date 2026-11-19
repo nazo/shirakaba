@@ -41,7 +41,13 @@ final class MercureTokensTest extends TestCase
 
     public function testIssuesMercure10AccessTokens(): void
     {
-        $tokens = new MercureTokens('https://example.com', 'https://hub.example.com/.well-known/mercure', self::KEY, 600, new FrozenClock('2026-11-12T00:00:00Z'));
+        $tokens = new MercureTokens(
+            'https://example.com',
+            'https://hub.example.com/.well-known/mercure',
+            self::KEY,
+            600,
+            new FrozenClock('2026-11-12T00:00:00Z'),
+        );
 
         [$header, $claims] = self::decode($tokens->subscriber('user-42', ['https://example.com/users/42'], ['https://example.com/rooms/:id']));
 
@@ -52,17 +58,23 @@ final class MercureTokensTest extends TestCase
         self::assertSame(1794441600, $claims['iat'] ?? null);
         self::assertSame(1794442200, $claims['exp'] ?? null);
         self::assertIsString($claims['jti'] ?? null);
-        self::assertSame([[
-            'type' => 'https://mercure.rocks/authorization-detail',
-            'actions' => ['subscribe'],
-            'topics' => [
-                ['match' => 'https://example.com/users/42'],
-                ['match' => 'https://example.com/rooms/:id', 'match_type' => 'urlpattern'],
-            ],
-        ]], $claims['authorization_details'] ?? null);
+        self::assertSame(
+            [[
+                'type' => 'https://mercure.rocks/authorization-detail',
+                'actions' => ['subscribe'],
+                'topics' => [
+                    ['match' => 'https://example.com/users/42'],
+                    ['match' => 'https://example.com/rooms/:id', 'match_type' => 'urlpattern'],
+                ],
+            ]],
+            $claims['authorization_details'] ?? null,
+        );
 
         [, $publisher] = self::decode($tokens->publisher());
-        self::assertSame([['type' => MercureTokens::DETAIL_TYPE, 'actions' => ['publish'], 'topics' => [['match' => '*']]]], $publisher['authorization_details'] ?? null);
+        self::assertSame(
+            [['type' => MercureTokens::DETAIL_TYPE, 'actions' => ['publish'], 'topics' => [['match' => '*']]]],
+            $publisher['authorization_details'] ?? null,
+        );
         self::assertArrayNotHasKey('mercure', $publisher, 'No legacy claim.');
     }
 
@@ -70,8 +82,15 @@ final class MercureTokensTest extends TestCase
     {
         $tokens = new MercureTokens('https://example.com', 'https://example.com/.well-known/mercure', self::KEY, 600);
 
-        self::assertSame('__Secure-mercure_access_token=abc; Path=/.well-known/mercure; Max-Age=600; Secure; HttpOnly; SameSite=Strict', $tokens->cookie('abc'));
-        self::assertSame('__Secure-mercure_access_token=abc; Path=/hub; Domain=example.com; Max-Age=600; Secure; HttpOnly; SameSite=Strict', $tokens->cookie('abc', '/hub', 'example.com'));
+        self::assertSame(
+            '__Secure-mercure_access_token=abc; Path=/.well-known/mercure; Max-Age=600; Secure; HttpOnly; SameSite=Strict',
+            $tokens->cookie('abc'),
+        );
+        self::assertSame('__Secure-mercure_access_token=abc; Path=/hub; Domain=example.com; Max-Age=600; Secure; HttpOnly; SameSite=Strict', $tokens->cookie(
+            'abc',
+            '/hub',
+            'example.com',
+        ));
     }
 
     public function testRejectsShortSecretsAndEmptyGrants(): void

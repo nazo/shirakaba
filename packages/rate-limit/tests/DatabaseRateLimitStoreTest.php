@@ -15,13 +15,13 @@ use Shirakaba\Core\Scope\ScopedWork;
 use Shirakaba\Database\Database;
 use Shirakaba\Database\Testing\TestDatabases;
 use Shirakaba\Database\Writer;
+use Shirakaba\DatabaseBridge\RequestDatabase;
 use Shirakaba\Migrations\Migrator;
 use Shirakaba\RateLimit\CreateRateLimitsTable;
 use Shirakaba\RateLimit\DatabaseRateLimitStore;
 use Shirakaba\RateLimit\RateLimiter;
 use Shirakaba\RateLimit\TooManyRequests;
 use Shirakaba\Time\FrozenClock;
-use Shirakaba\DatabaseBridge\RequestDatabase;
 
 #[CoversClass(DatabaseRateLimitStore::class)]
 #[CoversClass(CreateRateLimitsTable::class)]

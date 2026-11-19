@@ -8,15 +8,15 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Shirakaba\Http\Message\Response;
 use Shirakaba\Http\Message\ServerRequest;
 use Shirakaba\TrustedProxy\ClientAddress;
 use Shirakaba\TrustedProxy\ForwardedHeader;
 use Shirakaba\TrustedProxy\IpRange;
 use Shirakaba\TrustedProxy\TrustedProxies;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 #[CoversClass(TrustedProxies::class)]
 #[CoversClass(IpRange::class)]
@@ -75,14 +75,21 @@ final class TrustedProxiesTest extends TestCase
 
     public function testProtoUsesTheValueOfTheNearestProxy(): void
     {
-        self::assertSame('https://internal.local/path?q=1', self::through('10.0.0.2', ['X-Forwarded-For' => '198.51.100.7', 'X-Forwarded-Proto' => 'http, https'])[0]);
+        self::assertSame(
+            'https://internal.local/path?q=1',
+            self::through('10.0.0.2', ['X-Forwarded-For' => '198.51.100.7', 'X-Forwarded-Proto' => 'http, https'])[0],
+        );
     }
 
     public function testForwardedHeader(): void
     {
         self::assertSame(
             ['https://api.example.com/path?q=1', '2001:db9::1'],
-            self::through('2001:db8::10', ['Forwarded' => 'for="[2001:db9::1]:4711";proto=https;host=api.example.com, for=10.0.0.3', 'X-Forwarded-For' => '9.9.9.9'], [ForwardedHeader::Forwarded]),
+            self::through(
+                '2001:db8::10',
+                ['Forwarded' => 'for="[2001:db9::1]:4711";proto=https;host=api.example.com, for=10.0.0.3', 'X-Forwarded-For' => '9.9.9.9'],
+                [ForwardedHeader::Forwarded],
+            ),
         );
     }
 
@@ -93,7 +100,10 @@ final class TrustedProxiesTest extends TestCase
 
     public function testHostWithPort(): void
     {
-        self::assertSame('https://api.example.com:8443/path?q=1', self::through('10.0.0.2', ['X-Forwarded-Proto' => 'https', 'X-Forwarded-Host' => 'api.example.com', 'X-Forwarded-Port' => '8443'])[0]);
+        self::assertSame(
+            'https://api.example.com:8443/path?q=1',
+            self::through('10.0.0.2', ['X-Forwarded-Proto' => 'https', 'X-Forwarded-Host' => 'api.example.com', 'X-Forwarded-Port' => '8443'])[0],
+        );
     }
 
     public function testMalformedValuesAreIgnored(): void
@@ -130,12 +140,16 @@ final class TrustedProxiesTest extends TestCase
         // The proxy sets X-Forwarded-For and -Proto; the client sent the rest.
         self::assertSame(
             ['https://internal.local/path?q=1', '198.51.100.7'],
-            self::through('10.0.0.2', [
-                'X-Forwarded-For' => '198.51.100.7',
-                'X-Forwarded-Proto' => 'https',
-                'X-Forwarded-Host' => 'evil.example',
-                'Forwarded' => 'for=1.1.1.1;host=evil.example',
-            ], [ForwardedHeader::For, ForwardedHeader::Proto]),
+            self::through(
+                '10.0.0.2',
+                [
+                    'X-Forwarded-For' => '198.51.100.7',
+                    'X-Forwarded-Proto' => 'https',
+                    'X-Forwarded-Host' => 'evil.example',
+                    'Forwarded' => 'for=1.1.1.1;host=evil.example',
+                ],
+                [ForwardedHeader::For, ForwardedHeader::Proto],
+            ),
         );
     }
 
@@ -143,7 +157,11 @@ final class TrustedProxiesTest extends TestCase
     {
         self::assertSame(
             ['http://internal.local:8080/path?q=1', '198.51.100.7'],
-            self::through('10.0.0.2', ['Forwarded' => 'for=1.1.1.1;proto=https;host=evil.example', 'X-Forwarded-For' => '198.51.100.7'], [ForwardedHeader::For]),
+            self::through(
+                '10.0.0.2',
+                ['Forwarded' => 'for=1.1.1.1;proto=https;host=evil.example', 'X-Forwarded-For' => '198.51.100.7'],
+                [ForwardedHeader::For],
+            ),
         );
     }
 

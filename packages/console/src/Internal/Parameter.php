@@ -6,10 +6,10 @@ namespace Shirakaba\Console\Internal;
 
 use BackedEnum;
 use DateTimeImmutable;
+use ReflectionEnum;
 use Shirakaba\Core\Extraction\Scalar;
 use Shirakaba\Time\LocalDate;
 use Shirakaba\Time\Rfc3339;
-use ReflectionEnum;
 
 /**
  * One parameter of a command and how it is filled.
@@ -69,7 +69,8 @@ final readonly class Parameter
             $type === 'bool' => 'true or false',
             $type === DateTimeImmutable::class => 'an RFC 3339 date-time with an offset',
             $type === LocalDate::class => 'a date (YYYY-MM-DD)',
-            enum_exists($type) && is_subclass_of($type, BackedEnum::class) => 'one of: ' . implode(', ', array_map(static fn (BackedEnum $case): string => (string) $case->value, $type::cases())),
+            enum_exists($type) && is_subclass_of($type, BackedEnum::class) => 'one of: '
+                . implode(', ', array_map(static fn (BackedEnum $case): string => (string) $case->value, $type::cases())),
             default => 'a value',
         };
     }

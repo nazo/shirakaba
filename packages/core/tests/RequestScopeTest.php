@@ -8,6 +8,10 @@ use Fiber;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Extraction\Path;
 use Shirakaba\Core\Http\HttpFailure;
@@ -22,10 +26,6 @@ use Shirakaba\Core\Testing\TestClient;
 use Shirakaba\Core\Tests\Fixtures\EventLog;
 use Shirakaba\Core\Tests\Fixtures\RecordingObserver;
 use Shirakaba\Http\Message\ServerRequest;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 use stdClass;
 
 #[CoversClass(RequestScope::class)]
@@ -86,7 +86,7 @@ final class RequestScopeTest extends TestCase
         $principal = new stdClass();
         $principal->name = 'alice';
         $app = new AppBuilder();
-        $app->middleware(new readonly class ($principal) implements MiddlewareInterface {
+        $app->middleware(new readonly class($principal) implements MiddlewareInterface {
             public function __construct(private stdClass $principal) {}
 
             public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface

@@ -11,6 +11,4 @@ use RuntimeException;
  * the wrong type. The console prints it with a hint and exits with 2. Commands may throw it
  * for their own usage checks.
  */
-final class UsageError extends RuntimeException
-{
-}
+final class UsageError extends RuntimeException {}

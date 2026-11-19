@@ -12,7 +12,5 @@ use Shirakaba\Queue\Jobs;
  */
 final readonly class Background
 {
-    public static function register(Jobs $jobs, Database $database): void
-    {
-    }
+    public static function register(Jobs $jobs, Database $database): void {}
 }

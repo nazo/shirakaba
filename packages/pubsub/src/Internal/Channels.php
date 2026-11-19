@@ -21,7 +21,10 @@ final readonly class Channels
         $channels = is_string($channels) ? [$channels] : $channels;
         foreach ($channels as $channel) {
             if (preg_match('/^[A-Za-z_][A-Za-z0-9_]{0,62}$/D', $channel) !== 1) {
-                throw new InvalidArgumentException(sprintf('Invalid channel name "%s": use up to 63 letters, digits and underscores, starting with a letter or underscore.', $channel));
+                throw new InvalidArgumentException(sprintf(
+                    'Invalid channel name "%s": use up to 63 letters, digits and underscores, starting with a letter or underscore.',
+                    $channel,
+                ));
             }
         }
 
@@ -41,7 +44,10 @@ final readonly class Channels
         $channels = is_string($channels) ? [$channels] : $channels;
         foreach ($channels as $channel) {
             if (strlen($channel) > 1024 || preg_match('#\A([A-Za-z0-9_.~-]|%[0-9A-Fa-f]{2})+(/([A-Za-z0-9_.~-]|%[0-9A-Fa-f]{2})+)*\z#', $channel) !== 1) {
-                throw new InvalidArgumentException(sprintf('Invalid Mercure channel "%s": use path segments of letters, digits, "_", ".", "~", "-" and percent-encodings, separated by "/".', $channel));
+                throw new InvalidArgumentException(sprintf(
+                    'Invalid Mercure channel "%s": use path segments of letters, digits, "_", ".", "~", "-" and percent-encodings, separated by "/".',
+                    $channel,
+                ));
             }
         }
 

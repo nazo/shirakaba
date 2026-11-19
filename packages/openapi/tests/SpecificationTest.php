@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Shirakaba\OpenApi\Tests;
 
-use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\CompliantValidator;
+use Opis\JsonSchema\Errors\ErrorFormatter;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use Shirakaba\Core\AppBuilder;

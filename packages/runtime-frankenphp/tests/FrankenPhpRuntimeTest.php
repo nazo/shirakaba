@@ -7,13 +7,13 @@ namespace Shirakaba\Runtime\FrankenPhp\Tests;
 use Closure;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Http\Text;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Http\Message\ServerRequest;
 use Shirakaba\Runtime\FrankenPhp\FrankenPhpRuntime;
 use Shirakaba\Sapi\SapiEmitter;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Drives the worker loop with a fake frankenphp_handle_request(), since FrankenPHP itself

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Shirakaba\Core\Internal;
 
-use Shirakaba\Core\Extraction\Constraint;
 use ReflectionAttribute;
 use ReflectionParameter;
+use Shirakaba\Core\Extraction\Constraint;
 
 /**
  * @internal

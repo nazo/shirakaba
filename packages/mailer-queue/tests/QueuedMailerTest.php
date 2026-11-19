@@ -13,8 +13,8 @@ use Shirakaba\Database\Writer;
 use Shirakaba\Mailer\Address;
 use Shirakaba\Mailer\Attachment;
 use Shirakaba\Mailer\Email;
-use Shirakaba\Mailer\MailError;
 use Shirakaba\Mailer\Mailer;
+use Shirakaba\Mailer\MailError;
 use Shirakaba\Mailer\SentEmail;
 use Shirakaba\Mailer\Testing\RecordingMailer;
 use Shirakaba\MailerQueue\MailJobs;
@@ -52,7 +52,10 @@ final class QueuedMailerTest extends TestCase
             cc: [new Address('cc@example.com')],
             bcc: [new Address('audit@example.com')],
             replyTo: [new Address('help@example.com')],
-            attachments: [new Attachment("\x00\x01binary", '請求書.pdf', 'application/pdf'), new Attachment('png', 'logo.png', 'image/png', 'logo@example.com')],
+            attachments: [
+                new Attachment("\x00\x01binary", '請求書.pdf', 'application/pdf'),
+                new Attachment('png', 'logo.png', 'image/png', 'logo@example.com'),
+            ],
             headers: ['List-Unsubscribe' => '<https://example.com/unsubscribe>'],
         );
     }

@@ -27,7 +27,7 @@ final class RecordingObserver implements Observer
     {
         $this->events[] = sprintf('begin %s HTTP/%s', $request->method, $request->protocolVersion);
 
-        return new class ($this) implements Observation {
+        return new class($this) implements Observation {
             public function __construct(private readonly RecordingObserver $observer) {}
 
             public function matched(RouteSummary $route): void

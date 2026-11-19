@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Shirakaba\HttpClient;
 
 use CurlHandle;
-use Shirakaba\Core\Scope\RequestCancelled;
-use Shirakaba\Core\Scope\RequestScope;
-use Shirakaba\Http\Message\HttpFactory;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -15,6 +12,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Message\UriInterface;
+use Shirakaba\Core\Scope\RequestCancelled;
+use Shirakaba\Core\Scope\RequestScope;
+use Shirakaba\Http\Message\HttpFactory;
 
 /**
  * A PSR-18 client for calling other servers (design/09-security.md), on ext-curl:
@@ -65,7 +65,7 @@ final readonly class HttpClient implements ClientInterface
         if (!$request->hasHeader('User-Agent')) {
             $request = $request->withHeader('User-Agent', $this->options->userAgent);
         }
-        for ($redirects = 0; ; $redirects++) {
+        for ($redirects = 0;; $redirects++) {
             $prepared = $this->options->prepare === null ? $request : ($this->options->prepare)($request);
             $response = $this->exchange($prepared, $started);
             $location = $response->getHeaderLine('Location');
@@ -89,8 +89,9 @@ final readonly class HttpClient implements ClientInterface
             }
         }
         // Browsers turn a redirected POST into a GET for 301 and 302; 303 always means GET.
-        if ($status === 303 || (in_array($status, [301, 302], true) && $request->getMethod() === 'POST')) {
-            $next = $next->withMethod($request->getMethod() === 'HEAD' ? 'HEAD' : 'GET')
+        if ($status === 303 || in_array($status, [301, 302], true) && $request->getMethod() === 'POST') {
+            $next = $next
+                ->withMethod($request->getMethod() === 'HEAD' ? 'HEAD' : 'GET')
                 ->withBody($this->streams->createStream(''))
                 ->withoutHeader('Content-Type')
                 ->withoutHeader('Content-Length');
@@ -142,7 +143,7 @@ final readonly class HttpClient implements ClientInterface
         $port = $uri->getPort() ?? ($scheme === 'https' ? 443 : 80);
         $address = $this->address($host, $request);
 
-        $remaining = $this->options->timeout - (hrtime(true) - $started) / 1e9;
+        $remaining = $this->options->timeout - ((hrtime(true) - $started) / 1e9);
         $deadline = $this->scope?->deadline()?->remaining();
         if ($deadline !== null) {
             $remaining = min($remaining, $deadline);
@@ -204,7 +205,7 @@ final readonly class HttpClient implements ClientInterface
                 return strlen($line);
             },
             CURLOPT_WRITEFUNCTION => static function (CurlHandle $handle, string $chunk) use (&$body, &$tooLarge, $limit): int {
-                if (strlen($body) + strlen($chunk) > $limit) {
+                if ((strlen($body) + strlen($chunk)) > $limit) {
                     $tooLarge = true;
 
                     return 0;
@@ -213,7 +214,10 @@ final readonly class HttpClient implements ClientInterface
 
                 return strlen($chunk);
             },
-            CURLOPT_XFERINFOFUNCTION => static fn (CurlHandle $handle, int $downloadTotal): int => $cancellation?->isRequested() === true || $downloadTotal > $limit ? 1 : 0,
+            CURLOPT_XFERINFOFUNCTION => static fn (CurlHandle $handle, int $downloadTotal): int => $cancellation?->isRequested() === true
+                || $downloadTotal > $limit
+                    ? 1
+                    : 0,
         ]);
         if ($requestBody !== '' || in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
             curl_setopt($handle, CURLOPT_POSTFIELDS, $requestBody);
@@ -232,7 +236,7 @@ final readonly class HttpClient implements ClientInterface
                 $this->report($request, $host, $port, $status, $seconds, 'cancelled');
                 throw new CallCancelled('The request was cancelled while calling ' . $host . '.');
             }
-            $tooLarge = $tooLarge || (is_float($downloadTotal) && $downloadTotal > $limit);
+            $tooLarge = $tooLarge || is_float($downloadTotal) && $downloadTotal > $limit;
             $timedOut = $errno === CURLE_OPERATION_TIMEDOUT;
             $this->report($request, $host, $port, $status, $seconds, $tooLarge ? 'response_too_large' : ($timedOut ? 'timeout' : 'network'));
             throw new NetworkError(
@@ -275,6 +279,8 @@ final readonly class HttpClient implements ClientInterface
 
     private function report(RequestInterface $request, string $host, int $port, int $status, float $seconds, string $error): void
     {
-        $this->scope?->record(new HttpRequestSent(strtoupper($request->getMethod()), strtolower($request->getUri()->getScheme()), $host, $port, $status, $seconds, $error));
+        $this->scope?->record(
+            new HttpRequestSent(strtoupper($request->getMethod()), strtolower($request->getUri()->getScheme()), $host, $port, $status, $seconds, $error),
+        );
     }
 }

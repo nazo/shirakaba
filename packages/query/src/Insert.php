@@ -135,7 +135,8 @@ final readonly class Insert
         );
         $sql .= $this->select !== null
             ? $this->select->compileInto($out)
-            : 'VALUES ' . implode(', ', array_map(
+            : 'VALUES '
+            . implode(', ', array_map(
                 static fn (array $row): string => '(' . implode(', ', array_map($out->value(...), $row)) . ')',
                 $this->rows,
             ));
@@ -149,11 +150,13 @@ final readonly class Insert
                     $assignments[$column] = 'excluded.' . $column;
                 }
             }
-            $sql .= ' ' . $dialect->upsert(
-                $out->identifier($this->table),
-                array_map($out->identifier(...), $this->conflict),
-                $assignments,
-            );
+            $sql .=
+                ' '
+                . $dialect->upsert(
+                    $out->identifier($this->table),
+                    array_map($out->identifier(...), $this->conflict),
+                    $assignments,
+                );
         }
         if ($this->returning !== []) {
             if (!$dialect->supportsReturning()) {

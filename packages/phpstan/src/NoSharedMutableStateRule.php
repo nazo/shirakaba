@@ -49,8 +49,12 @@ final readonly class NoSharedMutableStateRule implements Rule
             default => null,
         };
 
-        return $message === null ? [] : [
-            RuleErrorBuilder::message($message)->identifier('shirakaba.sharedMutableState')->build(),
-        ];
+        return (
+            $message === null
+                ? []
+                : [
+                    RuleErrorBuilder::message($message)->identifier('shirakaba.sharedMutableState')->build(),
+                ]
+        );
     }
 }

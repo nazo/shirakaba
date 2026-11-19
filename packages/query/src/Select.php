@@ -267,16 +267,21 @@ final readonly class Select
     {
         $sql = '';
         if ($this->ctes !== []) {
-            $sql .= 'WITH ' . implode(', ', array_map(
-                static fn (array $cte): string => $out->identifier($cte[0]) . ' AS (' . $cte[1]->compileInto($out) . ')',
-                $this->ctes,
-            )) . ' ';
+            $sql .=
+                'WITH '
+                . implode(', ', array_map(
+                    static fn (array $cte): string => $out->identifier($cte[0]) . ' AS (' . $cte[1]->compileInto($out) . ')',
+                    $this->ctes,
+                ))
+                . ' ';
         }
         $sql .= 'SELECT ' . ($this->distinct ? 'DISTINCT ' : '');
-        $sql .= $this->columns === [] ? '*' : implode(', ', array_map(
-            static fn (array $column): string => self::expression($out, $column[0]) . ($column[1] === null ? '' : ' AS ' . $out->identifier($column[1])),
-            $this->columns,
-        ));
+        $sql .= $this->columns === []
+            ? '*'
+            : implode(', ', array_map(
+                static fn (array $column): string => self::expression($out, $column[0]) . ($column[1] === null ? '' : ' AS ' . $out->identifier($column[1])),
+                $this->columns,
+            ));
         $sql .= ' FROM ' . self::table($out, $this->from, $this->alias);
         foreach ($this->joins as [$type, $table, $alias, $on]) {
             $sql .= sprintf(' %s JOIN %s ON %s', $type, self::table($out, $table, $alias), $on->compile($out));
@@ -294,10 +299,12 @@ final readonly class Select
             $sql .= ($all ? ' UNION ALL ' : ' UNION ') . $query->compileInto($out);
         }
         if ($this->orderBy !== []) {
-            $sql .= ' ORDER BY ' . implode(', ', array_map(
-                static fn (array $order): string => self::expression($out, $order[0]) . ' ' . $order[1],
-                $this->orderBy,
-            ));
+            $sql .=
+                ' ORDER BY '
+                . implode(', ', array_map(
+                    static fn (array $order): string => self::expression($out, $order[0]) . ' ' . $order[1],
+                    $this->orderBy,
+                ));
         }
         $limit = $out->dialect->limit($this->limit, $this->offset);
         if ($limit !== '') {

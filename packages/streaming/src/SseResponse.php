@@ -46,7 +46,7 @@ final readonly class SseResponse implements ResponseDeclaration
         foreach ($this->events as $name => $type) {
             $events[(string) $name] = $type === 'string'
                 ? new ScalarType('string')
-                : (new JsonResponse(200, $type)->responseDescription()->body ?? new ScalarType('string'));
+                : new JsonResponse(200, $type)->responseDescription()->body ?? new ScalarType('string');
         }
 
         return new ResponseDescription(200, 'text/event-stream', new EventStreamType($events), $this->description);

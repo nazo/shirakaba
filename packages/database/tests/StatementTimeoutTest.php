@@ -95,7 +95,7 @@ final class StatementTimeoutTest extends TestCase
         $db = new Database(static fn (): \PDO => \PDO::connect('sqlite::memory:'), $dialect)->connect()->writer();
         $limited = $db->withTimeout(0.5);
 
-        foreach (range(1, 6) as $ignored) {
+        for ($statement = 0; $statement < 6; $statement++) {
             $limited->fetchValue('SELECT 1');
         }
         self::assertSame([500], $dialect->sets, 'Six statements with the same limit share one SET.');

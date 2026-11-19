@@ -21,7 +21,7 @@ final class EventRecorder implements Observer
 
     public function begin(RequestSummary $request): Observation
     {
-        return new class ($this) implements Observation {
+        return new class($this) implements Observation {
             public function __construct(private readonly EventRecorder $recorder) {}
 
             public function matched(RouteSummary $route): void {}

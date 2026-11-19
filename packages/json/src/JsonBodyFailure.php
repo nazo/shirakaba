@@ -28,7 +28,12 @@ final class JsonBodyFailure extends HttpFailure
 
     public static function unsupportedMediaType(): self
     {
-        return new self(415, 'Expected a JSON body (Content-Type: application/json).', headers: ['Accept' => 'application/json'], extensions: ['code' => ProblemCode::UNSUPPORTED_MEDIA_TYPE]);
+        return new self(
+            415,
+            'Expected a JSON body (Content-Type: application/json).',
+            headers: ['Accept' => 'application/json'],
+            extensions: ['code' => ProblemCode::UNSUPPORTED_MEDIA_TYPE],
+        );
     }
 
     public static function tooLarge(int $maxBytes): self
@@ -38,7 +43,9 @@ final class JsonBodyFailure extends HttpFailure
 
     public static function tooManyMembers(int $maxMembers): self
     {
-        return new self(413, sprintf('The request body must not have more than %d object members.', $maxMembers), extensions: ['code' => ProblemCode::BODY_TOO_LARGE]);
+        return new self(413, sprintf('The request body must not have more than %d object members.', $maxMembers), extensions: [
+            'code' => ProblemCode::BODY_TOO_LARGE,
+        ]);
     }
 
     public static function malformed(): self

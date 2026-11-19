@@ -62,9 +62,11 @@ final class Schema
     public function rename(string $from, string $to): void
     {
         $this->operations[] = new Operation('renameTable', $from, $from . ' -> ' . $to);
-        $this->add($this->dialect->name() === 'mysql'
-            ? sprintf('RENAME TABLE %s TO %s', $this->dialect->quoteIdentifier($from), $this->dialect->quoteIdentifier($to))
-            : sprintf('ALTER TABLE %s RENAME TO %s', $this->dialect->quoteIdentifier($from), $this->dialect->quoteIdentifier($to)));
+        $this->add(
+            $this->dialect->name() === 'mysql'
+                ? sprintf('RENAME TABLE %s TO %s', $this->dialect->quoteIdentifier($from), $this->dialect->quoteIdentifier($to))
+                : sprintf('ALTER TABLE %s RENAME TO %s', $this->dialect->quoteIdentifier($from), $this->dialect->quoteIdentifier($to)),
+        );
     }
 
     /**

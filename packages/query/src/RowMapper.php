@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Shirakaba\Query;
 
 use InvalidArgumentException;
-use Shirakaba\Database\Dialect\Dialect;
 use ReflectionClass;
 use ReflectionNamedType;
+use Shirakaba\Database\Dialect\Dialect;
 use UnexpectedValueException;
 
 /**
@@ -95,7 +95,7 @@ final readonly class RowMapper
             $arguments[$name] = $this->convert($value, $type, $nullable, $name);
         }
 
-        return new ($this->class)(...$arguments);
+        return new $this->class(...$arguments);
     }
 
     private function convert(mixed $value, string $type, bool $nullable, string $name): mixed
@@ -110,7 +110,13 @@ final readonly class RowMapper
 
         $converted = Values::read($value, $type, $this->dialect);
         if ($converted === null) {
-            throw new UnexpectedValueException(sprintf('Column for %s::$%s holds %s, which is not a valid %s.', $this->class, $name, get_debug_type($value), $type));
+            throw new UnexpectedValueException(sprintf(
+                'Column for %s::$%s holds %s, which is not a valid %s.',
+                $this->class,
+                $name,
+                get_debug_type($value),
+                $type,
+            ));
         }
 
         return $converted;

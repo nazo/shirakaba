@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Shirakaba\Log;
 
 use InvalidArgumentException;
-use Shirakaba\Time\SystemClock;
 use Psr\Clock\ClockInterface;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
+use Shirakaba\Time\SystemClock;
 use Stringable;
 use Throwable;
 
@@ -67,7 +67,10 @@ final class StreamLogger extends AbstractLogger
         }
 
         $record = [
-            'time' => $this->clock->now()->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.u\Z'),
+            'time' => $this->clock
+                ->now()
+                ->setTimezone(new \DateTimeZone('UTC'))
+                ->format('Y-m-d\TH:i:s.u\Z'),
             'level' => $level,
             'message' => self::interpolate((string) $message, $context),
         ];
@@ -75,7 +78,10 @@ final class StreamLogger extends AbstractLogger
             $record['context'][(string) $key] = $value instanceof Throwable ? self::exception($value) : self::scalar($value);
         }
 
-        fwrite($this->stream, json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR) . "\n");
+        fwrite(
+            $this->stream,
+            json_encode($record, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR) . "\n",
+        );
     }
 
     /**
@@ -83,15 +89,19 @@ final class StreamLogger extends AbstractLogger
      */
     private static function interpolate(string $message, array $context): string
     {
-        return preg_replace_callback('/\{([A-Za-z0-9_.]+)\}/', static function (array $match) use ($context): string {
-            $value = $context[$match[1]] ?? null;
+        return preg_replace_callback(
+            '/\{([A-Za-z0-9_.]+)\}/',
+            static function (array $match) use ($context): string {
+                $value = $context[$match[1]] ?? null;
 
-            return match (true) {
-                $value === null => $match[0],
-                is_scalar($value), $value instanceof Stringable => (string) $value,
-                default => '[' . get_debug_type($value) . ']',
-            };
-        }, $message) ?? $message;
+                return match (true) {
+                    $value === null => $match[0],
+                    is_scalar($value), $value instanceof Stringable => (string) $value,
+                    default => '[' . get_debug_type($value) . ']',
+                };
+            },
+            $message,
+        ) ?? $message;
     }
 
     /**
@@ -99,7 +109,12 @@ final class StreamLogger extends AbstractLogger
      */
     private static function exception(Throwable $error): array
     {
-        $data = ['class' => $error::class, 'message' => $error->getMessage(), 'file' => $error->getFile() . ':' . $error->getLine(), 'trace' => $error->getTraceAsString()];
+        $data = [
+            'class' => $error::class,
+            'message' => $error->getMessage(),
+            'file' => $error->getFile() . ':' . $error->getLine(),
+            'trace' => $error->getTraceAsString(),
+        ];
         $previous = $error->getPrevious();
 
         return $previous === null ? $data : [...$data, 'previous' => self::exception($previous)];

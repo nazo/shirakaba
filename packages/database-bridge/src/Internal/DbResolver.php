@@ -58,6 +58,6 @@ final readonly class DbResolver implements ArgumentResolver
             }
         }
 
-        return new ($this->class)(...$arguments);
+        return new $this->class(...$arguments);
     }
 }

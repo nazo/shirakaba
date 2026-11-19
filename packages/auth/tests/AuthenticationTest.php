@@ -6,20 +6,20 @@ namespace Shirakaba\Auth\Tests;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Shirakaba\Auth\Authenticated;
 use Shirakaba\Auth\Authentication;
 use Shirakaba\Auth\BearerAuthentication;
-use Shirakaba\Auth\TokenVerifier;
 use Shirakaba\Auth\Tests\Fixtures\User;
+use Shirakaba\Auth\TokenVerifier;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Description\ParameterDescription;
 use Shirakaba\Core\Http\Text;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Core\Testing\TestClient;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 #[CoversClass(BearerAuthentication::class)]
 #[CoversClass(Authenticated::class)]

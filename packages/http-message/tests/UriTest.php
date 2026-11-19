@@ -69,7 +69,12 @@ final class UriTest extends TestCase
     {
         self::assertSame('/a%2Fb', new Uri('http://example.com/a%2Fb')->getPath());
         self::assertSame('/a%2Fb%25', new Uri('http://example.com/a%2Fb%')->getPath());
-        self::assertSame('/a%2Fb%25', new Uri()->withPath('/a%2Fb%')->getPath());
+        self::assertSame(
+            '/a%2Fb%25',
+            new Uri()
+                ->withPath('/a%2Fb%')
+                ->getPath(),
+        );
     }
 
     /**
@@ -187,10 +192,17 @@ final class UriTest extends TestCase
     public static function roundTripUris(): iterable
     {
         yield 'full' => [new Uri('https://u:p@example.com:8443/a/b?q=1#f')];
-        yield 'built' => [new Uri()->withScheme('http')->withHost('example.com')->withPath('/a b')->withQuery('x=?')->withFragment('#')];
+        yield 'built' => [new Uri()
+            ->withScheme('http')
+            ->withHost('example.com')
+            ->withPath('/a b')
+            ->withQuery('x=?')
+            ->withFragment('#')];
         yield 'encoded slash' => [new Uri('http://example.com/a%2Fb')];
         yield 'empty query and fragment' => [new Uri('http://example.com/?#')];
-        yield 'relative' => [new Uri()->withPath('a/b')->withQuery('c')];
+        yield 'relative' => [new Uri()
+            ->withPath('a/b')
+            ->withQuery('c')];
         yield 'ipv6' => [new Uri('http://[2001:db8::1]:8080/')];
         yield 'ipvfuture' => [new Uri('http://[v1.fe80::a+en1]/')];
         yield 'leading colon segment' => [new Uri()->withPath('./:a')];
@@ -203,7 +215,15 @@ final class UriTest extends TestCase
 
         self::assertSame(
             [$uri->getScheme(), $uri->getUserInfo(), $uri->getHost(), $uri->getPort(), $uri->getPath(), $uri->getQuery(), $uri->getFragment()],
-            [$parsed->getScheme(), $parsed->getUserInfo(), $parsed->getHost(), $parsed->getPort(), $parsed->getPath(), $parsed->getQuery(), $parsed->getFragment()],
+            [
+                $parsed->getScheme(),
+                $parsed->getUserInfo(),
+                $parsed->getHost(),
+                $parsed->getPort(),
+                $parsed->getPath(),
+                $parsed->getQuery(),
+                $parsed->getFragment(),
+            ],
         );
     }
 

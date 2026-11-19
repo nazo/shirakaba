@@ -60,7 +60,9 @@ final readonly class SchemaCheck
             if ($field->kind === 'embedded') {
                 foreach (self::fields($field->children) as $child) {
                     // A nullable embedded value makes all its columns nullable.
-                    $flat[] = $field->nullable ? new Field($child->property, $child->column, $child->kind, $child->type, true, $child->hasDefault, $child->default) : $child;
+                    $flat[] = $field->nullable
+                        ? new Field($child->property, $child->column, $child->kind, $child->type, true, $child->hasDefault, $child->default)
+                        : $child;
                 }
                 continue;
             }
@@ -80,11 +82,21 @@ final readonly class SchemaCheck
     {
         $rows = match ($db->dialect()->name()) {
             'sqlite' => array_map(
-                static fn (array $row): array => ['name' => $row['name'] ?? null, 'nullable' => (int) (is_numeric($row['notnull'] ?? null) ? $row['notnull'] : 0) === 0 && (int) (is_numeric($row['pk'] ?? null) ? $row['pk'] : 0) === 0],
+                static fn (array $row): array => [
+                    'name' => $row['name'] ?? null,
+                    'nullable' =>
+                        (int) (is_numeric($row['notnull'] ?? null) ? $row['notnull'] : 0) === 0
+                            && (int) (is_numeric($row['pk'] ?? null) ? $row['pk'] : 0) === 0,
+                ],
                 $db->fetchAll(sprintf('PRAGMA table_info(%s)', $db->dialect()->quoteIdentifier($table))),
             ),
-            'mysql' => $db->fetchAll("SELECT column_name AS name, is_nullable = 'YES' AS nullable FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?", [$table]),
-            default => $db->fetchAll("SELECT column_name AS name, is_nullable = 'YES' AS nullable FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = ?", [$table]),
+            'mysql'
+                => $db->fetchAll("SELECT column_name AS name, is_nullable = 'YES' AS nullable FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?", [
+                $table,
+            ]),
+            default => $db->fetchAll("SELECT column_name AS name, is_nullable = 'YES' AS nullable FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = ?", [
+                $table,
+            ]),
         };
         $columns = [];
         foreach ($rows as $row) {

@@ -56,7 +56,9 @@ final class EventChannelsTest extends TestCase
     {
         $client = new RecordingClient();
         $factory = new HttpFactory();
-        $events = new MercureEvents(new MercurePublisher($client, $factory, $factory, 'http://hub.test/.well-known/mercure', 'jwt', 'https://example.com/streams/'));
+        $events = new MercureEvents(
+            new MercurePublisher($client, $factory, $factory, 'http://hub.test/.well-known/mercure', 'jwt', 'https://example.com/streams/'),
+        );
         $db = self::writer();
 
         $events->publish($db, [new BoardUserChannel('b1', 1), new BoardUserChannel('b1', 2)], new CardAdded(1, new Card('c', 'x')));
@@ -64,8 +66,13 @@ final class EventChannelsTest extends TestCase
         self::assertCount(1, $client->sent);
         $body = (string) $client->sent[0]->getBody();
         self::assertSame(
-            'topic=' . rawurlencode('https://example.com/streams/board/b1/user/1') . '&topic=' . rawurlencode('https://example.com/streams/board/b1/user/2')
-                . '&data=' . rawurlencode('{"type":"card.added","seq":1,"card":{"id":"c","body":"x"}}') . '&private=on',
+            'topic='
+                . rawurlencode('https://example.com/streams/board/b1/user/1')
+                . '&topic='
+                . rawurlencode('https://example.com/streams/board/b1/user/2')
+                . '&data='
+                . rawurlencode('{"type":"card.added","seq":1,"card":{"id":"c","body":"x"}}')
+                . '&private=on',
             $body,
         );
 
@@ -93,7 +100,12 @@ final class EventChannelsTest extends TestCase
 
         self::assertNotNull($board);
         self::assertNotNull($user);
-        self::assertSame(['board', 'board/{boardId}', true, 'Updates every participant of a board may see'], [$board->name, $board->channel, $board->private, $board->summary]);
+        self::assertSame(['board', 'board/{boardId}', true, 'Updates every participant of a board may see'], [
+            $board->name,
+            $board->channel,
+            $board->private,
+            $board->summary,
+        ]);
         self::assertSame('boardUser', $user->name);
         self::assertSame(['boardId', 'userId'], array_keys($user->parameters));
         self::assertInstanceOf(UnionType::class, $board->payload);
@@ -115,14 +127,16 @@ final class EventChannelsTest extends TestCase
     public function testMercureChannelsMayBePathsButNotAnything(): void
     {
         self::assertSame(['board/a%2Fb/user/1'], Channels::checkTopics('board/a%2Fb/user/1'));
+        $accepted = [];
         foreach (['board//x', '/board', 'board/a b', 'board/%zz', "board\nx"] as $bad) {
             try {
                 Channels::checkTopics($bad);
-                self::fail(sprintf('"%s" must be refused.', $bad));
             } catch (InvalidArgumentException) {
-                $this->addToAssertionCount(1);
+                continue;
             }
+            $accepted[] = $bad;
         }
+        self::assertSame([], $accepted, 'These topics must be refused.');
         $this->expectException(InvalidArgumentException::class);
         Channels::check('board/x');
     }

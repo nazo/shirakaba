@@ -6,9 +6,9 @@ namespace Shirakaba\Query;
 
 use BackedEnum;
 use DateTimeImmutable;
+use ReflectionEnum;
 use Shirakaba\Database\Dialect\Dialect;
 use Shirakaba\Time\LocalDate;
-use ReflectionEnum;
 
 /**
  * Converts a non-null column value, as the driver returned it, to a PHP type (design/07-date-and-time.md):
@@ -22,8 +22,11 @@ final readonly class Values
      */
     public static function supports(string $type): bool
     {
-        return in_array($type, ['int', 'float', 'bool', 'string', 'mixed', DateTimeImmutable::class, LocalDate::class], true)
-            || (enum_exists($type) && is_subclass_of($type, BackedEnum::class));
+        return (
+            in_array($type, ['int', 'float', 'bool', 'string', 'mixed', DateTimeImmutable::class, LocalDate::class], true)
+                || enum_exists($type)
+                && is_subclass_of($type, BackedEnum::class)
+        );
     }
 
     /**
@@ -39,7 +42,7 @@ final readonly class Values
                 is_string($value) && preg_match('/^-?\d+$/D', $value) === 1 && (string) (int) $value === $value => (int) $value,
                 default => null,
             },
-            'float' => is_int($value) || is_float($value) || (is_string($value) && is_numeric($value)) ? (float) $value : null,
+            'float' => is_int($value) || is_float($value) || is_string($value) && is_numeric($value) ? (float) $value : null,
             'bool' => match (true) {
                 is_bool($value) => $value,
                 $value === 1, $value === '1', $value === 't', $value === 'true' => true,
@@ -62,7 +65,7 @@ final readonly class Values
             return $value;
         }
         if ((string) new ReflectionEnum($type)->getBackingType() === 'int') {
-            return is_int($value) || (is_string($value) && preg_match('/^-?\d+$/D', $value) === 1) ? $type::tryFrom((int) $value) : null;
+            return is_int($value) || is_string($value) && preg_match('/^-?\d+$/D', $value) === 1 ? $type::tryFrom((int) $value) : null;
         }
 
         return is_string($value) || is_int($value) ? $type::tryFrom((string) $value) : null;

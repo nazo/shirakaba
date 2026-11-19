@@ -16,8 +16,8 @@ use Shirakaba\Core\Extraction\Path;
 use Shirakaba\Core\Extraction\Query;
 use Shirakaba\Core\Http\Text;
 use Shirakaba\Core\RouteGroup;
-use Shirakaba\Examples\Tasks\TaskSchema;
 use Shirakaba\Examples\Tasks\TaskApi;
+use Shirakaba\Examples\Tasks\TaskSchema;
 use Shirakaba\Http\Message\ServerRequest;
 use Shirakaba\Json\Json;
 use Shirakaba\Json\JsonBody;
@@ -45,7 +45,7 @@ function measure(Closure $operation): float
             $iterations += 100;
             $elapsed = hrtime(true) - $start;
         } while ($elapsed < 200_000_000);
-        $rounds[] = $elapsed / $iterations / 1000;
+        $rounds[] = ($elapsed / $iterations) / 1000;
     }
     sort($rounds);
 
@@ -108,7 +108,12 @@ $ormDb = Shirakaba\Orm\Tests\Fixtures\Schema::create($ormDatabase)->writer();
 $ormAuthor = Shirakaba\Orm\Entities::insert(new Shirakaba\Orm\Tests\Fixtures\Author('Ada', 'ada@example.com'), $ormDb);
 $ormPosts = [];
 for ($i = 0; $i < 100; $i++) {
-    $ormPosts[] = new Shirakaba\Orm\Tests\Fixtures\Post(new Shirakaba\Orm\Tests\Fixtures\AuthorId($ormAuthor->id ?? 1), 'Post ' . $i, Shirakaba\Orm\Tests\Fixtures\PostStatus::Published, meta: ['n' => $i]);
+    $ormPosts[] = new Shirakaba\Orm\Tests\Fixtures\Post(
+        new Shirakaba\Orm\Tests\Fixtures\AuthorId($ormAuthor->id ?? 1),
+        'Post ' . $i,
+        Shirakaba\Orm\Tests\Fixtures\PostStatus::Published,
+        meta: ['n' => $i],
+    );
 }
 Shirakaba\Orm\Entities::insertAll($ormPosts, $ormDb);
 $ormQuery = Shirakaba\Orm\Entities::query(Shirakaba\Orm\Tests\Fixtures\Post::class)->orderBy('id');

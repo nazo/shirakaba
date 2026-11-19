@@ -23,8 +23,8 @@ final readonly class App
         $app->get('/health', static fn (): Text => new Text('ok'))->name('health');
         $app->get(
             '/greet',
-            #[JsonResponse(200, Greeting::class)]
-            static fn (#[Query] #[Length(min: 1, max: 50)] string $name): Json => new Json(new Greeting(sprintf('Hello, %s!', $name))),
+            #[JsonResponse(200, Greeting::class)] static fn (#[Query]
+                #[Length(min: 1, max: 50)] string $name): Json => new Json(new Greeting(sprintf('Hello, %s!', $name))),
         )->name('greet');
 
         return $app;

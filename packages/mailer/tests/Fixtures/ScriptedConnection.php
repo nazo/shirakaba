@@ -96,7 +96,10 @@ final class ScriptedConnection implements SmtpConnection
      */
     public function commands(): array
     {
-        return array_values(array_map(static fn (string $data): string => rtrim($data, "\r\n"), array_filter($this->written, static fn (string $data): bool => !str_ends_with($data, "\r\n.\r\n"))));
+        return array_values(array_map(
+            static fn (string $data): string => rtrim($data, "\r\n"),
+            array_filter($this->written, static fn (string $data): bool => !str_ends_with($data, "\r\n.\r\n")),
+        ));
     }
 
     public function message(): string

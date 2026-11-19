@@ -236,7 +236,7 @@ final class Stream implements StreamInterface
 
         $metadata = stream_get_meta_data($resource);
 
-        return $key === null ? $metadata : ($metadata[$key] ?? null);
+        return $key === null ? $metadata : $metadata[$key] ?? null;
     }
 
     /**

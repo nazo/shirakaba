@@ -192,7 +192,7 @@ final readonly class SmtpTransport implements Mailer
             if ($match[2] === ' ') {
                 break;
             }
-            if ($i === self::MAX_REPLY_LINES - 1) {
+            if ($i === (self::MAX_REPLY_LINES - 1)) {
                 throw new MailError(sprintf('%s sent a reply of more than %d lines.', $this->host, self::MAX_REPLY_LINES), retryable: true);
             }
         }

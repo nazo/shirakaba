@@ -25,9 +25,11 @@ final readonly class Document
      */
     public function toJson(): string
     {
-        return json_encode(
-            $this->content,
-            JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION,
-        ) . "\n";
+        return (
+            json_encode(
+                $this->content,
+                JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION,
+            ) . "\n"
+        );
     }
 }

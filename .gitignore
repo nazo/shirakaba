@@ -4,3 +4,4 @@
 /packages/*/vendor/
 /packages/*/composer.lock
 CLAUDE.local.md
+/.infection/

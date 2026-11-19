@@ -7,7 +7,8 @@ namespace Shirakaba\Log\Tests;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Shirakaba\Time\FrozenClock;
+use Psr\Log\LogLevel;
+use RuntimeException;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Extraction\Path;
 use Shirakaba\Core\Http\HttpFailure;
@@ -17,8 +18,7 @@ use Shirakaba\Core\Testing\TestClient;
 use Shirakaba\Core\Testing\TestEvent;
 use Shirakaba\Log\LoggingObserver;
 use Shirakaba\Log\StreamLogger;
-use Psr\Log\LogLevel;
-use RuntimeException;
+use Shirakaba\Time\FrozenClock;
 
 #[CoversClass(LoggingObserver::class)]
 #[CoversClass(StreamLogger::class)]
@@ -57,11 +57,15 @@ final class LoggingTest extends TestCase
     {
         $time = 10.0;
         $app = new AppBuilder();
-        $app->observe(new LoggingObserver(new StreamLogger($this->stream, $minimumLevel, new FrozenClock('2026-11-11T09:30:00.25+09:00')), $accessLog, static function () use (&$time): float {
-            $time += 0.0125;
+        $app->observe(new LoggingObserver(
+            new StreamLogger($this->stream, $minimumLevel, new FrozenClock('2026-11-11T09:30:00.25+09:00')),
+            $accessLog,
+            static function () use (&$time): float {
+                $time += 0.0125;
 
-            return $time;
-        }));
+                return $time;
+            },
+        ));
         $app->get('/users/{id}', static fn (#[Path] int $id): Text => $id === 0 ? throw HttpFailure::notFound('No user 0.') : new Text('user'));
         $app->get('/boom', static fn (): Text => throw new LogicException('database password was wrong', previous: new RuntimeException('connection refused')));
         $app->get('/cleanup', static function (RequestScope $scope): Text {
@@ -98,7 +102,10 @@ final class LoggingTest extends TestCase
         $client->get('/cleanup');
 
         self::assertSame(
-            [['debug', 'Client error 404 on GET /users/{id}: No user 0.'], ['warning', 'A request cleanup callback failed: RuntimeException: lock not released']],
+            [
+                ['debug',   'Client error 404 on GET /users/{id}: No user 0.'],
+                ['warning', 'A request cleanup callback failed: RuntimeException: lock not released'],
+            ],
             array_map(static fn (array $record): array => [$record['level'] ?? null, $record['message'] ?? null], $this->records()),
         );
     }

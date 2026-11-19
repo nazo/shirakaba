@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Shirakaba\Orm;
 
-use Shirakaba\Orm\Attribute\SoftDelete;
 use ReflectionClass;
+use Shirakaba\Orm\Attribute\SoftDelete;
 
 /**
  * The default scope of #[SoftDelete] entities: rows whose deletion time is NULL. Switch it

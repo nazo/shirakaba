@@ -61,7 +61,11 @@ final class RuntimeConformanceTest extends TestCase
             'swoole' => [self::swoolePhp(), $app],
             default => throw new RuntimeException('Unknown runtime ' . $runtime),
         };
-        $process = proc_open($command, [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, __DIR__ . '/app', [...getenv(), 'RUNTIME' => $runtime, 'SWOOLE_PORT' => (string) $port]);
+        $process = proc_open($command, [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']], $pipes, __DIR__ . '/app', [
+            ...getenv(),
+            'RUNTIME' => $runtime,
+            'SWOOLE_PORT' => (string) $port,
+        ]);
         if (!is_resource($process)) {
             throw new RuntimeException('Unable to start ' . $runtime);
         }
@@ -216,7 +220,13 @@ final class RuntimeConformanceTest extends TestCase
     public function testReadsRequestBodies(string $runtime): void
     {
         $body = '{"x":1}';
-        $response = self::send($runtime, "POST /echo HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: " . strlen($body) . "\r\nConnection: close\r\n\r\n" . $body);
+        $response = self::send(
+            $runtime,
+            "POST /echo HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/json\r\nContent-Length: "
+                . strlen($body)
+                . "\r\nConnection: close\r\n\r\n"
+                . $body,
+        );
 
         self::assertSame($body, $response['body']);
     }
@@ -226,7 +236,13 @@ final class RuntimeConformanceTest extends TestCase
     {
         $boundary = 'shirakaba-boundary';
         $payload = "--{$boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.txt\"\r\nContent-Type: text/plain\r\n\r\nhello upload\r\n--{$boundary}--\r\n";
-        $response = self::send($runtime, "POST /upload HTTP/1.1\r\nHost: localhost\r\nContent-Type: multipart/form-data; boundary={$boundary}\r\nContent-Length: " . strlen($payload) . "\r\nConnection: close\r\n\r\n" . $payload);
+        $response = self::send(
+            $runtime,
+            "POST /upload HTTP/1.1\r\nHost: localhost\r\nContent-Type: multipart/form-data; boundary={$boundary}\r\nContent-Length: "
+                . strlen($payload)
+                . "\r\nConnection: close\r\n\r\n"
+                . $payload,
+        );
 
         self::assertSame('a.txt 12', $response['body']);
     }

@@ -7,14 +7,14 @@ namespace Shirakaba\Runtime\Fpm\Tests;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Shirakaba\Http\Message\Response;
 use Shirakaba\Http\Message\ServerRequest;
 use Shirakaba\Runtime\Fpm\FpmRuntime;
 use Shirakaba\Sapi\SapiEmitter;
 use Shirakaba\Sapi\ServerRequestBuilder;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 #[CoversClass(SapiEmitter::class)]
 #[CoversClass(FpmRuntime::class)]
@@ -44,12 +44,15 @@ final class EmitterAndRuntimeTest extends TestCase
 
         $this->emitter()->emit($response);
 
-        self::assertSame([
-            ['HTTP/1.1 201 Created', true, 201],
-            ['Content-Type: text/plain', true, 201],
-            ['Set-Cookie: a=1', false, 201],
-            ['Set-Cookie: b=2', false, 201],
-        ], $this->headers);
+        self::assertSame(
+            [
+                ['HTTP/1.1 201 Created',     true,  201],
+                ['Content-Type: text/plain', true,  201],
+                ['Set-Cookie: a=1',          false, 201],
+                ['Set-Cookie: b=2',          false, 201],
+            ],
+            $this->headers,
+        );
         self::assertSame('created', $this->output);
     }
 
@@ -81,7 +84,7 @@ final class EmitterAndRuntimeTest extends TestCase
                 $state['written'] = (int) $state['written'] + strlen($chunk);
             },
             static fn (): bool => false,
-            static fn (): bool => $state['written'] >= 65_536 * 2,
+            static fn (): bool => $state['written'] >= (65_536 * 2),
         );
         $response = new Response(body: str_repeat('x', 65_536 * 10));
         $body = $response->getBody();

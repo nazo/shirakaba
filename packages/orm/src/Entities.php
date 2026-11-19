@@ -6,6 +6,7 @@ namespace Shirakaba\Orm;
 
 use DateTimeImmutable;
 use LogicException;
+use Psr\Clock\ClockInterface;
 use Shirakaba\Database\Error\DatabaseError;
 use Shirakaba\Database\Reader;
 use Shirakaba\Database\Writer;
@@ -19,7 +20,6 @@ use Shirakaba\Query\Select;
 use Shirakaba\Query\Sql;
 use Shirakaba\Query\Update;
 use Shirakaba\Time\SystemClock;
-use Psr\Clock\ClockInterface;
 
 /**
  * Reads and explicit writes of entities (design/08-database.md). There is no unit of work: every write
@@ -453,7 +453,7 @@ final readonly class Entities
     {
         $ids = $map->ids();
         if (count($ids) === 1) {
-            return [$ids[0]->property => is_array($id) ? ($id[$ids[0]->property] ?? null) : $id];
+            return [$ids[0]->property => is_array($id) ? $id[$ids[0]->property] ?? null : $id];
         }
         if (!is_array($id)) {
             throw new LogicException(sprintf('%s has a composite key; pass property => value.', $map->class));
@@ -573,7 +573,7 @@ final readonly class Entities
                 : EntityMap::property($entity, $field->property);
         }
 
-        return new ($map->class)(...$arguments);
+        return new $map->class(...$arguments);
     }
 
     /**

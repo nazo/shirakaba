@@ -10,6 +10,4 @@ use Attribute;
  * An integer incremented by every update(); an update of a stale entity fails with StaleEntity (optimistic locking).
  */
 #[Attribute(Attribute::TARGET_PARAMETER)]
-final readonly class Version
-{
-}
+final readonly class Version {}

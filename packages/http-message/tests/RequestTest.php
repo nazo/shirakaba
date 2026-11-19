@@ -38,7 +38,12 @@ final class RequestTest extends TestCase
 
         self::assertSame('b.example', $request->withUri($uri)->getHeaderLine('Host'));
         self::assertSame('a.example', $request->withUri($uri, preserveHost: true)->getHeaderLine('Host'));
-        self::assertSame('b.example', new Request('GET', '/')->withUri($uri, preserveHost: true)->getHeaderLine('Host'));
+        self::assertSame(
+            'b.example',
+            new Request('GET', '/')
+                ->withUri($uri, preserveHost: true)
+                ->getHeaderLine('Host'),
+        );
     }
 
     public function testWithUriWithoutHostKeepsHostHeader(): void
@@ -100,13 +105,23 @@ final class RequestTest extends TestCase
 
     public function testAcceptsAbsoluteFormTarget(): void
     {
-        self::assertSame('http://example.com/a?b', new Request('GET', '/')->withRequestTarget('http://example.com/a?b')->getRequestTarget());
+        self::assertSame(
+            'http://example.com/a?b',
+            new Request('GET', '/')
+                ->withRequestTarget('http://example.com/a?b')
+                ->getRequestTarget(),
+        );
     }
 
     public function testMethodCaseIsPreserved(): void
     {
         self::assertSame('get', new Request('get', '/')->getMethod());
-        self::assertSame('PURGE', new Request('GET', '/')->withMethod('PURGE')->getMethod());
+        self::assertSame(
+            'PURGE',
+            new Request('GET', '/')
+                ->withMethod('PURGE')
+                ->getMethod(),
+        );
     }
 
     /**

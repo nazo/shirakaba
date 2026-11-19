@@ -25,21 +25,24 @@ final class EventChannelsOpenApiTest extends TestCase
         $document = json_decode($generator->generate(new AppBuilder()->describe())->toJson(), true, 512, JSON_THROW_ON_ERROR);
         self::assertIsArray($document);
 
-        self::assertSame([
-            'board' => [
-                'summary' => 'Updates every participant of a board may see',
-                'channel' => 'board/{boardId}',
-                'parameters' => ['boardId' => ['type' => 'string']],
-                'private' => true,
-                'content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/BoardEvent']]],
+        self::assertSame(
+            [
+                'board' => [
+                    'summary' => 'Updates every participant of a board may see',
+                    'channel' => 'board/{boardId}',
+                    'parameters' => ['boardId' => ['type' => 'string']],
+                    'private' => true,
+                    'content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/BoardEvent']]],
+                ],
+                'boardUser' => [
+                    'channel' => 'board/{boardId}/user/{userId}',
+                    'parameters' => ['boardId' => ['type' => 'string'], 'userId' => ['type' => 'integer']],
+                    'private' => true,
+                    'content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/BoardUserEvent']]],
+                ],
             ],
-            'boardUser' => [
-                'channel' => 'board/{boardId}/user/{userId}',
-                'parameters' => ['boardId' => ['type' => 'string'], 'userId' => ['type' => 'integer']],
-                'private' => true,
-                'content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/BoardUserEvent']]],
-            ],
-        ], $document['x-event-channels'] ?? null);
+            $document['x-event-channels'] ?? null,
+        );
 
         $components = $document['components'] ?? null;
         self::assertIsArray($components);
@@ -48,13 +51,19 @@ final class EventChannelsOpenApiTest extends TestCase
         $cardAdded = $schemas['CardAdded'] ?? null;
         self::assertIsArray($cardAdded);
         self::assertIsArray($cardAdded['properties'] ?? null);
-        self::assertSame([
-            'oneOf' => [['$ref' => '#/components/schemas/CardAdded'], ['$ref' => '#/components/schemas/PhaseChanged']],
-            'discriminator' => ['propertyName' => 'type', 'mapping' => [
-                'card.added' => '#/components/schemas/CardAdded',
-                'phase.changed' => '#/components/schemas/PhaseChanged',
-            ]],
-        ], $schemas['BoardEvent'] ?? null);
+        self::assertSame(
+            [
+                'oneOf' => [['$ref' => '#/components/schemas/CardAdded'], ['$ref' => '#/components/schemas/PhaseChanged']],
+                'discriminator' => [
+                    'propertyName' => 'type',
+                    'mapping' => [
+                        'card.added' => '#/components/schemas/CardAdded',
+                        'phase.changed' => '#/components/schemas/PhaseChanged',
+                    ],
+                ],
+            ],
+            $schemas['BoardEvent'] ?? null,
+        );
         self::assertSame(['type' => 'string', 'const' => 'card.added'], $cardAdded['properties']['type'] ?? null);
         self::assertSame(['type', 'seq', 'card'], $cardAdded['required'] ?? null);
         self::assertSame(['$ref' => '#/components/schemas/Card'], $cardAdded['properties']['card'] ?? null);

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Shirakaba\PubSub\Tests\Fixtures;
 
-use Shirakaba\Http\Message\HttpFactory;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Shirakaba\Http\Message\HttpFactory;
 
 /**
  * A PSR-18 client that records requests and answers with a fixed status.

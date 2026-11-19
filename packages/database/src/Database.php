@@ -115,7 +115,7 @@ final readonly class Database
             $dialect->configure($pdo);
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            throw ($this->dialect?->classify($e)) ?? new DatabaseError($e);
+            throw $this->dialect?->classify($e) ?? new DatabaseError($e);
         }
 
         return new Connection($pdo, $dialect, $events, $leased);

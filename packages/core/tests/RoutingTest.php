@@ -7,19 +7,19 @@ namespace Shirakaba\Core\Tests;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Extraction\Path;
 use Shirakaba\Core\Http\Text;
-use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Core\Internal\RouteParameters;
 use Shirakaba\Core\Internal\RouterHandler;
+use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Core\RouteGroup;
 use Shirakaba\Core\Routing\PathTemplate;
 use Shirakaba\Core\Routing\Router;
 use Shirakaba\Core\Testing\TestClient;
 use Shirakaba\Http\Message\Response;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * The examples of design/04-routing-and-handlers.md, end to end.

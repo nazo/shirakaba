@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Shirakaba\RateLimit;
 
-use Shirakaba\Core\Description\ResponseDeclaration;
-use Shirakaba\Core\Description\ResponseDescription;
-use Shirakaba\Core\Scope\RequestScope;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Core\Description\ResponseDeclaration;
+use Shirakaba\Core\Description\ResponseDescription;
+use Shirakaba\Core\Scope\RequestScope;
 
 /**
  * A route's rate limit, made with RateLimiter::limit(). Declares its 429 so API descriptions
@@ -50,6 +50,10 @@ final readonly class RateLimitMiddleware implements MiddlewareInterface, Respons
 
     public function responseDescription(): ResponseDescription
     {
-        return new ResponseDescription(429, 'application/problem+json', description: sprintf('More than %d requests in %d seconds (%s).', $this->limit, $this->seconds, $this->name));
+        return new ResponseDescription(
+            429,
+            'application/problem+json',
+            description: sprintf('More than %d requests in %d seconds (%s).', $this->limit, $this->seconds, $this->name),
+        );
     }
 }

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Shirakaba\OpenTelemetry;
 
+use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
 use OpenTelemetry\API\Trace\SpanInterface;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\API\Trace\TracerInterface;
-use OpenTelemetry\API\Trace\Propagation\TraceContextPropagator;
 use OpenTelemetry\Context\Propagation\TextMapPropagatorInterface;
 use OpenTelemetry\Context\ScopeInterface;
 use Shirakaba\Core\Http\HttpFailure;
@@ -48,14 +48,15 @@ final readonly class TracingObserver implements Observer
     public function begin(RequestSummary $request): Observation
     {
         // Methods are validated tokens, so never empty; the fallback satisfies the API's type.
-        $span = $this->tracer->spanBuilder($request->method !== '' ? $request->method : 'HTTP')
+        $span = $this->tracer
+            ->spanBuilder($request->method !== '' ? $request->method : 'HTTP')
             ->setSpanKind(SpanKind::KIND_SERVER)
             ->setParent($this->propagator->extract($request->propagation))
             ->setAttribute('http.request.method', $request->method)
             ->setAttribute('network.protocol.version', $request->protocolVersion)
             ->startSpan();
 
-        return new class ($span, $span->activate()) implements Observation {
+        return new class($span, $span->activate()) implements Observation {
             /** @var array<string, array{int, float}> event name => count, seconds */
             private array $events = [];
 

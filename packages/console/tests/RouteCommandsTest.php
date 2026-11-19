@@ -48,17 +48,21 @@ final class RouteCommandsTest extends TestCase
         $byPath = self::tester()->run('routes:show', 'get /tasks/{id}');
 
         self::assertSame($byName->output, $byPath->output);
-        self::assertSame(implode("\n", [
-            'GET /tasks/{id}',
-            'name: tasks.show',
-            'handler: ' . TaskHandlers::class . '::show',
-            'parameters:',
-            '  path id: int $id (required)',
-            '  query verbose: bool $verbose (optional, default false)',
-            'responses:',
-            '  200 text/plain string The task.',
-            '  404 application/problem+json  No such task.',
-        ]) . "\n", $byName->output);
+        self::assertSame(
+            implode("\n", [
+                'GET /tasks/{id}',
+                'name: tasks.show',
+                'handler: ' . TaskHandlers::class . '::show',
+                'parameters:',
+                '  path id: int $id (required)',
+                '  query verbose: bool $verbose (optional, default false)',
+                'responses:',
+                '  200 text/plain string The task.',
+                '  404 application/problem+json  No such task.',
+            ])
+                . "\n",
+            $byName->output,
+        );
     }
 
     public function testPrintsJson(): void
@@ -67,14 +71,20 @@ final class RouteCommandsTest extends TestCase
         $route = json_decode($result->output, true, 512, JSON_THROW_ON_ERROR);
 
         self::assertIsArray($route);
-        self::assertSame(['method', 'path', 'name', 'handler', 'documented', 'parameters', 'undescribedParameters', 'responses', 'returns'], array_keys($route));
+        self::assertSame(
+            ['method', 'path', 'name', 'handler', 'documented', 'parameters', 'undescribedParameters', 'responses', 'returns'],
+            array_keys($route),
+        );
         self::assertIsArray($route['parameters'] ?? null);
         self::assertIsArray($route['responses'] ?? null);
         self::assertSame(
             ['source' => 'path', 'name' => 'id', 'parameter' => 'id', 'type' => ['kind' => 'int', 'format' => null, 'nullable' => false], 'required' => true],
             $route['parameters'][0] ?? null,
         );
-        self::assertSame(['status' => 404, 'contentType' => 'application/problem+json', 'type' => null, 'description' => 'No such task.'], $route['responses'][1] ?? null);
+        self::assertSame(
+            ['status' => 404, 'contentType' => 'application/problem+json', 'type' => null, 'description' => 'No such task.'],
+            $route['responses'][1] ?? null,
+        );
 
         $list = json_decode(self::tester()->run('routes', '--json')->output, true, 512, JSON_THROW_ON_ERROR);
         self::assertIsArray($list);

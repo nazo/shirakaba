@@ -48,7 +48,11 @@ final readonly class PathTemplate
                 $names[$name] = true;
                 $segments[] = $catchAll ? Segment::catchAll($name) : Segment::parameter($name);
             } elseif (strpbrk($part, '{}') !== false) {
-                throw new InvalidApplication(sprintf('Route path "%s": segment "%s" is not a valid parameter; parameters are "{name}" or "{name...}".', $template, $part));
+                throw new InvalidApplication(sprintf(
+                    'Route path "%s": segment "%s" is not a valid parameter; parameters are "{name}" or "{name...}".',
+                    $template,
+                    $part,
+                ));
             } else {
                 $segments[] = Segment::static($part);
             }
@@ -103,27 +107,6 @@ final readonly class PathTemplate
         }
 
         return $key;
-    }
-
-    /**
-     * Orders templates by precedence: the first segment whose kinds differ decides.
-     *
-     * @return int<-1, 1>
-     */
-    public static function compare(self $a, self $b): int
-    {
-        foreach ($a->segments as $index => $segment) {
-            $other = $b->segments[$index] ?? null;
-            if ($other === null) {
-                return 1;
-            }
-            $order = $segment->kind->value <=> $other->kind->value;
-            if ($order !== 0) {
-                return $order;
-            }
-        }
-
-        return count($a->segments) < count($b->segments) ? -1 : 0;
     }
 
     /**

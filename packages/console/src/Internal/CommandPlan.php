@@ -7,6 +7,9 @@ namespace Shirakaba\Console\Internal;
 use BackedEnum;
 use Closure;
 use DateTimeImmutable;
+use ReflectionFunction;
+use ReflectionNamedType;
+use ReflectionParameter;
 use Shirakaba\Console\Argument;
 use Shirakaba\Console\Option;
 use Shirakaba\Console\Output;
@@ -14,9 +17,6 @@ use Shirakaba\Console\UsageError;
 use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Core\Scope\Cancellation;
 use Shirakaba\Time\LocalDate;
-use ReflectionFunction;
-use ReflectionNamedType;
-use ReflectionParameter;
 
 /**
  * A command planned when the console is built: its parameters and how to parse its part of
@@ -50,7 +50,12 @@ final readonly class CommandPlan
         foreach (new ReflectionFunction($handler)->getParameters() as $parameter) {
             $plan = self::parameter($name, $parameter);
             if ($plan->source === 'option') {
-                if (in_array($plan->cliName, self::RESERVED, true) || isset($optionNames[$plan->cliName]) || ($plan->short !== null && isset($optionNames[$plan->short]))) {
+                if (
+                    in_array($plan->cliName, self::RESERVED, true)
+                    || isset($optionNames[$plan->cliName])
+                    || $plan->short !== null
+                    && isset($optionNames[$plan->short])
+                ) {
                     throw new InvalidApplication(sprintf('Command "%s": option --%s is reserved or declared twice.', $name, $plan->cliName));
                 }
                 $optionNames[$plan->cliName] = true;
@@ -118,7 +123,7 @@ final readonly class CommandPlan
                     $parameter = null;
                 }
             }
-            if ($parameter === null || (!$long && $parameter->short !== $body)) {
+            if ($parameter === null || !$long && $parameter->short !== $body) {
                 throw new UsageError(sprintf('Unknown option %s.', $token));
             }
             if ($parameter->type === 'bool' && !$parameter->list && $value === null) {
@@ -144,7 +149,11 @@ final readonly class CommandPlan
                 'cancellation' => $cancellation,
                 'option' => array_key_exists($parameter->name, $options)
                     ? $options[$parameter->name]
-                    : ($parameter->hasDefault ? $parameter->default : ($parameter->list ? [] : throw new UsageError(sprintf('Option --%s is required.', $parameter->cliName)))),
+                    : (
+                        $parameter->hasDefault
+                            ? $parameter->default
+                            : ($parameter->list ? [] : throw new UsageError(sprintf('Option --%s is required.', $parameter->cliName)))
+                    ),
                 'argument' => self::positional($parameter, $positional),
             };
             if ($parameter->source === 'argument' && $parameter->list) {
@@ -168,7 +177,13 @@ final readonly class CommandPlan
         $options = [];
         foreach ($this->parameters as $parameter) {
             if ($parameter->source === 'argument') {
-                $line .= ' ' . ($parameter->list ? sprintf('[<%s>...]', $parameter->cliName) : ($parameter->hasDefault ? sprintf('[<%s>]', $parameter->cliName) : sprintf('<%s>', $parameter->cliName)));
+                $line .=
+                    ' '
+                    . (
+                        $parameter->list
+                            ? sprintf('[<%s>...]', $parameter->cliName)
+                            : ($parameter->hasDefault ? sprintf('[<%s>]', $parameter->cliName) : sprintf('<%s>', $parameter->cliName))
+                    );
                 $arguments[] = [$parameter->cliName, self::describe($parameter)];
             }
             if ($parameter->source === 'option') {
@@ -262,9 +277,18 @@ final readonly class CommandPlan
             throw new InvalidApplication($where . ': a list argument is declared as variadic (string ...$files).');
         }
         $itemType = $typeName === 'array' ? 'string' : $typeName;
-        if (!in_array($itemType, ['string', 'int', 'float', 'bool', DateTimeImmutable::class, LocalDate::class], true)
-            && !(enum_exists($itemType) && is_subclass_of($itemType, BackedEnum::class))) {
-            throw new InvalidApplication(sprintf('%s has the unsupported type %s; use string, int, float, bool, a backed enum, DateTimeImmutable, LocalDate or a list.', $where, $typeName));
+        if (
+            !in_array($itemType, ['string', 'int', 'float', 'bool', DateTimeImmutable::class, LocalDate::class], true)
+            && !(
+                enum_exists($itemType)
+                && is_subclass_of($itemType, BackedEnum::class)
+            )
+        ) {
+            throw new InvalidApplication(sprintf(
+                '%s has the unsupported type %s; use string, int, float, bool, a backed enum, DateTimeImmutable, LocalDate or a list.',
+                $where,
+                $typeName,
+            ));
         }
         $hasDefault = $parameter->isDefaultValueAvailable();
         $default = $hasDefault ? $parameter->getDefaultValue() : null;
@@ -280,7 +304,7 @@ final readonly class CommandPlan
             $itemType,
             $option->name ?? $kebab,
             $option?->short,
-            $hasDefault || ($argument === null && $type->allowsNull()),
+            $hasDefault || $argument === null && $type->allowsNull(),
             $default,
             $list,
             $argument->description ?? $option->description ?? '',

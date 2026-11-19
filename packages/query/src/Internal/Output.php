@@ -74,7 +74,12 @@ final class Output
 
     private static function bindable(mixed $value): bool
     {
-        return $value === null || is_scalar($value) || $value instanceof \DateTimeImmutable
-            || $value instanceof \Shirakaba\Time\LocalDate || $value instanceof \BackedEnum;
+        return (
+            $value === null
+                || is_scalar($value)
+                || $value instanceof \DateTimeImmutable
+                || $value instanceof \Shirakaba\Time\LocalDate
+                || $value instanceof \BackedEnum
+        );
     }
 }

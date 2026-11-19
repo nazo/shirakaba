@@ -25,7 +25,14 @@ final class UnionSchemaTest extends TestCase
         $app = new AppBuilder();
         $app->get('/activities', #[JsonResponse(200, Activity::class, list: true)] static fn (): Json => new Json([]));
         $app->post('/activities', #[JsonResponse(201, Activity::class)] static fn (#[JsonBody] Activity $input): Json => new Json($input, 201));
-        $json = json_decode(new Generator(new Info('Activities', '1'))->generate($app->describe())->toJson(), true, 512, JSON_THROW_ON_ERROR);
+        $json = json_decode(
+            new Generator(new Info('Activities', '1'))
+                ->generate($app->describe())
+                ->toJson(),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
         self::assertIsArray($json);
         self::assertIsArray($json['components'] ?? null);
         self::assertIsArray($json['components']['schemas'] ?? null);
@@ -38,27 +45,33 @@ final class UnionSchemaTest extends TestCase
     {
         $schemas = self::schemas();
 
-        self::assertSame([
-            'oneOf' => [
-                ['$ref' => '#/components/schemas/Followed'],
-                ['$ref' => '#/components/schemas/Reacted'],
-            ],
-            'discriminator' => [
-                'propertyName' => 'kind',
-                'mapping' => [
-                    'follow' => '#/components/schemas/Followed',
-                    'reaction' => '#/components/schemas/Reacted',
+        self::assertSame(
+            [
+                'oneOf' => [
+                    ['$ref' => '#/components/schemas/Followed'],
+                    ['$ref' => '#/components/schemas/Reacted'],
+                ],
+                'discriminator' => [
+                    'propertyName' => 'kind',
+                    'mapping' => [
+                        'follow' => '#/components/schemas/Followed',
+                        'reaction' => '#/components/schemas/Reacted',
+                    ],
                 ],
             ],
-        ], $schemas['ActivityItem'] ?? null);
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'kind' => ['type' => 'string', 'const' => 'follow'],
-                'user' => ['type' => 'string'],
+            $schemas['ActivityItem'] ?? null,
+        );
+        self::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'kind' => ['type' => 'string', 'const' => 'follow'],
+                    'user' => ['type' => 'string'],
+                ],
+                'required' => ['kind', 'user'],
             ],
-            'required' => ['kind', 'user'],
-        ], $schemas['Followed'] ?? null);
+            $schemas['Followed'] ?? null,
+        );
     }
 
     public function testInputMembersKeepDefaultsAndConstraints(): void
@@ -72,15 +85,18 @@ final class UnionSchemaTest extends TestCase
             ['follow' => '#/components/schemas/FollowedInput', 'reaction' => '#/components/schemas/ReactedInput'],
             $union['discriminator']['mapping'] ?? null,
         );
-        self::assertSame([
-            'type' => 'object',
-            'properties' => [
-                'kind' => ['type' => 'string', 'const' => 'reaction'],
-                'user' => ['type' => 'string'],
-                'reaction' => ['type' => 'string', 'maxLength' => 8, 'default' => '+1'],
+        self::assertSame(
+            [
+                'type' => 'object',
+                'properties' => [
+                    'kind' => ['type' => 'string', 'const' => 'reaction'],
+                    'user' => ['type' => 'string'],
+                    'reaction' => ['type' => 'string', 'maxLength' => 8, 'default' => '+1'],
+                ],
+                'required' => ['kind', 'user'],
+                'additionalProperties' => false,
             ],
-            'required' => ['kind', 'user'],
-            'additionalProperties' => false,
-        ], $schemas['ReactedInput'] ?? null);
+            $schemas['ReactedInput'] ?? null,
+        );
     }
 }

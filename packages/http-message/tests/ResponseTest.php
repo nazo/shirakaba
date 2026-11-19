@@ -17,7 +17,12 @@ final class ResponseTest extends TestCase
     {
         self::assertSame('OK', new Response()->getReasonPhrase());
         self::assertSame('Unprocessable Content', new Response(422)->getReasonPhrase());
-        self::assertSame('Not Found', new Response()->withStatus(404)->getReasonPhrase());
+        self::assertSame(
+            'Not Found',
+            new Response()
+                ->withStatus(404)
+                ->getReasonPhrase(),
+        );
     }
 
     public function testUnregisteredStatusHasEmptyReasonPhrase(): void
@@ -27,7 +32,12 @@ final class ResponseTest extends TestCase
 
     public function testKeepsCustomReasonPhrase(): void
     {
-        self::assertSame('Fine', new Response()->withStatus(200, 'Fine')->getReasonPhrase());
+        self::assertSame(
+            'Fine',
+            new Response()
+                ->withStatus(200, 'Fine')
+                ->getReasonPhrase(),
+        );
     }
 
     #[TestWith([99])]

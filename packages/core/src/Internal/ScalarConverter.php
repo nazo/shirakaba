@@ -7,21 +7,21 @@ namespace Shirakaba\Core\Internal;
 use BackedEnum;
 use DateTimeImmutable;
 use DateTimeInterface;
+use ReflectionEnum;
+use ReflectionNamedType;
 use Shirakaba\Core\Description\EnumType;
 use Shirakaba\Core\Description\ParameterDescription;
 use Shirakaba\Core\Description\ScalarType;
 use Shirakaba\Core\Description\Type;
 use Shirakaba\Core\Extraction\Constraint;
 use Shirakaba\Core\Extraction\ExtractionFailure;
-use Shirakaba\Core\Http\ProblemCode;
+use Shirakaba\Core\Extraction\HandlerParameter;
 use Shirakaba\Core\Extraction\RequestValue;
 use Shirakaba\Core\Extraction\Scalar;
-use Shirakaba\Core\Extraction\HandlerParameter;
+use Shirakaba\Core\Http\ProblemCode;
 use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Time\LocalDate;
 use Shirakaba\Time\Rfc3339;
-use ReflectionEnum;
-use ReflectionNamedType;
 
 /**
  * Converts request strings to a parameter's declared scalar type, strictly (design/04-routing-and-handlers.md).
@@ -162,7 +162,16 @@ final readonly class ScalarConverter
         }
 
         if ($name === DateTimeImmutable::class) {
-            return new self('instant', null, false, 'an RFC 3339 date-time with an offset, such as 2026-11-11T09:30:00Z', $hasDefault, $default, $nullable, $constraints);
+            return new self(
+                'instant',
+                null,
+                false,
+                'an RFC 3339 date-time with an offset, such as 2026-11-11T09:30:00Z',
+                $hasDefault,
+                $default,
+                $nullable,
+                $constraints,
+            );
         }
         if ($name === LocalDate::class) {
             return new self('date', null, false, 'a date (YYYY-MM-DD)', $hasDefault, $default, $nullable, $constraints);

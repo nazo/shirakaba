@@ -7,6 +7,7 @@ namespace Shirakaba\Form\Tests;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Description\FileType;
 use Shirakaba\Core\Description\ObjectType;
@@ -22,7 +23,6 @@ use Shirakaba\Form\Tests\Fixtures\SignUp;
 use Shirakaba\Http\Message\ServerRequest;
 use Shirakaba\Http\Message\Stream;
 use Shirakaba\Http\Message\UploadedFile;
-use Psr\Http\Message\ResponseInterface;
 
 #[CoversClass(FormBody::class)]
 #[CoversClass(FormPlanner::class)]
@@ -35,14 +35,17 @@ final class FormBodyTest extends TestCase
     private static function app(): AppBuilder
     {
         $app = new AppBuilder();
-        $app->post('/signup', static fn (#[FormBody] SignUp $form): Text => new Text(sprintf(
-            '%s age=%s plan=%s newsletter=%s interests=%s',
-            $form->email,
-            var_export($form->age, true),
-            $form->plan->value,
-            var_export($form->newsletter, true),
-            implode('|', $form->interests),
-        )));
+        $app->post(
+            '/signup',
+            static fn (#[FormBody] SignUp $form): Text => new Text(sprintf(
+                '%s age=%s plan=%s newsletter=%s interests=%s',
+                $form->email,
+                var_export($form->age, true),
+                $form->plan->value,
+                var_export($form->newsletter, true),
+                implode('|', $form->interests),
+            )),
+        );
         $app->post('/avatar', static fn (#[FormBody] Avatar $form): Text => new Text($form->caption . ' ' . $form->image->getClientFilename()));
 
         return $app;
@@ -59,13 +62,15 @@ final class FormBodyTest extends TestCase
      */
     private static function multipart(string $path, array $fields, array $files): ResponseInterface
     {
-        return self::app()->build()->handle(new ServerRequest(
-            'POST',
-            'http://localhost' . $path,
-            ['Content-Type' => 'multipart/form-data; boundary=x'],
-            uploadedFiles: $files,
-            parsedBody: $fields,
-        ));
+        return self::app()
+            ->build()
+            ->handle(new ServerRequest(
+                'POST',
+                'http://localhost' . $path,
+                ['Content-Type' => 'multipart/form-data; boundary=x'],
+                uploadedFiles: $files,
+                parsedBody: $fields,
+            ));
     }
 
     public function testMapsUrlEncodedForms(): void
@@ -85,20 +90,32 @@ final class FormBodyTest extends TestCase
      */
     public static function failures(): iterable
     {
-        yield 'missing and invalid' => ['age=x&plan=gold&newsletter=maybe', 400, [
-            ['pointer' => '/email', 'detail' => 'is required'],
-            ['pointer' => '/age', 'detail' => 'must be an integer'],
-            ['pointer' => '/plan', 'detail' => 'must be one of: free, pro'],
-            ['pointer' => '/newsletter', 'detail' => 'must be a boolean (true, false, 1, 0, on or off)'],
-        ]];
-        yield 'repeated scalar and unknown field' => ['email=a%40example.com&email=b%40example.com&a.b=1', 400, [
-            ['pointer' => '/email', 'detail' => 'must appear at most once'],
-            ['pointer' => '/a.b', 'detail' => 'is not an accepted field'],
-        ]];
-        yield 'constraints' => ['email=nope&age=10', 422, [
-            ['pointer' => '/email', 'detail' => 'must be an e-mail address'],
-            ['pointer' => '/age', 'detail' => 'must be at least 13'],
-        ]];
+        yield 'missing and invalid' => [
+            'age=x&plan=gold&newsletter=maybe',
+            400,
+            [
+                ['pointer' => '/email', 'detail' => 'is required'],
+                ['pointer' => '/age', 'detail' => 'must be an integer'],
+                ['pointer' => '/plan', 'detail' => 'must be one of: free, pro'],
+                ['pointer' => '/newsletter', 'detail' => 'must be a boolean (true, false, 1, 0, on or off)'],
+            ],
+        ];
+        yield 'repeated scalar and unknown field' => [
+            'email=a%40example.com&email=b%40example.com&a.b=1',
+            400,
+            [
+                ['pointer' => '/email', 'detail' => 'must appear at most once'],
+                ['pointer' => '/a.b', 'detail' => 'is not an accepted field'],
+            ],
+        ];
+        yield 'constraints' => [
+            'email=nope&age=10',
+            422,
+            [
+                ['pointer' => '/email', 'detail' => 'must be an e-mail address'],
+                ['pointer' => '/age', 'detail' => 'must be at least 13'],
+            ],
+        ];
     }
 
     /**
@@ -120,7 +137,12 @@ final class FormBodyTest extends TestCase
         self::assertSame(415, $client->post('/signup', '{}', ['Content-Type' => 'application/json'])->getStatusCode());
         $app = new AppBuilder();
         $app->post('/', static fn (#[FormBody(maxBytes: 10)] SignUp $form): Text => new Text(''));
-        self::assertSame(413, new TestClient($app->build())->post('/', 'email=a%40example.com', ['Content-Type' => 'application/x-www-form-urlencoded'])->getStatusCode());
+        self::assertSame(
+            413,
+            new TestClient($app->build())
+                ->post('/', 'email=a%40example.com', ['Content-Type' => 'application/x-www-form-urlencoded'])
+                ->getStatusCode(),
+        );
     }
 
     public function testDatesAndInstants(): void
@@ -133,13 +155,19 @@ final class FormBodyTest extends TestCase
         $headers = ['Content-Type' => 'application/x-www-form-urlencoded'];
 
         self::assertSame('2026-11-11 -', (string) $client->post('/', 'day=2026-11-11&remindAt=', $headers)->getBody());
-        self::assertSame('2026-11-11 2026-11-11T00:00:00.000000Z', (string) $client->post('/', 'day=2026-11-11&remindAt=2026-11-11T09%3A00%3A00%2B09%3A00', $headers)->getBody());
+        self::assertSame(
+            '2026-11-11 2026-11-11T00:00:00.000000Z',
+            (string) $client->post('/', 'day=2026-11-11&remindAt=2026-11-11T09%3A00%3A00%2B09%3A00', $headers)->getBody(),
+        );
         $invalid = $client->post('/', 'day=2026-11-31&remindAt=2026-11-11T09%3A00', $headers);
         self::assertSame(400, $invalid->getStatusCode());
-        self::assertSame([
-            ['pointer' => '/day', 'detail' => 'must be a date (YYYY-MM-DD)'],
-            ['pointer' => '/remindAt', 'detail' => 'must be an RFC 3339 date-time with an offset'],
-        ], self::withoutCodes(ResponseJson::at($invalid, '/errors')));
+        self::assertSame(
+            [
+                ['pointer' => '/day', 'detail' => 'must be a date (YYYY-MM-DD)'],
+                ['pointer' => '/remindAt', 'detail' => 'must be an RFC 3339 date-time with an offset'],
+            ],
+            self::withoutCodes(ResponseJson::at($invalid, '/errors')),
+        );
     }
 
     public function testLimitsTheNumberOfFields(): void
@@ -166,7 +194,10 @@ final class FormBodyTest extends TestCase
         $response = self::multipart('/avatar', ['caption' => 'Me'], ['image' => $script]);
 
         self::assertSame(422, $response->getStatusCode());
-        self::assertSame([['pointer' => '/image', 'detail' => 'must be one of the file types: image/png']], self::withoutCodes(ResponseJson::at($response, '/errors')));
+        self::assertSame(
+            [['pointer' => '/image', 'detail' => 'must be one of the file types: image/png']],
+            self::withoutCodes(ResponseJson::at($response, '/errors')),
+        );
     }
 
     public function testUploadErrors(): void
@@ -176,7 +207,10 @@ final class FormBodyTest extends TestCase
         $big = new UploadedFile(Stream::fromString(str_repeat("\x89PNG", 400)), 1600, UPLOAD_ERR_OK, 'big.png');
 
         self::assertSame(413, self::multipart('/avatar', ['caption' => 'x'], ['image' => $tooLarge])->getStatusCode());
-        self::assertSame([['pointer' => '/image', 'detail' => 'is required']], self::withoutCodes(ResponseJson::at(self::multipart('/avatar', ['caption' => 'x'], ['image' => $missing]), '/errors')));
+        self::assertSame(
+            [['pointer' => '/image', 'detail' => 'is required']],
+            self::withoutCodes(ResponseJson::at(self::multipart('/avatar', ['caption' => 'x'], ['image' => $missing]), '/errors')),
+        );
         self::assertSame('must be at most 1024 bytes', ResponseJson::at(self::multipart('/avatar', ['caption' => 'x'], ['image' => $big]), '/errors/0/detail'));
     }
 

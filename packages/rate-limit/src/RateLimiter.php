@@ -7,9 +7,9 @@ namespace Shirakaba\RateLimit;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use Psr\Clock\ClockInterface;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Time\SystemClock;
-use Psr\Clock\ClockInterface;
 
 /**
  * Applies rate limits in fixed windows (design/09-security.md): at most $limit hits per $seconds for each

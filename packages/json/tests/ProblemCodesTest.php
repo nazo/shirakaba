@@ -33,7 +33,9 @@ final class ProblemCodesTest extends TestCase
 
     public function testBodyProblemsAndFieldErrorsCarryCodes(): void
     {
-        $response = self::client()->post('/events', '{"title":"x","startsAt":"2026-11-11T09:30:00","day":"2026-11-11","extra":1}', ['Content-Type' => 'application/json']);
+        $response = self::client()->post('/events', '{"title":"x","startsAt":"2026-11-11T09:30:00","day":"2026-11-11","extra":1}', [
+            'Content-Type' => 'application/json',
+        ]);
 
         self::assertSame(400, $response->getStatusCode());
         self::assertSame(ProblemCode::INVALID_BODY, ResponseJson::at($response, '/code'));
@@ -55,7 +57,9 @@ final class ProblemCodesTest extends TestCase
         self::assertSame(ProblemCode::REQUIRED, ResponseJson::at($missing, '/errors/0/code'));
 
         self::assertSame(ProblemCode::MALFORMED_BODY, ResponseJson::at(self::client()->post('/events', '{', ['Content-Type' => 'application/json']), '/code'));
-        self::assertSame(ProblemCode::UNSUPPORTED_MEDIA_TYPE, ResponseJson::at(self::client()->post('/events', 'x', ['Content-Type' => 'text/plain']), '/code'));
+        self::assertSame(ProblemCode::UNSUPPORTED_MEDIA_TYPE, ResponseJson::at(self::client()->post('/events', 'x', [
+            'Content-Type' => 'text/plain',
+        ]), '/code'));
     }
 
     public function testParameterProblemsCarryCodes(): void

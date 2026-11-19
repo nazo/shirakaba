@@ -16,10 +16,14 @@ use Shirakaba\OpenApi\Tests\Fixtures\Status;
 use Shirakaba\Validation\Range;
 
 $app = new AppBuilder();
-$app->get('/tasks', static fn (
-    #[Query] #[Range(min: 1)] int $page = 1,
-    #[Query] ?Status $status = null,
-): Json => new Json([]))->name('tasks.list');
+$app->get(
+    '/tasks',
+    static fn (
+        #[Query]
+        #[Range(min: 1)] int $page = 1,
+        #[Query] ?Status $status = null,
+    ): Json => new Json([]),
+)->name('tasks.list');
 $app->post('/tasks', static fn (#[JsonBody] NewTask $task): Json => new Json(['title' => $task->title], 201))->name('tasks.create');
 $app->delete('/tasks/{id}', static fn (#[Path] int $id, #[Header('If-Match')] string $etag): NoContent => new NoContent())->name('tasks.delete');
 $app->get('/files/{path...}', static fn (): Text => new Text('file'));

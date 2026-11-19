@@ -6,8 +6,8 @@ namespace Shirakaba\Form;
 
 use Attribute;
 use InvalidArgumentException;
-use Shirakaba\Core\Extraction\Constraint;
 use Psr\Http\Message\UploadedFileInterface;
+use Shirakaba\Core\Extraction\Constraint;
 
 /**
  * Limits the size of an uploaded file, measured on the received data.

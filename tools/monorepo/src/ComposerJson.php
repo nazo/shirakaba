@@ -77,7 +77,7 @@ final readonly class ComposerJson
             if ($next === null) {
                 return [];
             }
-            if (!is_array($next) || ($next !== [] && array_is_list($next))) {
+            if (!is_array($next) || $next !== [] && array_is_list($next)) {
                 throw new ValidationFailure(sprintf('%s: "%s" must be a JSON object.', $this->path, implode('.', $path)));
             }
             $node = $next;

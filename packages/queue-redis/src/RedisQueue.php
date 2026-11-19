@@ -108,11 +108,15 @@ final readonly class RedisQueue implements Queue
         $id = bin2hex(random_bytes(16));
         $trace = TraceContext::current() ?? '';
         $db->afterCommit(function () use ($id, $type, $payload, $options, $available, $trace): void {
-            $this->redis->eval(self::PUSH, [
-                $this->prefix . 'job:' . $id,
-                $this->prefix . 'due:' . $options->queue,
-                $this->prefix . 'unique:' . ($options->uniqueKey ?? ''),
-            ], [$id, $options->queue, $type, $payload, $options->maxAttempts, self::milliseconds($available), $options->uniqueKey ?? '', $trace]);
+            $this->redis->eval(
+                self::PUSH,
+                [
+                    $this->prefix . 'job:' . $id,
+                    $this->prefix . 'due:' . $options->queue,
+                    $this->prefix . 'unique:' . ($options->uniqueKey ?? ''),
+                ],
+                [$id, $options->queue, $type, $payload, $options->maxAttempts, self::milliseconds($available), $options->uniqueKey ?? '', $trace],
+            );
         });
 
         return true;
@@ -130,7 +134,15 @@ final readonly class RedisQueue implements Queue
         if (!is_array($reply) || count($reply) < 7) {
             return null;
         }
-        [$id, $queue, $type, $payload, $attempts, $max, $trace] = [self::at($reply, 0), self::at($reply, 1), self::at($reply, 2), self::at($reply, 3), self::at($reply, 4), self::at($reply, 5), self::at($reply, 6)];
+        [$id, $queue, $type, $payload, $attempts, $max, $trace] = [
+            self::at($reply, 0),
+            self::at($reply, 1),
+            self::at($reply, 2),
+            self::at($reply, 3),
+            self::at($reply, 4),
+            self::at($reply, 5),
+            self::at($reply, 6),
+        ];
 
         return new ReservedJob($id, $queue, $type, $payload, max(1, (int) $attempts), max(1, (int) $max), $token, $trace === '' ? null : $trace);
     }

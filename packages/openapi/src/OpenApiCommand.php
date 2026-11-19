@@ -24,11 +24,15 @@ final readonly class OpenApiCommand
      */
     public static function register(ConsoleBuilder $cli, Closure $app, Closure $generator, string $name = 'openapi'): void
     {
-        $cli->command($name, static fn (
-            Output $out,
-            #[Option('File to write; standard output when omitted')] ?string $output = null,
-            #[Option('Exit with 1 when anything could not be described')] bool $strict = false,
-        ): int => self::write($app(), $generator(), $output, $strict, $out), 'Writes the OpenAPI document of the application.');
+        $cli->command(
+            $name,
+            static fn (
+                Output $out,
+                #[Option('File to write; standard output when omitted')] ?string $output = null,
+                #[Option('Exit with 1 when anything could not be described')] bool $strict = false,
+            ): int => self::write($app(), $generator(), $output, $strict, $out),
+            'Writes the OpenAPI document of the application.',
+        );
     }
 
     /**

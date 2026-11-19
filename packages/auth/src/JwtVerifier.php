@@ -7,9 +7,9 @@ namespace Shirakaba\Auth;
 use Closure;
 use InvalidArgumentException;
 use JsonException;
+use Psr\Clock\ClockInterface;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Time\SystemClock;
-use Psr\Clock\ClockInterface;
 
 /**
  * Shirakaba's minimal JWT (JWS compact) verifier: HS256, RS256 and ES256 (design/09-security.md).
@@ -70,7 +70,7 @@ final readonly class JwtVerifier implements TokenVerifier
         if ($header === null || $claims === null || $signature === null) {
             return null;
         }
-        if (isset($header['crit']) || (isset($header['typ']) && (!is_string($header['typ']) || strcasecmp($header['typ'], 'JWT') !== 0))) {
+        if (isset($header['crit']) || isset($header['typ']) && (!is_string($header['typ']) || strcasecmp($header['typ'], 'JWT') !== 0)) {
             return null;
         }
 
@@ -110,13 +110,13 @@ final readonly class JwtVerifier implements TokenVerifier
         $exp = $claims['exp'] ?? null;
         $nbf = $claims['nbf'] ?? null;
         $iat = $claims['iat'] ?? null;
-        if ($exp === null ? $this->requireExpiration : (!is_int($exp) || $now - $this->leeway >= $exp)) {
+        if ($exp === null ? $this->requireExpiration : !is_int($exp) || ($now - $this->leeway) >= $exp) {
             return false;
         }
-        if ($nbf !== null && (!is_int($nbf) || $now + $this->leeway < $nbf)) {
+        if ($nbf !== null && (!is_int($nbf) || ($now + $this->leeway) < $nbf)) {
             return false;
         }
-        if ($iat !== null && (!is_int($iat) || $now + $this->leeway < $iat)) {
+        if ($iat !== null && (!is_int($iat) || ($now + $this->leeway) < $iat)) {
             return false;
         }
         if ($this->issuer !== null && ($claims['iss'] ?? null) !== $this->issuer) {
@@ -165,7 +165,7 @@ final readonly class JwtVerifier implements TokenVerifier
      */
     private static function decode(string $encoded): ?string
     {
-        if ($encoded === '' || preg_match('/^[A-Za-z0-9_-]+$/D', $encoded) !== 1 || strlen($encoded) % 4 === 1) {
+        if ($encoded === '' || preg_match('/^[A-Za-z0-9_-]+$/D', $encoded) !== 1 || (strlen($encoded) % 4) === 1) {
             return null;
         }
         $decoded = base64_decode(strtr($encoded, '-_', '+/'), true);

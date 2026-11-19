@@ -6,10 +6,10 @@ namespace Shirakaba\Http\Message\Tests\Conformance;
 
 use Http\Psr7Test\RequestIntegrationTest;
 use PHPUnit\Framework\Attributes\CoversClass;
+use Psr\Http\Message\RequestInterface;
 use Shirakaba\Http\Message\Message;
 use Shirakaba\Http\Message\Request;
 use Shirakaba\Http\Message\RequestBase;
-use Psr\Http\Message\RequestInterface;
 
 #[CoversClass(Request::class)]
 #[CoversClass(RequestBase::class)]

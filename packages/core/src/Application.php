@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Shirakaba\Core;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Shirakaba\Core\Internal\ErrorResponder;
 use Shirakaba\Core\Internal\SafeObservation;
 use Shirakaba\Core\Observe\Observer;
@@ -11,9 +14,6 @@ use Shirakaba\Core\Observe\RequestSummary;
 use Shirakaba\Core\Scope\RequestOptions;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Core\Scope\ScopeOwningBody;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 
 /**

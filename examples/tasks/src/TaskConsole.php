@@ -6,16 +6,16 @@ namespace Shirakaba\Examples\Tasks;
 
 use Shirakaba\Console\Argument;
 use Shirakaba\Console\ConsoleBuilder;
-use Shirakaba\Console\RouteCommands;
 use Shirakaba\Console\Option;
 use Shirakaba\Console\Output;
+use Shirakaba\Console\RouteCommands;
 use Shirakaba\Database\Database;
+use Shirakaba\DatabaseBridge\EntityCommands;
 use Shirakaba\DatabaseBridge\MigrationCommands;
 use Shirakaba\Migrations\Migrations;
 use Shirakaba\OpenApi\Generator;
 use Shirakaba\OpenApi\OpenApiCommand;
 use Shirakaba\Orm\Entities;
-use Shirakaba\DatabaseBridge\EntityCommands;
 
 /**
  * The example's command line: migrations, the OpenAPI document, introspection (routes and
@@ -38,27 +38,35 @@ final readonly class TaskConsole
         );
         RouteCommands::register($cli, static fn () => TaskApi::builder($database));
         EntityCommands::register($cli, static fn (): array => [Task::class], static fn () => $database->connect()->reader());
-        $cli->command('tasks:add', static function (
-            Output $output,
-            #[Argument('Title of the task')] string $title,
-            #[Option('Mark it done at once')] bool $done = false,
-        ) use ($database): int {
-            $task = Entities::insert(new Task($title, status: $done ? TaskStatus::Done : TaskStatus::Open), $database->connect()->writer());
-            $output->line(sprintf('Added task %d.', $task->id ?? 0));
+        $cli->command(
+            'tasks:add',
+            static function (
+                Output $output,
+                #[Argument('Title of the task')] string $title,
+                #[Option('Mark it done at once')] bool $done = false,
+            ) use ($database): int {
+                $task = Entities::insert(new Task($title, status: $done ? TaskStatus::Done : TaskStatus::Open), $database->connect()->writer());
+                $output->line(sprintf('Added task %d.', $task->id ?? 0));
 
-            return 0;
-        }, 'Adds a task.');
-        $cli->command('tasks:list', static function (Output $output, #[Option('Only tasks with this status')] ?TaskStatus $status = null) use ($database): int {
-            $query = Entities::query(Task::class)->orderBy('id');
-            if ($status !== null) {
-                $query = $query->where('status', '=', $status);
-            }
-            foreach ($query->fetch($database->connect()->reader()) as $task) {
-                $output->line(sprintf('%d [%s] %s', $task->id ?? 0, $task->status === TaskStatus::Done ? 'x' : ' ', $task->title));
-            }
+                return 0;
+            },
+            'Adds a task.',
+        );
+        $cli->command(
+            'tasks:list',
+            static function (Output $output, #[Option('Only tasks with this status')] ?TaskStatus $status = null) use ($database): int {
+                $query = Entities::query(Task::class)->orderBy('id');
+                if ($status !== null) {
+                    $query = $query->where('status', '=', $status);
+                }
+                foreach ($query->fetch($database->connect()->reader()) as $task) {
+                    $output->line(sprintf('%d [%s] %s', $task->id ?? 0, $task->status === TaskStatus::Done ? 'x' : ' ', $task->title));
+                }
 
-            return 0;
-        }, 'Lists tasks.');
+                return 0;
+            },
+            'Lists tasks.',
+        );
 
         return $cli;
     }

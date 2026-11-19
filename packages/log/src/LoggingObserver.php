@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Shirakaba\Log;
 
 use Closure;
+use Psr\Log\LoggerInterface;
 use Shirakaba\Core\Http\HttpFailure;
 use Shirakaba\Core\Observe\Event;
 use Shirakaba\Core\Observe\Observation;
 use Shirakaba\Core\Observe\Observer;
 use Shirakaba\Core\Observe\RequestSummary;
 use Shirakaba\Core\Observe\RouteSummary;
-use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -44,7 +44,7 @@ final readonly class LoggingObserver implements Observer
 
     public function begin(RequestSummary $request): Observation
     {
-        return new class ($this->logger, $this->accessLog, $this->clock, $request) implements Observation {
+        return new class($this->logger, $this->accessLog, $this->clock, $request) implements Observation {
             private ?RouteSummary $route = null;
             private float $started;
 
@@ -74,7 +74,11 @@ final readonly class LoggingObserver implements Observer
             {
                 $context = ['exception' => $error, 'method' => $this->request->method, 'route' => $this->route?->template];
                 if ($error instanceof HttpFailure && $error->status < 500) {
-                    $this->logger->debug('Client error {status} on {method} {route}: {detail}', [...$context, 'status' => $error->status, 'detail' => $error->detail]);
+                    $this->logger->debug('Client error {status} on {method} {route}: {detail}', [
+                        ...$context,
+                        'status' => $error->status,
+                        'detail' => $error->detail,
+                    ]);
 
                     return;
                 }

@@ -2,10 +2,21 @@
 
 ## PHPStan at level max
 
-All code passes PHPStan at level `max` with strict rules and the extra strictness options in
-`phpstan.dist.neon`. Baselines and `@phpstan-ignore` are not used: a type is fixed or narrowed with a
-check. Configuration as code ([principles](01-principles.md)) exists largely so that PHPStan sees the
-whole application.
+All code passes PHPStan at level `max` with strict rules, bleeding edge (the checks of the next
+major version) and the extra strictness options in `phpstan.common.neon`. Baselines and
+`@phpstan-ignore` are not used: a type is fixed or narrowed with a check. Configuration as code
+([principles](01-principles.md)) exists largely so that PHPStan sees the whole application.
+
+`reportUnsafeArrayStringKeyCasting` is not enabled yet. It makes `array<string, X>` mean keys that PHP
+does not cast to integers, but PHPStan cannot narrow a `string` to such a key with any check, so
+every map keyed by a column, header or field name would need a checked conversion at its boundary.
+
+The monorepo analysis also finds unused code with `shipmonk/dead-code-detector`. Public and
+protected members of package classes outside `Internal` and `@internal` are public API, and
+properties of classes in tests and examples are read by the framework through reflection;
+`tools/phpstan/src/PublicApiUsageProvider.php` tells the detector so. Members that only tests use are
+reported. A member of an internal class that something outside PHP reads, such as a property that
+templates read, is marked `@api`.
 
 `shirakaba/phpstan` adds rules for applications:
 
@@ -20,6 +31,20 @@ whole application.
 | `QueryInLoopRule` | queries inside loops, the usual source of N+1 queries |
 
 `SelectResultTypeExtension` gives query results their row shapes.
+
+## Other checks
+
+- **Dependencies.** `composer monorepo:standalone` runs `shipmonk/composer-dependency-analyser` in
+  each installed package: a dependency used but not declared (extensions included), declared but
+  unused, or in the wrong section fails. Dependencies in `suggest` are optional and used behind a
+  check; a package lists its other exceptions, with reasons, in
+  `composer-dependency-analyser.package.php`.
+- **Mutation testing.** `composer infection` runs Infection over the packages that guard security
+  boundaries (authentication, CORS, the SSRF-safe HTTP client, rate limits, sessions and CSRF,
+  trusted proxies). CI runs it as a non-blocking job: surviving mutants show where tests are weak,
+  and the score is not a gate.
+- **Formatting.** Mago formats the code (`mago.toml`, `composer format`); only its formatter is used.
+  `composer check` fails while a file is not formatted.
 
 ## Effects and Steins
 

@@ -110,10 +110,14 @@ final class MailerTest extends TestCase
         self::assertMatchesRegularExpression('/Content-Type: multipart\/mixed; boundary="=_[0-9a-f]+"/', $message);
         self::assertStringContainsString('Content-Type: multipart/related;', $message);
         self::assertStringContainsString('Content-Type: multipart/alternative;', $message);
-        self::assertStringContainsString("Content-Type: text/html; charset=utf-8", $message);
+        self::assertStringContainsString('Content-Type: text/html; charset=utf-8', $message);
         self::assertStringContainsString("Content-ID: <logo@example.com>\r\n", $message);
         self::assertStringContainsString('Content-Disposition: inline; filename="logo.png"', $message);
-        self::assertStringContainsString("Content-Disposition: attachment; filename*=utf-8''%E8%AB%8B%E6%B1%82%E6%9B%B8.csv", str_replace("\r\n ", ' ', $message), 'Headers may be folded.');
+        self::assertStringContainsString(
+            "Content-Disposition: attachment; filename*=utf-8''%E8%AB%8B%E6%B1%82%E6%9B%B8.csv",
+            str_replace("\r\n ", ' ', $message),
+            'Headers may be folded.',
+        );
         self::assertStringContainsString(base64_encode('a,b'), $message);
         self::assertSame(3, preg_match_all('/^--=_[0-9a-f]+--\r?$/m', $message), 'Three multiparts close.');
     }
@@ -134,14 +138,16 @@ final class MailerTest extends TestCase
             static fn () => new Attachment('x', 'a.txt', "text/plain\r\nX: y"),
             static fn () => new Email(new Address('a@example.com'), [], 'Hi', 'x'),
         ];
+        $accepted = [];
         foreach ($attempts as $index => $attempt) {
             try {
                 $attempt();
-                self::fail(sprintf('Attempt %d must be refused.', $index));
             } catch (InvalidArgumentException) {
-                self::addToAssertionCount(1);
+                continue;
             }
+            $accepted[] = $index;
         }
+        self::assertSame([], $accepted, 'These attempts must be refused.');
     }
 
     public function testDisplayNamesWithSpecialCharactersAreQuoted(): void
@@ -154,21 +160,32 @@ final class MailerTest extends TestCase
     public function testSendsOverStartTlsWithAuthAndDotStuffing(): void
     {
         $connection = new ScriptedConnection(['220 mail.example.com ESMTP'], []);
-        $transport = new SmtpTransport('mail.example.com', 587, 'user', 'secret', heloName: 'app.example.com', writer: self::writer(), connector: static fn () => $connection);
+        $transport = new SmtpTransport(
+            'mail.example.com',
+            587,
+            'user',
+            'secret',
+            heloName: 'app.example.com',
+            writer: self::writer(),
+            connector: static fn () => $connection,
+        );
 
         $sent = $transport->send(self::email(".hidden line\nnormal"));
 
-        self::assertSame([
-            'EHLO app.example.com',
-            'STARTTLS',
-            'EHLO app.example.com',
-            'AUTH PLAIN ' . base64_encode("\0user\0secret"),
-            'MAIL FROM:<noreply@example.com>',
-            'RCPT TO:<ann@example.jp>',
-            'RCPT TO:<audit@example.com>',
-            'DATA',
-            'QUIT',
-        ], $connection->commands());
+        self::assertSame(
+            [
+                'EHLO app.example.com',
+                'STARTTLS',
+                'EHLO app.example.com',
+                'AUTH PLAIN ' . base64_encode("\0user\0secret"),
+                'MAIL FROM:<noreply@example.com>',
+                'RCPT TO:<ann@example.jp>',
+                'RCPT TO:<audit@example.com>',
+                'DATA',
+                'QUIT',
+            ],
+            $connection->commands(),
+        );
         self::assertTrue($connection->closed);
         self::assertStringEndsWith("\r\n.\r\n", $connection->message());
         self::assertDoesNotMatchRegularExpression('/^\.[^.\r]/m', $connection->message(), 'No line starts with a single dot.');
@@ -217,7 +234,6 @@ final class MailerTest extends TestCase
     {
         SmtpTransport::fromDsn('smtps://user%40example.com:p%40ss@smtp.example.com');
         SmtpTransport::fromDsn('smtp://localhost:1025?tls=none');
-        $this->addToAssertionCount(2);
 
         $this->expectException(InvalidArgumentException::class);
         SmtpTransport::fromDsn('http://example.com');
@@ -257,7 +273,11 @@ final class MailerTest extends TestCase
             self::markTestSkipped('Set SHIRAKABA_TEST_SMTP_DSN to send through Mailpit.');
         }
         $id = bin2hex(random_bytes(6)) . '@example.com';
-        $sent = SmtpTransport::fromDsn($dsn)->send(self::email('本文です', '<p>本文です</p>', [new Attachment('a,b', '請求書.csv', 'text/csv')])->withMessageId($id));
+        $sent = SmtpTransport::fromDsn($dsn)->send(self::email('本文です', '<p>本文です</p>', [new Attachment(
+            'a,b',
+            '請求書.csv',
+            'text/csv',
+        )])->withMessageId($id));
 
         self::assertSame($id, $sent->messageId);
         $api = getenv('SHIRAKABA_TEST_MAILPIT_API');

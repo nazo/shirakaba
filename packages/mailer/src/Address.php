@@ -27,13 +27,16 @@ final readonly class Address
             throw new InvalidArgumentException('Mail addresses and display names cannot contain line breaks or NUL.');
         }
         $at = strrpos($address, '@');
-        if ($at === false || $at === 0 || $at === strlen($address) - 1) {
+        if ($at === false || $at === 0 || $at === (strlen($address) - 1)) {
             throw new InvalidArgumentException(sprintf('"%s" is not a mail address.', $address));
         }
         $local = substr($address, 0, $at);
         $domain = self::asciiDomain(substr($address, $at + 1), $address);
         if (strlen($local) > 64 || preg_match('/\A[A-Za-z0-9!#$%&\'*+\/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&\'*+\/=?^_`{|}~-]+)*\z/', $local) !== 1) {
-            throw new InvalidArgumentException(sprintf('"%s" has a local part that is not a plain ASCII dot-atom; quoted and non-ASCII local parts are not supported.', $address));
+            throw new InvalidArgumentException(sprintf(
+                '"%s" has a local part that is not a plain ASCII dot-atom; quoted and non-ASCII local parts are not supported.',
+                $address,
+            ));
         }
         $this->address = $local . '@' . $domain;
     }
@@ -61,7 +64,10 @@ final readonly class Address
             }
             $domain = $converted;
         }
-        if (strlen($domain) > 253 || preg_match('/\A[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\z/', $domain) !== 1) {
+        if (
+            strlen($domain) > 253
+            || preg_match('/\A[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\z/', $domain) !== 1
+        ) {
             throw new InvalidArgumentException(sprintf('"%s" has an invalid domain.', $address));
         }
 

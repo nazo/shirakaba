@@ -48,7 +48,7 @@ abstract class Message implements MessageInterface
             $lower = strtolower($name);
             $key = $names[$lower] ?? $name;
             $names[$lower] = $key;
-            $values[$key] = [...$values[$key] ?? [], ...self::filterValue($value)];
+            $values[$key] = [...($values[$key] ?? []), ...self::filterValue($value)];
         }
 
         $this->headers = $values;
@@ -134,7 +134,7 @@ abstract class Message implements MessageInterface
         }
 
         $headers = $this->headers;
-        $headers[$existing] = [...$headers[$existing] ?? [], ...$values];
+        $headers[$existing] = [...($headers[$existing] ?? []), ...$values];
 
         return clone($this, ['headers' => $headers]);
     }

@@ -17,11 +17,15 @@ final readonly class Schema
 {
     public static function migrations(Database $database): Migrations
     {
-        return new Migrations($database, [
-            '2026_11_01_000000_create_users' => new CreateUsers(),
-            '2026_11_01_000001_create_sent_mails' => new CreateSentMails(),
-            '2026_11_01_000002_create_jobs' => new CreateJobsTable(),
-        ], entities: self::entities());
+        return new Migrations(
+            $database,
+            [
+                '2026_11_01_000000_create_users' => new CreateUsers(),
+                '2026_11_01_000001_create_sent_mails' => new CreateSentMails(),
+                '2026_11_01_000002_create_jobs' => new CreateJobsTable(),
+            ],
+            entities: self::entities(),
+        );
     }
 
     /**

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Shirakaba\Session;
 
-use Shirakaba\Core\Scope\RequestScope;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Core\Scope\RequestScope;
 
 /**
  * Loads the session for each request into the RequestScope and saves it afterwards.

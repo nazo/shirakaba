@@ -36,7 +36,10 @@ final readonly class TemplateDirectory
     public function find(string $name, ?string $locale = null): ?string
     {
         if (preg_match('#\A[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*(\.[A-Za-z0-9_-]+)*\.(txt|html)\z#', $name) !== 1) {
-            throw new TemplateError(sprintf('"%s" is not a template name; use letters, digits, "_", "-", "/" between directories and a .txt or .html extension.', $name));
+            throw new TemplateError(sprintf(
+                '"%s" is not a template name; use letters, digits, "_", "-", "/" between directories and a .txt or .html extension.',
+                $name,
+            ));
         }
         if ($locale !== null && preg_match('/\A[A-Za-z]{2,3}([_-][A-Za-z0-9]{2,8})*\z/', $locale) !== 1) {
             throw new TemplateError(sprintf('"%s" is not a locale.', $locale));

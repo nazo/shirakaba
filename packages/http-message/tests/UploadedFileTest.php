@@ -7,11 +7,11 @@ namespace Shirakaba\Http\Message\Tests;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Shirakaba\Http\Message\Stream;
 use Shirakaba\Http\Message\Tests\Fixtures\LimitedWriteWrapper;
 use Shirakaba\Http\Message\Tests\Fixtures\ScriptedReadStream;
 use Shirakaba\Http\Message\UploadedFile;
-use RuntimeException;
 
 #[CoversClass(UploadedFile::class)]
 final class UploadedFileTest extends TestCase

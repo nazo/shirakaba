@@ -59,7 +59,10 @@ final class AgentCommandsTest extends TestCase
 
     public function testKeepsTheProjectsOwnTextAndReplacesOnlyTheBlock(): void
     {
-        file_put_contents($this->root . '/AGENTS.md', "# Shop\n\nUse tabs.\n\n" . AgentRules::BEGIN . "\nold rules\n" . AgentRules::END . "\n\n## Deploy\n\nAsk first.\n");
+        file_put_contents(
+            $this->root . '/AGENTS.md',
+            "# Shop\n\nUse tabs.\n\n" . AgentRules::BEGIN . "\nold rules\n" . AgentRules::END . "\n\n## Deploy\n\nAsk first.\n",
+        );
 
         self::assertSame(0, $this->tester()->run('agents:sync')->exitCode);
 

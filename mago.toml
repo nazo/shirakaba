@@ -1,0 +1,23 @@
+# Mago formats the PHP code (`composer format`, `composer format:check`). Only its formatter is
+# used: PHPStan and Steins do the analysis (design/13-static-analysis-and-agents.md).
+php-version = "8.5"
+
+[source]
+paths = ["packages", "tools", "examples", "tests"]
+# PHPStan rule tests expect errors on fixed lines of these fixtures.
+excludes = ["packages/*/vendor", "packages/phpstan/tests/data"]
+
+[formatter]
+# PER Coding Style, with a wider line and the line breaks the author chose kept.
+print-width = 160
+space-before-arrow-function-parameter-list-parenthesis = true
+break-promoted-properties-list = false
+parameter-attribute-on-new-line = false
+inline-single-breaking-value-argument = true
+preserve-breaking-argument-list = true
+preserve-breaking-parameter-list = true
+preserve-breaking-member-access-chain = true
+preserve-breaking-conditional-expression = true
+preserve-breaking-condition-expression = true
+preserve-breaking-binary-expression = true
+preserve-breaking-attribute-list = true

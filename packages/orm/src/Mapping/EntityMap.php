@@ -8,6 +8,9 @@ use BackedEnum;
 use DateTimeImmutable;
 use DateTimeInterface;
 use JsonException;
+use ReflectionClass;
+use ReflectionNamedType;
+use ReflectionParameter;
 use Shirakaba\Database\Dialect\Dialect;
 use Shirakaba\Orm\Attribute\BelongsTo;
 use Shirakaba\Orm\Attribute\Column;
@@ -30,9 +33,6 @@ use Shirakaba\Orm\MappingError;
 use Shirakaba\Orm\NotDeleted;
 use Shirakaba\Orm\Scope;
 use Shirakaba\Query\Values;
-use ReflectionClass;
-use ReflectionNamedType;
-use ReflectionParameter;
 use UnexpectedValueException;
 
 /**
@@ -90,7 +90,15 @@ final readonly class EntityMap
                 $declared instanceof BelongsTo => new Relation($declared->name, 'belongsTo', $declared->entity, $declared->foreignKey),
                 $declared instanceof HasOne => new Relation($declared->name, 'hasOne', $declared->entity, $declared->foreignKey),
                 $declared instanceof HasMany => new Relation($declared->name, 'hasMany', $declared->entity, $declared->foreignKey, orderBy: $declared->orderBy),
-                $declared instanceof ManyToMany => new Relation($declared->name, 'manyToMany', $declared->entity, $declared->foreignKey, $declared->through, $declared->localKey, orderBy: $declared->orderBy),
+                $declared instanceof ManyToMany => new Relation(
+                    $declared->name,
+                    'manyToMany',
+                    $declared->entity,
+                    $declared->foreignKey,
+                    $declared->through,
+                    $declared->localKey,
+                    orderBy: $declared->orderBy,
+                ),
                 default => null,
             };
             if ($relation === null) {
@@ -136,7 +144,11 @@ final readonly class EntityMap
             throw new MappingError(sprintf('%s: %s is not a Scope.', $entity, $scope));
         }
         if ($needsNoArguments && (new ReflectionClass($scope)->getConstructor()?->getNumberOfRequiredParameters() ?? 0) > 0) {
-            throw new MappingError(sprintf('%s: the default scope %s must have a constructor without required arguments; use #[RequiredScope] for scopes that need values.', $entity, $scope));
+            throw new MappingError(sprintf(
+                '%s: the default scope %s must have a constructor without required arguments; use #[RequiredScope] for scopes that need values.',
+                $entity,
+                $scope,
+            ));
         }
 
         return $scope;
@@ -177,7 +189,16 @@ final readonly class EntityMap
 
     public function relation(string $name): Relation
     {
-        return $this->relations[$name] ?? throw new MappingError(sprintf('%s has no relation "%s"; relations are declared on the class with #[BelongsTo], #[HasOne], #[HasMany] or #[ManyToMany].', $this->class, $name) . \Shirakaba\Orm\Internal\Messages::see('unknown-relation'));
+        return (
+            $this->relations[$name] ?? throw new MappingError(
+                sprintf(
+                    '%s has no relation "%s"; relations are declared on the class with #[BelongsTo], #[HasOne], #[HasMany] or #[ManyToMany].',
+                    $this->class,
+                    $name,
+                )
+                    . \Shirakaba\Orm\Internal\Messages::see('unknown-relation'),
+            )
+        );
     }
 
     /**
@@ -210,7 +231,7 @@ final readonly class EntityMap
      */
     public function hydrate(array $row, Dialect $dialect): object
     {
-        return new ($this->class)(...self::arguments($this->class, $this->fields, $row, $dialect));
+        return new $this->class(...self::arguments($this->class, $this->fields, $row, $dialect));
     }
 
     /**
@@ -311,7 +332,17 @@ final readonly class EntityMap
                 throw new MappingError(sprintf('%s: %s does not implement ColumnType.', $where, $converter));
             }
 
-            return new Field(...$common, kind: 'custom', type: $typeName, nullable: $tail[0], hasDefault: $tail[1], default: $tail[2], id: $tail[3], generated: $tail[4], converter: new $converter());
+            return new Field(
+                ...$common,
+                kind: 'custom',
+                type: $typeName,
+                nullable: $tail[0],
+                hasDefault: $tail[1],
+                default: $tail[2],
+                id: $tail[3],
+                generated: $tail[4],
+                converter: new $converter(),
+            );
         }
         if ($attributes(Json::class)) {
             if ($typeName !== 'array' && !class_exists($typeName) && !interface_exists($typeName)) {
@@ -350,12 +381,35 @@ final readonly class EntityMap
             );
         }
         if (Values::supports($typeName) && $typeName !== 'mixed') {
-            return new Field(...$common, kind: 'value', type: $typeName, nullable: $tail[0], hasDefault: $tail[1], default: $tail[2], id: $tail[3], generated: $tail[4], version: $tail[5], createdAt: $tail[6], updatedAt: $tail[7]);
+            return new Field(
+                ...$common,
+                kind: 'value',
+                type: $typeName,
+                nullable: $tail[0],
+                hasDefault: $tail[1],
+                default: $tail[2],
+                id: $tail[3],
+                generated: $tail[4],
+                version: $tail[5],
+                createdAt: $tail[6],
+                updatedAt: $tail[7],
+            );
         }
         if (class_exists($typeName)) {
             $wrapped = self::wrapper($typeName);
             if ($wrapped !== null) {
-                return new Field(...$common, kind: 'wrapper', type: $typeName, nullable: $tail[0], hasDefault: $tail[1], default: $tail[2], id: $tail[3], generated: $tail[4], innerType: $wrapped[1], wrapperProperty: $wrapped[0]);
+                return new Field(
+                    ...$common,
+                    kind: 'wrapper',
+                    type: $typeName,
+                    nullable: $tail[0],
+                    hasDefault: $tail[1],
+                    default: $tail[2],
+                    id: $tail[3],
+                    generated: $tail[4],
+                    innerType: $wrapped[1],
+                    wrapperProperty: $wrapped[0],
+                );
             }
         }
 
@@ -435,15 +489,26 @@ final readonly class EntityMap
         }
         $converted = match ($field->kind) {
             'value' => Values::read($value, $field->type, $dialect),
-            'wrapper' => ($inner = Values::read($value, $field->innerType ?? 'mixed', $dialect)) === null ? null : new ($field->type)($inner),
+            'wrapper' => ($inner = Values::read($value, $field->innerType ?? 'mixed', $dialect)) === null ? null : new $field->type($inner),
             'custom' => $field->converter?->fromDatabase($value),
             'json' => $field->type === 'array'
                 ? (is_string($value) ? self::decode($value) : (is_array($value) ? $value : null))
-                : (is_string($value) && (class_exists($field->type) || interface_exists($field->type)) ? \Shirakaba\Json\JsonMapper::decode($value, $field->type) : null),
+                : (
+                    is_string($value) && (class_exists($field->type) || interface_exists($field->type))
+                        ? \Shirakaba\Json\JsonMapper::decode($value, $field->type)
+                        : null
+                ),
             'embedded' => null,
         };
         if ($converted === null) {
-            throw new UnexpectedValueException(sprintf('Column "%s" holds %s, which is not a valid %s for %s::$%s.', $field->column, get_debug_type($value), $field->type, $class, $field->property));
+            throw new UnexpectedValueException(sprintf(
+                'Column "%s" holds %s, which is not a valid %s for %s::$%s.',
+                $field->column,
+                get_debug_type($value),
+                $field->type,
+                $class,
+                $field->property,
+            ));
         }
 
         return $converted;

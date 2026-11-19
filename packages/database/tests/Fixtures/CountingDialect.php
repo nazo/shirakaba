@@ -50,16 +50,24 @@ final class CountingDialect implements Dialect
     {
         $this->sqlite->configure($pdo);
         if ($pdo instanceof \Pdo\Sqlite) {
-            $pdo->createFunction('shirakaba_set_limit', function (int $milliseconds): int {
-                $this->sets[] = $milliseconds;
+            $pdo->createFunction(
+                'shirakaba_set_limit',
+                function (int $milliseconds): int {
+                    $this->sets[] = $milliseconds;
 
-                return $milliseconds;
-            }, 1);
-            $pdo->createFunction('shirakaba_set_config', function (string $name, string $value): string {
-                $this->settings[] = $name . '=' . $value;
+                    return $milliseconds;
+                },
+                1,
+            );
+            $pdo->createFunction(
+                'shirakaba_set_config',
+                function (string $name, string $value): string {
+                    $this->settings[] = $name . '=' . $value;
 
-                return $value;
-            }, 2);
+                    return $value;
+                },
+                2,
+            );
         }
     }
 

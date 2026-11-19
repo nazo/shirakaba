@@ -16,11 +16,9 @@ final readonly class Patch
      * @param Optional<Role> $role
      */
     public function __construct(
-        #[OptionalOf('string', nullable: true)]
-        public Optional $nickname = new Optional(),
-        #[OptionalOf('int')] #[Range(min: 0)]
-        public Optional $age = new Optional(),
-        #[OptionalOf(Role::class)]
-        public Optional $role = new Optional(),
+        #[OptionalOf('string', nullable: true)] public Optional $nickname = new Optional(),
+        #[OptionalOf('int')]
+        #[Range(min: 0)] public Optional $age = new Optional(),
+        #[OptionalOf(Role::class)] public Optional $role = new Optional(),
     ) {}
 }

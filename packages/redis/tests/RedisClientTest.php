@@ -53,14 +53,16 @@ final class RedisClientTest extends TestCase
 
     public function testRefusesStatefulCommandsAndBadUrls(): void
     {
+        $accepted = [];
         foreach (['MULTI', 'subscribe', 'SELECT', ''] as $command) {
             try {
                 new RedisClient()->command($command);
-                self::fail(sprintf('"%s" must be refused.', $command));
             } catch (InvalidArgumentException) {
-                $this->addToAssertionCount(1);
+                continue;
             }
+            $accepted[] = $command;
         }
+        self::assertSame([], $accepted, 'These commands must be refused.');
         RedisClient::fromUrl('rediss://user:p%40ss@cache.example.com:6380/2');
         $this->expectException(InvalidArgumentException::class);
         RedisClient::fromUrl('http://example.com');

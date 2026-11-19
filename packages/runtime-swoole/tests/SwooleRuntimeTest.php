@@ -35,8 +35,13 @@ final class SwooleRuntimeTest extends TestCase
     /**
      * @param array<string, string> $headers
      */
-    private static function serve(RequestHandlerInterface $application, string $path, array $headers = ['host' => 'localhost'], ?FakeConnection $connection = null, ?Log $errors = null): FakeConnection
-    {
+    private static function serve(
+        RequestHandlerInterface $application,
+        string $path,
+        array $headers = ['host' => 'localhost'],
+        ?FakeConnection $connection = null,
+        ?Log $errors = null,
+    ): FakeConnection {
         $connection ??= new FakeConnection();
         $server = new RequestServer($application, static function (Throwable $e) use ($errors): void {
             if ($errors !== null) {
@@ -86,7 +91,14 @@ final class SwooleRuntimeTest extends TestCase
         self::assertIsString($upload);
         file_put_contents($upload, 'hello');
         $request = RequestConverter::convert(
-            ['request_method' => 'POST', 'request_uri' => '/items', 'query_string' => 'page=2', 'server_protocol' => 'HTTP/1.1', 'server_port' => 9501, 'remote_addr' => '192.0.2.1'],
+            [
+                'request_method' => 'POST',
+                'request_uri' => '/items',
+                'query_string' => 'page=2',
+                'server_protocol' => 'HTTP/1.1',
+                'server_port' => 9501,
+                'remote_addr' => '192.0.2.1',
+            ],
             ['host' => 'example.com', 'content-type' => 'application/x-www-form-urlencoded', 'x_forwarded_for' => '203.0.113.9'],
             ['a' => '1'],
             ['page' => '2'],
@@ -120,11 +132,14 @@ final class SwooleRuntimeTest extends TestCase
                 $log->entries[] = $cancellation->isRequested() ? 'cancelled' : 'finished';
             });
 
-            return new Streamed((static function (): Generator {
-                foreach (['one', 'two', 'three'] as $chunk) {
-                    yield $chunk . "\n";
-                }
-            })(), 'text/plain');
+            return new Streamed(
+                (static function (): Generator {
+                    foreach (['one', 'two', 'three'] as $chunk) {
+                        yield $chunk . "\n";
+                    }
+                })(),
+                'text/plain',
+            );
         });
         $application = $app->build();
 

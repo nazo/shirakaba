@@ -270,7 +270,7 @@ final readonly class Uri implements UriInterface
         $scheme = strpos($uri, ':');
         $delimiter = strcspn($uri, '/?#');
         // An authority follows "//" at the start or right after "scheme:".
-        if ($authority === 0 || ($authority !== false && $scheme !== false && $authority === $scheme + 1 && $scheme < $delimiter)) {
+        if ($authority === 0 || $authority !== false && $scheme !== false && $authority === ($scheme + 1) && $scheme < $delimiter) {
             $start = $authority + 2;
             $start += strcspn($uri, '/?#', $start);
         }
@@ -280,10 +280,12 @@ final readonly class Uri implements UriInterface
 
     private static function encode(string $value, string $allowed): string
     {
-        return preg_replace_callback(
-            '/(?:[^' . $allowed . '%]++|%(?![A-Fa-f0-9]{2}))/',
-            static fn (array $match): string => rawurlencode($match[0] ?? ''),
-            $value,
-        ) ?? throw new InvalidArgumentException('Unable to encode URI component.');
+        return (
+            preg_replace_callback(
+                '/(?:[^' . $allowed . '%]++|%(?![A-Fa-f0-9]{2}))/',
+                static fn (array $match): string => rawurlencode($match[0] ?? ''),
+                $value,
+            ) ?? throw new InvalidArgumentException('Unable to encode URI component.')
+        );
     }
 }

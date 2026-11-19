@@ -7,10 +7,10 @@ namespace Shirakaba\Http\Message\Tests;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use Shirakaba\Http\Message\ServerRequest;
 use Shirakaba\Http\Message\Stream;
 use Shirakaba\Http\Message\UploadedFile;
-use ReflectionMethod;
 
 #[CoversClass(ServerRequest::class)]
 final class ServerRequestTest extends TestCase

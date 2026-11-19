@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Shirakaba\QueryCache;
 
 use JsonException;
+use Psr\SimpleCache\CacheInterface;
 use Shirakaba\Database\Error\DatabaseError;
 use Shirakaba\Database\Reader;
 use Shirakaba\Database\Writer;
@@ -13,7 +14,6 @@ use Shirakaba\Query\Insert;
 use Shirakaba\Query\RowMapper;
 use Shirakaba\Query\Select;
 use Shirakaba\Query\Update;
-use Psr\SimpleCache\CacheInterface;
 
 /**
  * Opt-in caching of query results. Nothing is cached unless a call asks:
@@ -60,12 +60,15 @@ final readonly class QueryCache
     {
         $tags = array_values(array_unique([...$query->tables(), ...$tags]));
         $compiled = $query->toSql($db->dialect());
-        $key = $this->prefix . 'q.' . hash('xxh128', json_encode([
-            $db->dialect()->name(),
-            $compiled->sql,
-            array_map(self::parameter(...), $compiled->parameters),
-            $this->versions($tags),
-        ], JSON_THROW_ON_ERROR));
+        $key =
+            $this->prefix
+            . 'q.'
+            . hash('xxh128', json_encode([
+                $db->dialect()->name(),
+                $compiled->sql,
+                array_map(self::parameter(...), $compiled->parameters),
+                $this->versions($tags),
+            ], JSON_THROW_ON_ERROR));
 
         $cached = $this->cache->get($key);
         if (is_string($cached)) {

@@ -41,7 +41,7 @@ final readonly class JwtKey
     {
         $key = self::publicKey($publicKeyPem, OPENSSL_KEYTYPE_RSA);
         $details = openssl_pkey_get_details($key);
-        $bits = is_array($details) ? ($details['bits'] ?? 0) : 0;
+        $bits = is_array($details) ? $details['bits'] ?? 0 : 0;
         if (!is_int($bits) || $bits < 2048) {
             throw new InvalidArgumentException('An RS256 key must have at least 2048 bits.');
         }
@@ -56,7 +56,7 @@ final readonly class JwtKey
     {
         $key = self::publicKey($publicKeyPem, OPENSSL_KEYTYPE_EC);
         $details = openssl_pkey_get_details($key);
-        $ec = is_array($details) ? ($details['ec'] ?? null) : null;
+        $ec = is_array($details) ? $details['ec'] ?? null : null;
         if (!is_array($ec) || ($ec['curve_name'] ?? null) !== 'prime256v1') {
             throw new InvalidArgumentException('An ES256 key must be on the P-256 curve.');
         }

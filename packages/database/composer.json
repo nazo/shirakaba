@@ -5,11 +5,16 @@
     "license": "MIT",
     "require": {
         "php": "^8.5",
+        "ext-ctype": "*",
         "ext-pdo": "*",
         "shirakaba/time": "^0.1"
     },
     "require-dev": {
         "phpunit/phpunit": "^13.4"
+    },
+    "suggest": {
+        "ext-pdo_pgsql": "PostgreSQL connections, including LISTEN and NOTIFY",
+        "ext-pdo_sqlite": "SQLite connections"
     },
     "autoload": {
         "psr-4": {

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Shirakaba\Queue;
 
-use Shirakaba\Core\Scope\Cancellation;
-
 use DateTimeImmutable;
+use Psr\Clock\ClockInterface;
+use Shirakaba\Core\Scope\Cancellation;
 use Shirakaba\Database\Connection;
 use Shirakaba\Database\Database;
 use Shirakaba\Database\Writer;
@@ -17,7 +17,6 @@ use Shirakaba\Query\Select;
 use Shirakaba\Query\Sql;
 use Shirakaba\Query\Update;
 use Shirakaba\Time\SystemClock;
-use Psr\Clock\ClockInterface;
 
 /**
  * Jobs in a database table (design/10-background-work.md), on MySQL 8, PostgreSQL and SQLite.
@@ -209,7 +208,12 @@ final class DatabaseQueue implements Queue, WaitsForJobs
     {
         $db = $this->writer();
         $failed = [];
-        foreach (Select::from($this->table)->whereNotNull('failed_at')->orderBy('failed_at', 'desc')->orderBy('id', 'desc')->limit(max(1, $limit))->fetchAll($db) as $row) {
+        foreach (Select::from($this->table)
+            ->whereNotNull('failed_at')
+            ->orderBy('failed_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->limit(max(1, $limit))
+            ->fetchAll($db) as $row) {
             $failedAt = $row['failed_at'] ?? null;
             $failed[] = [
                 'id' => self::string($row['id'] ?? ''),
@@ -229,11 +233,13 @@ final class DatabaseQueue implements Queue, WaitsForJobs
      */
     public function retry(string $id): bool
     {
-        return Update::table($this->table)
-            ->set(['failed_at' => null, 'error' => null, 'attempts' => 0, 'available_at' => $this->clock->now()])
-            ->where('id', '=', $id)
-            ->whereNotNull('failed_at')
-            ->execute($this->writer()) > 0;
+        return (
+            Update::table($this->table)
+                ->set(['failed_at' => null, 'error' => null, 'attempts' => 0, 'available_at' => $this->clock->now()])
+                ->where('id', '=', $id)
+                ->whereNotNull('failed_at')
+                ->execute($this->writer()) > 0
+        );
     }
 
     /**
@@ -258,11 +264,13 @@ final class DatabaseQueue implements Queue, WaitsForJobs
      */
     private function finish(ReservedJob $job, array $changes): bool
     {
-        return Update::table($this->table)
-            ->set([...$changes, 'reserved_until' => null, 'reservation' => null])
-            ->where('id', '=', $job->id)
-            ->where('reservation', '=', $job->reservation)
-            ->execute($this->writer()) > 0;
+        return (
+            Update::table($this->table)
+                ->set([...$changes, 'reserved_until' => null, 'reservation' => null])
+                ->where('id', '=', $job->id)
+                ->where('reservation', '=', $job->reservation)
+                ->execute($this->writer()) > 0
+        );
     }
 
     private function writer(): Writer

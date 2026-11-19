@@ -43,7 +43,19 @@ final readonly class EntityQueryRule implements Rule
     private const string ENTITIES = 'Shirakaba\Orm\Entities';
 
     /** @var list<string> Methods whose first argument is a property name. */
-    private const array PROPERTY_METHODS = ['where', 'wherein', 'wherenotin', 'wherenull', 'wherenotnull', 'wherebetween', 'orderby', 'orwhere', 'orwherein', 'orwherenotin', 'orwherenull'];
+    private const array PROPERTY_METHODS = [
+        'where',
+        'wherein',
+        'wherenotin',
+        'wherenull',
+        'wherenotnull',
+        'wherebetween',
+        'orderby',
+        'orwhere',
+        'orwherein',
+        'orwherenotin',
+        'orwherenull',
+    ];
 
     /** @var list<string> Methods whose first argument is a relation name. */
     private const array RELATION_METHODS = ['wherehas', 'wheredoesnthave'];

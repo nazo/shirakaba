@@ -6,8 +6,8 @@ namespace Shirakaba\Session;
 
 use Closure;
 use LogicException;
-use Shirakaba\Core\Scope\RequestScope;
 use Psr\Http\Message\ServerRequestInterface;
+use Shirakaba\Core\Scope\RequestScope;
 
 /**
  * The session of one request, kept in the RequestScope (never in globals, design/03-runtimes-and-scopes.md).

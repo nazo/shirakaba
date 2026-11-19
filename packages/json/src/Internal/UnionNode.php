@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Shirakaba\Json\Internal;
 
-use Shirakaba\Core\Http\ProblemCode;
-
 use Shirakaba\Core\Description\UnionType;
+use Shirakaba\Core\Http\ProblemCode;
 use stdClass;
 
 /**
@@ -46,10 +45,15 @@ final readonly class UnionNode implements Node
         }
         $tag = $value->{$this->discriminator};
         if (!is_string($tag) || !isset($this->members[$tag])) {
-            $problems->mapping($tagPointer, 'must be one of: ' . implode(', ', array_map(
-                static fn (int|string $tag): string => json_encode((string) $tag, JSON_THROW_ON_ERROR),
-                array_keys($this->members),
-            )), ProblemCode::INVALID_CHOICE);
+            $problems->mapping(
+                $tagPointer,
+                'must be one of: '
+                    . implode(', ', array_map(
+                        static fn (int|string $tag): string => json_encode((string) $tag, JSON_THROW_ON_ERROR),
+                        array_keys($this->members),
+                    )),
+                ProblemCode::INVALID_CHOICE,
+            );
 
             return null;
         }

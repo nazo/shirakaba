@@ -43,8 +43,16 @@ final class ConstraintsTest extends TestCase
         yield 'date in range' => [new DateRange('2000-01-01', '2000-12-31'), \Shirakaba\Time\LocalDate::of(2000, 12, 31), null];
         yield 'date too early' => [new DateRange('2000-01-01'), \Shirakaba\Time\LocalDate::of(1999, 12, 31), 'must not be before 2000-01-01'];
         yield 'instant within the last day' => [new DateRange(notAfter: '2000-12-31'), new \DateTimeImmutable('2000-12-31T23:59:59Z'), null];
-        yield 'instant after the last day' => [new DateRange(notAfter: '2000-12-31'), new \DateTimeImmutable('2001-01-01T00:00:00Z'), 'must not be after 2000-12-31'];
-        yield 'instant bound' => [new DateRange(notBefore: '2026-11-11T09:00:00+09:00'), new \DateTimeImmutable('2026-11-10T23:59:59Z'), 'must not be before 2026-11-11T09:00:00+09:00'];
+        yield 'instant after the last day' => [
+            new DateRange(notAfter: '2000-12-31'),
+            new \DateTimeImmutable('2001-01-01T00:00:00Z'),
+            'must not be after 2000-12-31',
+        ];
+        yield 'instant bound' => [
+            new DateRange(notBefore: '2026-11-11T09:00:00+09:00'),
+            new \DateTimeImmutable('2026-11-10T23:59:59Z'),
+            'must not be before 2026-11-11T09:00:00+09:00',
+        ];
         yield 'length counts code points' => [new Length(max: 2), 'äöü', 'must be at most 2 characters long'];
         yield 'length too short' => [new Length(min: 2), 'a', 'must be at least 2 characters long'];
         yield 'length invalid utf-8' => [new Length(min: 1), "\xff", 'must be valid UTF-8'];
@@ -60,7 +68,7 @@ final class ConstraintsTest extends TestCase
         yield 'not blank' => [new NotBlank(), " \t", 'must not be blank'];
         yield 'not blank ok' => [new NotBlank(), ' a ', null];
         yield 'one of ok' => [new OneOf(['asc', 'desc']), 'asc', null];
-        yield 'one of strict' => [new OneOf([1, 2]), '1', "must be one of: 1, 2"];
+        yield 'one of strict' => [new OneOf([1, 2]), '1', 'must be one of: 1, 2'];
         yield 'email ok' => [new Email(), 'a@example.com', null];
         yield 'email fails' => [new Email(), 'not an address', 'must be an e-mail address'];
     }
@@ -109,7 +117,9 @@ final class ConstraintsTest extends TestCase
     public function testAppliesToQueryParameters(): void
     {
         $app = new AppBuilder();
-        $app->get('/search', static fn (#[Query] #[Length(min: 2)] string $q, #[Query] #[OneOf(['asc', 'desc'])] string $order = 'asc'): Text => new Text($q . ' ' . $order));
+        $app->get('/search', static fn (#[Query]
+            #[Length(min: 2)] string $q, #[Query]
+            #[OneOf(['asc', 'desc'])] string $order = 'asc'): Text => new Text($q . ' ' . $order));
         $client = new TestClient($app->build());
 
         self::assertSame('ab desc', (string) $client->get('/search?q=ab&order=desc')->getBody());

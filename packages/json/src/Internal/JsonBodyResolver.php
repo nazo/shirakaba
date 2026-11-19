@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Shirakaba\Json\Internal;
 
 use JsonException;
+use Psr\Http\Message\StreamInterface;
 use Shirakaba\Core\Extraction\ArgumentResolver;
 use Shirakaba\Core\Extraction\Exchange;
 use Shirakaba\Json\JsonBody;
 use Shirakaba\Json\JsonBodyFailure;
-use Psr\Http\Message\StreamInterface;
 
 /**
  * Reads and maps a JSON body. A plain serialisable object, so build plans can be cached (design/04-routing-and-handlers.md).

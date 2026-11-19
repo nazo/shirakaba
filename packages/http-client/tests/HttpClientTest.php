@@ -7,6 +7,7 @@ namespace Shirakaba\HttpClient\Tests;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestInterface;
 use Shirakaba\Core\Observe\Event;
 use Shirakaba\Core\Observe\Observation;
 use Shirakaba\Core\Observe\Observer;
@@ -24,7 +25,6 @@ use Shirakaba\HttpClient\HttpRequestSent;
 use Shirakaba\HttpClient\NetworkError;
 use Shirakaba\HttpClient\RequestRefused;
 use Shirakaba\HttpClient\Resolver;
-use Psr\Http\Message\RequestInterface;
 use Throwable;
 
 #[CoversClass(HttpClient::class)]
@@ -48,7 +48,11 @@ final class HttpClientTest extends TestCase
         self::$port = (int) substr($name, (int) strrpos($name, ':') + 1);
         $server = proc_open(
             [PHP_BINARY, '-S', '127.0.0.1:' . self::$port, __DIR__ . '/Fixtures/server.php'],
-            [['pipe', 'r'], ['file', '/dev/null', 'w'], ['file', '/dev/null', 'w']],
+            [
+                ['pipe', 'r'],
+                ['file', '/dev/null', 'w'],
+                ['file', '/dev/null', 'w'],
+            ],
             $pipes,
             null,
             null,
@@ -83,7 +87,7 @@ final class HttpClientTest extends TestCase
      */
     private static function resolver(array $hosts = []): Resolver
     {
-        return new class ($hosts) implements Resolver {
+        return new class($hosts) implements Resolver {
             /**
              * @param array<string, list<string>> $hosts
              */
@@ -223,7 +227,14 @@ final class HttpClientTest extends TestCase
     #[DataProvider('largeResponses')]
     public function testAbortsResponsesOverTheLimit(string $path): void
     {
-        self::assertSame(900, strlen((string) self::local(new HttpClientOptions(maxResponseBytes: 1000))->sendRequest(self::request('GET', self::url('/big?bytes=900')))->getBody()));
+        self::assertSame(
+            900,
+            strlen(
+                (string) self::local(new HttpClientOptions(maxResponseBytes: 1000))
+                    ->sendRequest(self::request('GET', self::url('/big?bytes=900')))
+                    ->getBody(),
+            ),
+        );
 
         try {
             self::local(new HttpClientOptions(maxResponseBytes: 1000))->sendRequest(self::request('GET', self::url($path)));
@@ -272,7 +283,10 @@ final class HttpClientTest extends TestCase
     {
         $this->expectException(RequestRefused::class);
         $this->expectExceptionMessage('resolves to 10.0.0.5');
-        self::local(hosts: ['intranet.test' => ['10.0.0.5']])->sendRequest(self::request('GET', self::url('/redirect?to=' . rawurlencode('http://intranet.test/admin'))));
+        self::local(hosts: ['intranet.test' => ['10.0.0.5']])->sendRequest(self::request(
+            'GET',
+            self::url('/redirect?to=' . rawurlencode('http://intranet.test/admin')),
+        ));
     }
 
     /**
@@ -305,13 +319,13 @@ final class HttpClientTest extends TestCase
     public function testReportsToTheRequestAndStopsWhenItIsCancelled(): void
     {
         $events = new \ArrayObject();
-        $observer = new class ($events) implements Observer {
+        $observer = new class($events) implements Observer {
             /** @param \ArrayObject<int, Event> $events */
             public function __construct(private \ArrayObject $events) {}
 
             public function begin(RequestSummary $request): Observation
             {
-                return new class ($this->events) implements Observation {
+                return new class($this->events) implements Observation {
                     /** @param \ArrayObject<int, Event> $events */
                     public function __construct(private \ArrayObject $events) {}
 
@@ -348,10 +362,31 @@ final class HttpClientTest extends TestCase
                 $sent[] = $event->attributes();
             }
         }
-        self::assertSame([
-            ['http.request.method' => 'GET', 'url.scheme' => 'http', 'server.address' => '127.0.0.1', 'server.port' => self::$port, 'http.response.status_code' => 302],
-            ['http.request.method' => 'GET', 'url.scheme' => 'http', 'server.address' => '127.0.0.1', 'server.port' => self::$port, 'http.response.status_code' => 200],
-            ['http.request.method' => 'GET', 'url.scheme' => 'http', 'server.address' => '127.0.0.1', 'server.port' => self::$port, 'error.type' => 'cancelled'],
-        ], $sent);
+        self::assertSame(
+            [
+                [
+                    'http.request.method' => 'GET',
+                    'url.scheme' => 'http',
+                    'server.address' => '127.0.0.1',
+                    'server.port' => self::$port,
+                    'http.response.status_code' => 302,
+                ],
+                [
+                    'http.request.method' => 'GET',
+                    'url.scheme' => 'http',
+                    'server.address' => '127.0.0.1',
+                    'server.port' => self::$port,
+                    'http.response.status_code' => 200,
+                ],
+                [
+                    'http.request.method' => 'GET',
+                    'url.scheme' => 'http',
+                    'server.address' => '127.0.0.1',
+                    'server.port' => self::$port,
+                    'error.type' => 'cancelled',
+                ],
+            ],
+            $sent,
+        );
     }
 }

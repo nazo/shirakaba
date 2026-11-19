@@ -7,6 +7,4 @@ namespace Shirakaba\Database\Error;
 /**
  * A unique or primary key constraint rejected the statement.
  */
-final class UniqueViolation extends DatabaseError
-{
-}
+final class UniqueViolation extends DatabaseError {}

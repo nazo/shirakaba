@@ -7,8 +7,8 @@ namespace Shirakaba\Core\Extraction;
 use Attribute;
 use Shirakaba\Core\Description\DescribesParameter;
 use Shirakaba\Core\Description\ParameterDescription;
-use Shirakaba\Core\Internal\ScalarResolver;
 use Shirakaba\Core\Internal\ScalarConverter;
+use Shirakaba\Core\Internal\ScalarResolver;
 use Shirakaba\Core\InvalidApplication;
 
 /**

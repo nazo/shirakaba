@@ -6,6 +6,7 @@ namespace Shirakaba\Core\Tests;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ServerRequestInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Description\ApplicationDescription;
 use Shirakaba\Core\Description\EnumType;
@@ -27,7 +28,6 @@ use Shirakaba\Core\Tests\Fixtures\Color;
 use Shirakaba\Core\Tests\Fixtures\OpaqueExtractor;
 use Shirakaba\Core\Tests\Fixtures\Priority;
 use Shirakaba\Core\Tests\Fixtures\Slug;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * The metadata API of design/04-routing-and-handlers.md and constraints on built-in extractors.
@@ -44,7 +44,8 @@ final class DescriptionTest extends TestCase
         $app = new AppBuilder();
         $app->get('/users/{id}', static fn (
             ServerRequestInterface $request,
-            #[Path] #[AtLeast(1)] int $id,
+            #[Path]
+            #[AtLeast(1)] int $id,
             #[Query] bool $verbose = false,
             #[Header('X-Color')] ?Color $color = null,
             #[Query] Priority $priority = Priority::Normal,
@@ -61,7 +62,11 @@ final class DescriptionTest extends TestCase
         $routes = self::app()->describe()->routes;
 
         self::assertSame(
-            [['GET', '/users/{id}', 'users.show'], ['PUT', '/admin/settings', null], ['PATCH', '/admin/settings', null]],
+            [
+                ['GET',   '/users/{id}',     'users.show'],
+                ['PUT',   '/admin/settings', null],
+                ['PATCH', '/admin/settings', null],
+            ],
             array_map(static fn (RouteDescription $route): array => [$route->method, $route->template, $route->name], $routes),
         );
     }
@@ -79,7 +84,10 @@ final class DescriptionTest extends TestCase
         [$id, $verbose, $color, $priority] = $route->parameters;
         self::assertEquals(new ParameterDescription('path', 'id', 'id', new ScalarType('int'), true, constraints: [new AtLeast(1)]), $id);
         self::assertEquals(new ParameterDescription('query', 'verbose', 'verbose', new ScalarType('bool'), false, true, false), $verbose);
-        self::assertEquals(new ParameterDescription('header', 'X-Color', 'color', new EnumType(Color::class, ['red', 'blue'], true), false, true, null), $color);
+        self::assertEquals(
+            new ParameterDescription('header', 'X-Color', 'color', new EnumType(Color::class, ['red', 'blue'], true), false, true, null),
+            $color,
+        );
         self::assertEquals(new ParameterDescription('query', 'priority', 'priority', new EnumType(Priority::class, [1, 2]), false, true, 1), $priority);
     }
 
@@ -116,7 +124,10 @@ final class DescriptionTest extends TestCase
 
         $route = $app->describe()->routes[0] ?? null;
         self::assertNotNull($route);
-        self::assertEquals(new ParameterDescription('path', 'slug', 'slug', new ScalarType('string'), true, constraints: [new AtLeast(0)]), $route->parameters[0] ?? null);
+        self::assertEquals(
+            new ParameterDescription('path', 'slug', 'slug', new ScalarType('string'), true, constraints: [new AtLeast(0)]),
+            $route->parameters[0] ?? null,
+        );
         self::assertEquals(new ScalarType('string', true), ($route->parameters[1] ?? null)?->type);
     }
 
@@ -134,13 +145,17 @@ final class DescriptionTest extends TestCase
     public function testDeclaredResponsesAreDescribedAndChecked(): void
     {
         $app = new AppBuilder();
-        $app->post('/items', #[\Shirakaba\Core\Http\Responds(201)] #[\Shirakaba\Core\Http\Responds(409, 'Duplicate.')] static fn (#[Query] bool $wrong = false): Text => new Text('created', $wrong ? 200 : 201));
+        $app->post('/items', #[\Shirakaba\Core\Http\Responds(201)]
+        #[\Shirakaba\Core\Http\Responds(409, 'Duplicate.')] static fn (#[Query] bool $wrong = false): Text => new Text('created', $wrong ? 200 : 201));
 
         $declared = ($app->describe()->routes[0] ?? null)?->declaredResponses;
-        self::assertEquals([
-            new \Shirakaba\Core\Description\ResponseDescription(201),
-            new \Shirakaba\Core\Description\ResponseDescription(409, 'application/problem+json', description: 'Duplicate.'),
-        ], $declared);
+        self::assertEquals(
+            [
+                new \Shirakaba\Core\Description\ResponseDescription(201),
+                new \Shirakaba\Core\Description\ResponseDescription(409, 'application/problem+json', description: 'Duplicate.'),
+            ],
+            $declared,
+        );
 
         $client = new TestClient($app->build());
         self::assertSame(201, $client->post('/items')->getStatusCode());
@@ -153,7 +168,8 @@ final class DescriptionTest extends TestCase
     public function testConstraintsApplyToBuiltInExtractors(): void
     {
         $app = new AppBuilder();
-        $app->get('/items', static fn (#[Query] #[AtLeast(1)] int $page = 1): Text => new Text('page ' . $page));
+        $app->get('/items', static fn (#[Query]
+            #[AtLeast(1)] int $page = 1): Text => new Text('page ' . $page));
         $client = new TestClient($app->build());
 
         self::assertSame('page 3', (string) $client->get('/items?page=3')->getBody());

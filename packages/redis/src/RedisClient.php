@@ -21,7 +21,22 @@ use InvalidArgumentException;
 final class RedisClient
 {
     /** @var list<string> */
-    private const array STATEFUL = ['MULTI', 'EXEC', 'DISCARD', 'WATCH', 'UNWATCH', 'SUBSCRIBE', 'PSUBSCRIBE', 'SSUBSCRIBE', 'MONITOR', 'SELECT', 'CLIENT', 'RESET', 'QUIT', 'HELLO'];
+    private const array STATEFUL = [
+        'MULTI',
+        'EXEC',
+        'DISCARD',
+        'WATCH',
+        'UNWATCH',
+        'SUBSCRIBE',
+        'PSUBSCRIBE',
+        'SSUBSCRIBE',
+        'MONITOR',
+        'SELECT',
+        'CLIENT',
+        'RESET',
+        'QUIT',
+        'HELLO',
+    ];
     private const int MAX_BULK = 64 * 1024 * 1024;
     private const int MAX_ELEMENTS = 1_000_000;
 
@@ -60,7 +75,14 @@ final class RedisClient
             [$user, $pass] = [null, $user];
         }
 
-        return new self($parts['host'], $parts['port'] ?? 6379, $pass, $user === '' ? null : $user, (int) ($database === '' ? 0 : $database), $parts['scheme'] === 'rediss');
+        return new self(
+            $parts['host'],
+            $parts['port'] ?? 6379,
+            $pass,
+            $user === '' ? null : $user,
+            (int) ($database === '' ? 0 : $database),
+            $parts['scheme'] === 'rediss',
+        );
     }
 
     /**
@@ -130,7 +152,14 @@ final class RedisClient
             return $this->stream;
         }
         $context = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'peer_name' => $this->host, 'SNI_enabled' => true]]);
-        $stream = @stream_socket_client(($this->tls ? 'tls://' : 'tcp://') . $this->host . ':' . $this->port, $code, $message, $this->timeout, STREAM_CLIENT_CONNECT, $context);
+        $stream = @stream_socket_client(
+            ($this->tls ? 'tls://' : 'tcp://') . $this->host . ':' . $this->port,
+            $code,
+            $message,
+            $this->timeout,
+            STREAM_CLIENT_CONNECT,
+            $context,
+        );
         if ($stream === false) {
             throw new RedisError(sprintf('Unable to connect to Redis at %s:%d: %s', $this->host, $this->port, $message));
         }
@@ -216,7 +245,7 @@ final class RedisClient
             throw new RedisError('Redis sent a reply that is too large.');
         }
         $data = '';
-        while (strlen($data) < $length + 2) {
+        while (strlen($data) < ($length + 2)) {
             $chunk = @fread($stream, max(1, $length + 2 - strlen($data)));
             if ($chunk === false || $chunk === '') {
                 throw new RedisError($this->timedOut($stream) ? 'Redis did not answer in time.' : 'Redis closed the connection.');

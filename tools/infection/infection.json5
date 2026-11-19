@@ -1,0 +1,30 @@
+// Mutation testing of the packages that guard security boundaries (design/13-static-analysis-and-agents.md):
+// a mutant that survives is a change to the code that no test notices. `composer infection` runs it;
+// CI runs it as a non-blocking job, since the score is a guide to where tests are weak, not a gate.
+{
+    "$schema": "../../vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "../../packages/auth/src",
+            "../../packages/cors/src",
+            "../../packages/http-client/src",
+            "../../packages/rate-limit/src",
+            "../../packages/session/src",
+            "../../packages/trusted-proxy/src"
+        ]
+    },
+    // The tests of those packages only, in tools/infection/phpunit.xml.
+    "phpUnit": {
+        "configDir": "."
+    },
+    "tmpDir": "../../.infection/tmp",
+    "logs": {
+        "text": "../../.infection/infection.log",
+        "summary": "../../.infection/summary.log",
+        "html": "../../.infection/infection.html",
+        "github": true
+    },
+    "mutators": {
+        "@default": true
+    }
+}

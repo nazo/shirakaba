@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Shirakaba\Core\Internal;
 
 use Closure;
-use Shirakaba\Core\Http\ResponseContext;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Core\Http\ResponseContext;
 
 /**
  * Plans its handler when called instead of at build time (AppBuilder::build(lazy: true)).

@@ -11,10 +11,10 @@ use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Http\Text;
 use Shirakaba\Core\Testing\TestClient;
 use Shirakaba\Database\Database;
-use Shirakaba\DatabaseBridge\DatabaseMiddleware;
-use Shirakaba\DatabaseBridge\Db;
 use Shirakaba\Database\Reader;
 use Shirakaba\Database\StatementExecuted;
+use Shirakaba\DatabaseBridge\DatabaseMiddleware;
+use Shirakaba\DatabaseBridge\Db;
 use Shirakaba\DatabaseBridge\Testing\StatementLog;
 
 #[CoversClass(StatementLog::class)]

@@ -7,6 +7,8 @@ namespace Shirakaba\PubSub\Tests;
 use PDO;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
+use RuntimeException;
 use Shirakaba\Database\Database;
 use Shirakaba\Database\Writer;
 use Shirakaba\Http\Message\HttpFactory;
@@ -14,8 +16,6 @@ use Shirakaba\HttpClient\HttpClient;
 use Shirakaba\HttpClient\HttpClientOptions;
 use Shirakaba\PubSub\MercurePublisher;
 use Shirakaba\PubSub\MercureTokens;
-use Psr\Log\AbstractLogger;
-use RuntimeException;
 
 /**
  * Publishes to and subscribes from the Mercure 1.0 hub built into FrankenPHP, started with
@@ -49,7 +49,11 @@ final class MercureHubTest extends TestCase
         mkdir(self::$directory);
         $hub = proc_open(
             [$binary, 'run', '--config', __DIR__ . '/Fixtures/Caddyfile', '--adapter', 'caddyfile'],
-            [['pipe', 'r'], ['file', '/dev/null', 'w'], ['file', '/dev/null', 'w']],
+            [
+                ['pipe', 'r'],
+                ['file', '/dev/null', 'w'],
+                ['file', '/dev/null', 'w'],
+            ],
             $pipes,
             self::$directory,
             ['HUB_DIR' => self::$directory, 'HUB_PORT' => (string) self::$port, 'HUB_KEY' => self::KEY, 'HOME' => self::$directory],
@@ -116,7 +120,11 @@ final class MercureHubTest extends TestCase
     {
         $socket = stream_socket_client('tcp://127.0.0.1:' . self::$port, timeout: 5);
         self::assertNotFalse($socket);
-        $request = sprintf("GET /.well-known/mercure?match=%s HTTP/1.1\r\nHost: 127.0.0.1:%d\r\nAccept: text/event-stream\r\n", rawurlencode($topic), self::$port);
+        $request = sprintf(
+            "GET /.well-known/mercure?match=%s HTTP/1.1\r\nHost: 127.0.0.1:%d\r\nAccept: text/event-stream\r\n",
+            rawurlencode($topic),
+            self::$port,
+        );
         if ($token !== null) {
             $request .= 'Authorization: Bearer ' . $token . "\r\n";
         }

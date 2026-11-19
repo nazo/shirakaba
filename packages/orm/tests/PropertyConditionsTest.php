@@ -53,14 +53,15 @@ final class PropertyConditionsTest extends TestCase
             new Post($cy, 'Cy published', PostStatus::Published),
         ], $db);
 
-
         // Own posts, or published posts of the followed: value objects and enums are converted.
         $timeline = Entities::query(Post::class)
             ->whereGroup(static fn (PropertyConditions $c): PropertyConditions => $c
                 ->where('authorId', '=', $ada)
-                ->orWhereGroup(static fn (PropertyConditions $g): PropertyConditions => $g
-                    ->whereIn('authorId', [$bob, $cy])
-                    ->where('status', '=', PostStatus::Published)))
+                ->orWhereGroup(
+                    static fn (PropertyConditions $g): PropertyConditions => $g
+                        ->whereIn('authorId', [$bob, $cy])
+                        ->where('status', '=', PostStatus::Published),
+                ))
             ->orderBy('id')
             ->fetch($db);
         self::assertSame(['Ada draft', 'Bob published', 'Cy published'], self::titles($timeline));
@@ -75,12 +76,24 @@ final class PropertyConditionsTest extends TestCase
         // Negated lists, of values and of a subquery.
         self::assertSame(['Bob published'], self::titles(Entities::query(Post::class)->whereNotIn('authorId', [$ada, $cy])->fetch($db)));
         $cyOnly = \Shirakaba\Query\Select::from('orm_authors')->columns('id')->where('name', '=', 'Cy');
-        self::assertSame(['Ada draft', 'Bob published'], self::titles(Entities::query(Post::class)->whereNotIn('authorId', $cyOnly)->orderBy('id')->fetch($db)));
+        self::assertSame(
+            ['Ada draft', 'Bob published'],
+            self::titles(Entities::query(Post::class)->whereNotIn('authorId', $cyOnly)->orderBy('id')->fetch($db)),
+        );
         self::assertCount(4, Entities::query(Post::class)->whereNotIn('authorId', [])->fetch($db));
-        self::assertSame(['Ada draft', 'Bob published', 'Cy published'], self::titles(Entities::query(Post::class)
-            ->whereGroup(static fn (PropertyConditions $c): PropertyConditions => $c->where('status', '=', PostStatus::Published)->orWhereNotIn('authorId', [$cy]))
-            ->orderBy('id')
-            ->fetch($db)));
+        self::assertSame(
+            ['Ada draft', 'Bob published', 'Cy published'],
+            self::titles(
+                Entities::query(Post::class)
+                    ->whereGroup(static fn (PropertyConditions $c): PropertyConditions => $c->where(
+                        'status',
+                        '=',
+                        PostStatus::Published,
+                    )->orWhereNotIn('authorId', [$cy]))
+                    ->orderBy('id')
+                    ->fetch($db),
+            ),
+        );
 
         $undated = Entities::query(Post::class)
             ->whereGroup(static fn (PropertyConditions $c): PropertyConditions => $c->whereNull('publishedOn')->orWhereIn('authorId', []))

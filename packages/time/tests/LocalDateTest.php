@@ -63,7 +63,10 @@ final class LocalDateTest extends TestCase
     {
         $date = LocalDate::of(2026, 12, 31);
 
-        self::assertSame('2026-12-30T15:00:00+00:00', $date->atStartOfDay(new DateTimeZone('Asia/Tokyo'))->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM));
+        self::assertSame(
+            '2026-12-30T15:00:00+00:00',
+            $date->atStartOfDay(new DateTimeZone('Asia/Tokyo'))->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM),
+        );
         self::assertSame('2027-01-01', $date->addDays(1)->toString());
         self::assertSame('2026-12-01', $date->addDays(-30)->toString());
         self::assertSame(4, $date->dayOfWeek());

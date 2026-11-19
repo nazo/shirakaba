@@ -14,10 +14,9 @@ use Shirakaba\Validation\NotBlank;
 final readonly class TaskUpdate
 {
     public function __construct(
-        #[NotBlank] #[Length(max: 200)]
-        public string $title,
-        #[Length(max: 2000)]
-        public string $description,
+        #[NotBlank]
+        #[Length(max: 200)] public string $title,
+        #[Length(max: 2000)] public string $description,
         public TaskStatus $status,
         public int $version,
     ) {}

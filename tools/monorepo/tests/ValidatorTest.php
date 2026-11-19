@@ -53,7 +53,11 @@ final class ValidatorTest extends TestCase
         $root = self::root();
         $root['replace'] = [...$root['replace'], 'shirakaba/orm' => 'self.version', 'shirakaba/time' => 'self.version'];
         $root['autoload']['psr-4'] = [...$root['autoload']['psr-4'], 'Shirakaba\\Orm\\' => 'packages/orm/src/', 'Shirakaba\\Time\\' => 'packages/time/src/'];
-        $root['autoload-dev']['psr-4'] = [...$root['autoload-dev']['psr-4'], 'Shirakaba\\Orm\\Tests\\' => 'packages/orm/tests/', 'Shirakaba\\Time\\Tests\\' => 'packages/time/tests/'];
+        $root['autoload-dev']['psr-4'] = [
+            ...$root['autoload-dev']['psr-4'],
+            'Shirakaba\\Orm\\Tests\\' => 'packages/orm/tests/',
+            'Shirakaba\\Time\\Tests\\' => 'packages/time/tests/',
+        ];
         $this->writeRoot($root);
         $this->writePackage('core', self::package('core', require: ['shirakaba/http' => '^0.1', 'psr/log' => '^3.0']));
         $this->writePackage('http', self::package('http'));
@@ -61,7 +65,9 @@ final class ValidatorTest extends TestCase
         $this->writePackage('orm', self::package('orm', require: ['shirakaba/time' => '^0.1', 'shirakaba/core' => '^0.1']));
 
         self::assertSame(
-            ['packages/orm/composer.json: must be usable without the framework, so it cannot require "shirakaba/core"; move the integration to shirakaba/database-bridge (design/08-database.md).'],
+            [
+                'packages/orm/composer.json: must be usable without the framework, so it cannot require "shirakaba/core"; move the integration to shirakaba/database-bridge (design/08-database.md).',
+            ],
             new Validator($this->dir)->validate(),
         );
     }

@@ -18,8 +18,16 @@ final class LlmsTxtTest extends TestCase
 
     public function testTheCheckedInFilesAreCurrent(): void
     {
-        self::assertSame(LlmsTxt::index(self::docs()), (string) file_get_contents(self::docs() . '/llms.txt'), 'llms.txt is stale; run composer docs:generate.');
-        self::assertSame(LlmsTxt::full(self::docs()), (string) file_get_contents(self::docs() . '/llms-full.txt'), 'llms-full.txt is stale; run composer docs:generate.');
+        self::assertSame(
+            LlmsTxt::index(self::docs()),
+            (string) file_get_contents(self::docs() . '/llms.txt'),
+            'llms.txt is stale; run composer docs:generate.',
+        );
+        self::assertSame(
+            LlmsTxt::full(self::docs()),
+            (string) file_get_contents(self::docs() . '/llms-full.txt'),
+            'llms-full.txt is stale; run composer docs:generate.',
+        );
     }
 
     public function testListsEveryChapterAndRecordAndNothingFromTheRepository(): void

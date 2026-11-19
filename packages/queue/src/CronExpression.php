@@ -53,7 +53,12 @@ final readonly class CronExpression
         }
         $fields = [];
         foreach ($parts as $index => $part) {
-            $fields[] = self::field($part, ...self::RANGES[$index]) ?? throw new InvalidArgumentException(sprintf('"%s" is not a cron expression: field %d ("%s") is invalid.', $expression, $index + 1, $part));
+            $fields[] = self::field($part, ...self::RANGES[$index]) ?? throw new InvalidArgumentException(sprintf(
+                '"%s" is not a cron expression: field %d ("%s") is invalid.',
+                $expression,
+                $index + 1,
+                $part,
+            ));
         }
         if (isset($fields[4][7])) {
             $fields[4][0] = true;
@@ -91,7 +96,7 @@ final readonly class CronExpression
     {
         $utc = $after->setTimezone(new DateTimeZone('UTC'));
         $time = $utc->setTime((int) $utc->format('G'), (int) $utc->format('i'))->modify('+1 minute');
-        for ($i = 0; $i < $days * 1440; $i++) {
+        for ($i = 0; $i < ($days * 1440); $i++) {
             if ($this->matches($time, $timezone)) {
                 return $time;
             }
@@ -121,7 +126,7 @@ final readonly class CronExpression
                 [$from, $to] = [$min, $max];
             } else {
                 $bounds = explode('-', $range, 2);
-                if (!ctype_digit($bounds[0]) || (isset($bounds[1]) && !ctype_digit($bounds[1]))) {
+                if (!ctype_digit($bounds[0]) || isset($bounds[1]) && !ctype_digit($bounds[1])) {
                     return null;
                 }
                 $from = (int) $bounds[0];

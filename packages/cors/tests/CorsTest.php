@@ -100,8 +100,14 @@ final class CorsTest extends TestCase
     {
         $client = self::client(self::cors());
 
-        self::assertSame('https://app.example.com', $client->get('/boom', ['Origin' => 'https://app.example.com'])->getHeaderLine('Access-Control-Allow-Origin'));
-        self::assertSame('https://app.example.com', $client->get('/missing', ['Origin' => 'https://app.example.com'])->getHeaderLine('Access-Control-Allow-Origin'));
+        self::assertSame(
+            'https://app.example.com',
+            $client->get('/boom', ['Origin' => 'https://app.example.com'])->getHeaderLine('Access-Control-Allow-Origin'),
+        );
+        self::assertSame(
+            'https://app.example.com',
+            $client->get('/missing', ['Origin' => 'https://app.example.com'])->getHeaderLine('Access-Control-Allow-Origin'),
+        );
     }
 
     public function testAnyOrigin(): void

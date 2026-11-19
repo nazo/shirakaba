@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Shirakaba\Core\Http;
 
+use Psr\Http\Message\ResponseInterface;
 use Shirakaba\Core\Description\DescribesResponse;
 use Shirakaba\Core\Description\ResponseDescription;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * A 204 No Content response.

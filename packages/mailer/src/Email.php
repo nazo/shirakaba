@@ -22,7 +22,21 @@ use InvalidArgumentException;
 final readonly class Email
 {
     /** @var list<string> Headers the writer sets itself, which extra headers cannot replace. */
-    private const array RESERVED = ['from', 'to', 'cc', 'bcc', 'reply-to', 'subject', 'date', 'message-id', 'mime-version', 'content-type', 'content-transfer-encoding', 'sender', 'return-path'];
+    private const array RESERVED = [
+        'from',
+        'to',
+        'cc',
+        'bcc',
+        'reply-to',
+        'subject',
+        'date',
+        'message-id',
+        'mime-version',
+        'content-type',
+        'content-transfer-encoding',
+        'sender',
+        'return-path',
+    ];
 
     /**
      * @param list<Address> $to
@@ -73,7 +87,19 @@ final readonly class Email
      */
     public function withMessageId(string $messageId): self
     {
-        return new self($this->from, $this->to, $this->subject, $this->text, $this->html, $this->cc, $this->bcc, $this->replyTo, $this->attachments, $this->headers, $messageId);
+        return new self(
+            $this->from,
+            $this->to,
+            $this->subject,
+            $this->text,
+            $this->html,
+            $this->cc,
+            $this->bcc,
+            $this->replyTo,
+            $this->attachments,
+            $this->headers,
+            $messageId,
+        );
     }
 
     /**

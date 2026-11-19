@@ -8,10 +8,10 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use Shirakaba\Http\Message\Message;
 use Shirakaba\Http\Message\Response;
 use Shirakaba\Http\Message\Stream;
-use ReflectionMethod;
 
 #[CoversClass(Message::class)]
 #[CoversClass(Response::class)]
@@ -85,7 +85,9 @@ final class MessageTest extends TestCase
 
     public function testTrimsSurroundingWhitespaceAndCastsIntegers(): void
     {
-        $response = new Response()->withHeader('X-Foo', " \tvalue\t ")->withHeader('Content-Length', 42);
+        $response = new Response()
+            ->withHeader('X-Foo', " \tvalue\t ")
+            ->withHeader('Content-Length', 42);
 
         self::assertSame(['value'], $response->getHeader('x-foo'));
         self::assertSame(['42'], $response->getHeader('content-length'));

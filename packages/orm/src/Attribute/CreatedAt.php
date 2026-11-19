@@ -10,6 +10,4 @@ use Attribute;
  * Set from the clock when the entity is inserted.
  */
 #[Attribute(Attribute::TARGET_PARAMETER)]
-final readonly class CreatedAt
-{
-}
+final readonly class CreatedAt {}

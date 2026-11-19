@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Shirakaba\PubSub;
 
 use InvalidArgumentException;
-use Shirakaba\Time\SystemClock;
 use Psr\Clock\ClockInterface;
+use Shirakaba\Time\SystemClock;
 
 /**
  * Issues Mercure 1.0 access tokens (design/11-real-time-events.md): JWT access tokens (RFC 9068, header
@@ -79,7 +79,10 @@ final readonly class MercureTokens
      */
     public function channelSubscriber(string $subject, string $topicPrefix, object ...$channels): string
     {
-        return $this->subscriber($subject, array_values(array_map(static fn (object $channel): string => $topicPrefix . EventChannels::topic($channel), $channels)));
+        return $this->subscriber(
+            $subject,
+            array_values(array_map(static fn (object $channel): string => $topicPrefix . EventChannels::topic($channel), $channels)),
+        );
     }
 
     /**

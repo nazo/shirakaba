@@ -14,12 +14,12 @@ use Shirakaba\Core\Http\Text;
 use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Core\Testing\TestClient;
-use Shirakaba\Database\Database;
-use Shirakaba\DatabaseBridge\DatabaseMiddleware;
-use Shirakaba\DatabaseBridge\Db;
 use Shirakaba\Database\Connection;
+use Shirakaba\Database\Database;
 use Shirakaba\Database\Reader;
 use Shirakaba\Database\Writer;
+use Shirakaba\DatabaseBridge\DatabaseMiddleware;
+use Shirakaba\DatabaseBridge\Db;
 use Shirakaba\DatabaseBridge\RequestDatabase;
 
 #[CoversClass(Database::class)]
@@ -54,21 +54,27 @@ final class DatabaseTest extends TestCase
         });
         $app = new AppBuilder();
         $app->middleware(new DatabaseMiddleware($database));
-        $app->get('/notes', static fn (#[Db] Reader $db): Text => new Text(implode(',', array_map(
-            static fn (array $row): string => is_string($row['body'] ?? null) ? $row['body'] : '?',
-            $db->fetchAll('SELECT body FROM notes ORDER BY id'),
-        ))));
+        $app->get(
+            '/notes',
+            static fn (#[Db] Reader $db): Text => new Text(implode(',', array_map(
+                static fn (array $row): string => is_string($row['body'] ?? null) ? $row['body'] : '?',
+                $db->fetchAll('SELECT body FROM notes ORDER BY id'),
+            ))),
+        );
         $app->get('/count', static fn (#[Db] Reader $db): Text => new Text(var_export($db->fetchValue('SELECT COUNT(*) FROM notes'), true)));
         $app->post('/notes', static function (#[Db] Writer $db): Text {
             $db->execute('INSERT INTO notes (body) VALUES (?)', ['hello']);
 
             return new Text($db->lastInsertId());
         });
-        $app->post('/fail', static fn (#[Db] Writer $db): Text => new Text((string) $db->transaction(static function (Writer $db): int {
-            $inserted = $db->execute('INSERT INTO notes (body) VALUES (?)', ['lost']);
+        $app->post(
+            '/fail',
+            static fn (#[Db] Writer $db): Text => new Text((string) $db->transaction(static function (Writer $db): int {
+                $inserted = $db->execute('INSERT INTO notes (body) VALUES (?)', ['lost']);
 
-            return $inserted === 1 ? throw new LogicException('rolled back') : $inserted;
-        })));
+                return $inserted === 1 ? throw new LogicException('rolled back') : $inserted;
+            })),
+        );
         $app->post('/abandon', static function (RequestScope $scope): Text {
             $pdo = RequestDatabase::connection($scope->get(Database::class), $scope)->pdo;
             $pdo->beginTransaction();

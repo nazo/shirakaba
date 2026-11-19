@@ -30,7 +30,7 @@ final class WorkerPacingTest extends TestCase
         $jobs = new Jobs(new InMemoryQueue());
         $jobs->handle(Prune::class, static function (): void {}, name: 'prune');
         $db = new Database(static fn (): PDO => PDO::connect('sqlite::memory:'))->connect()->writer();
-        foreach (range(1, 3) as $ignored) {
+        for ($push = 0; $push < 3; $push++) {
             $jobs->push(new Prune(), $db, new PushOptions('mail'));
         }
 
@@ -63,7 +63,7 @@ final class WorkerPacingTest extends TestCase
         $jobs->handle(Prune::class, static function (): void {}, name: 'prune');
         $cancellation = new Cancellation();
 
-        $queue->waitForJobs(['default'], 0.01, $cancellation);   // LISTEN on the worker's connection
+        $queue->waitForJobs(['default'], 0.01, $cancellation); // LISTEN on the worker's connection
         $jobs->push(new Prune(), $connection->writer());
         $started = microtime(true);
         $queue->waitForJobs(['default'], 5.0, $cancellation);

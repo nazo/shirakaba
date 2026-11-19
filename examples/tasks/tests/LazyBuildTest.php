@@ -6,6 +6,7 @@ namespace Shirakaba\Examples\Tasks\Tests;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Http\Text;
 use Shirakaba\Core\Internal\LazyInvoker;
@@ -15,7 +16,6 @@ use Shirakaba\Examples\Tasks\TaskApi;
 use Shirakaba\Examples\Tasks\TaskSchema;
 use Shirakaba\Http\Message\Stream;
 use Shirakaba\Http\Message\UploadedFile;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * build(lazy: true) must behave exactly like build() for valid applications.
@@ -53,7 +53,12 @@ final class LazyBuildTest extends TestCase
             $client->get('/tasks/1'),
             $client->get('/tasks/0'),
             $client->patch('/tasks/1', '{"status":"done"}', $json),
-            $client->form('POST', '/tasks/1/attachments', ['note' => 'n'], ['file' => new UploadedFile(Stream::fromString("%PDF-1.4\n"), 9, UPLOAD_ERR_OK, 'a.pdf')]),
+            $client->form(
+                'POST',
+                '/tasks/1/attachments',
+                ['note' => 'n'],
+                ['file' => new UploadedFile(Stream::fromString("%PDF-1.4\n"), 9, UPLOAD_ERR_OK, 'a.pdf')],
+            ),
             $client->delete('/tasks/1'),
             $client->get('/tasks/1'),
             $client->post('/tasks/1'),

@@ -26,48 +26,66 @@ final readonly class RouteCommands
      */
     public static function register(ConsoleBuilder $cli, Closure $app, string $prefix = ''): void
     {
-        $cli->command($prefix . 'routes', static function (Output $output, #[Option('Print JSON instead of a table')] bool $json) use ($app): int {
-            $routes = $app()->describe()->routes;
-            if ($json) {
-                $output->line(self::encode(array_map(self::summary(...), $routes)));
+        $cli->command(
+            $prefix . 'routes',
+            static function (Output $output, #[Option('Print JSON instead of a table')] bool $json) use ($app): int {
+                $routes = $app()->describe()->routes;
+                if ($json) {
+                    $output->line(self::encode(array_map(self::summary(...), $routes)));
 
-                return 0;
-            }
-            $rows = array_map(static fn (RouteDescription $route): array => [$route->method, $route->template, $route->name ?? '-', self::relative($route->handler)], $routes);
-            foreach (self::table($rows) as $line) {
-                $output->line($line);
-            }
-
-            return 0;
-        }, 'Lists the routes: method, path, name and handler.');
-
-        $cli->command($prefix . 'routes:show', static function (
-            Output $output,
-            #[Argument('A route name, or a method and path such as "PATCH /tasks/{id}"')] string $route,
-            #[Option('Print JSON instead of text')] bool $json,
-        ) use ($app): int {
-            $routes = $app()->describe()->routes;
-            $matches = array_values(array_filter($routes, static fn (RouteDescription $candidate): bool => $candidate->name === $route
-                || strcasecmp($candidate->method . ' ' . $candidate->template, $route) === 0));
-            if ($matches === []) {
-                throw new UsageError(sprintf('No route "%s"; run routes to list them.', $route));
-            }
-            if ($json) {
-                $output->line(self::encode(count($matches) === 1 ? self::details($matches[0]) : array_map(self::details(...), $matches)));
-
-                return 0;
-            }
-            foreach ($matches as $index => $match) {
-                if ($index > 0) {
-                    $output->line();
+                    return 0;
                 }
-                foreach (self::text($match) as $line) {
+                $rows = array_map(static fn (RouteDescription $route): array => [
+                    $route->method,
+                    $route->template,
+                    $route->name ?? '-',
+                    self::relative($route->handler),
+                ], $routes);
+                foreach (self::table($rows) as $line) {
                     $output->line($line);
                 }
-            }
 
-            return 0;
-        }, 'Shows one route: its handler, parameters and responses.');
+                return 0;
+            },
+            'Lists the routes: method, path, name and handler.',
+        );
+
+        $cli->command(
+            $prefix . 'routes:show',
+            static function (
+                Output $output,
+                #[Argument('A route name, or a method and path such as "PATCH /tasks/{id}"')] string $route,
+                #[Option('Print JSON instead of text')] bool $json,
+            ) use ($app): int {
+                $routes = $app()->describe()->routes;
+                $matches = array_values(array_filter(
+                    $routes,
+                    static fn (RouteDescription $candidate): bool => (
+                        $candidate->name === $route
+                        || strcasecmp($candidate->method . ' ' . $candidate->template, $route) === 0
+                    ),
+                ));
+                if ($matches === []) {
+                    throw new UsageError(sprintf('No route "%s"; run routes to list them.', $route));
+                }
+                if ($json) {
+                    $output->line(self::encode(count($matches) === 1 ? self::details($matches[0]) : array_map(self::details(...), $matches)));
+
+                    return 0;
+                }
+                foreach ($matches as $index => $match) {
+                    if ($index > 0) {
+                        $output->line();
+                    }
+                    foreach (self::text($match) as $line) {
+                        $output->line($line);
+                    }
+                }
+
+                return 0;
+            },
+            'Shows one route: its handler, parameters and responses.',
+        );
     }
 
     /**
@@ -127,7 +145,9 @@ final readonly class RouteCommands
         }
         $lines[] = 'parameters:';
         foreach ($route->parameters as $parameter) {
-            $where = $parameter->source === ParameterDescription::INTERNAL ? 'internal' : $parameter->source . ' ' . ($parameter->name === '' ? $parameter->parameter : $parameter->name);
+            $where = $parameter->source === ParameterDescription::INTERNAL
+                ? 'internal'
+                : $parameter->source . ' ' . ($parameter->name === '' ? $parameter->parameter : $parameter->name);
             $notes = [$parameter->required ? 'required' : 'optional'];
             if ($parameter->hasDefault) {
                 $notes[] = 'default ' . var_export($parameter->default, true);
@@ -142,7 +162,13 @@ final readonly class RouteCommands
         }
         $lines[] = 'responses:';
         foreach ($route->declaredResponses as $response) {
-            $lines[] = rtrim(sprintf('  %d %s %s %s', $response->status, $response->contentType, $response->body === null ? '' : Introspection::typeName($response->body), $response->description));
+            $lines[] = rtrim(sprintf(
+                '  %d %s %s %s',
+                $response->status,
+                $response->contentType,
+                $response->body === null ? '' : Introspection::typeName($response->body),
+                $response->description,
+            ));
         }
         if ($route->declaredResponses === []) {
             $lines[] = '  (none declared; returns ' . ($route->responses === [] ? 'an undeclared type' : implode('|', $route->responses)) . ')';

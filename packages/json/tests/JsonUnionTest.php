@@ -93,11 +93,17 @@ final class JsonUnionTest extends TestCase
         yield 'no discriminator' => ['{"id":"n1"}', [['pointer' => '/type', 'detail' => 'is required']]];
         yield 'unknown discriminator' => ['{"type":"poke","id":"n1"}', [['pointer' => '/type', 'detail' => 'must be one of: "follow", "reaction"']]];
         yield 'discriminator not a string' => ['{"type":1,"id":"n1"}', [['pointer' => '/type', 'detail' => 'must be one of: "follow", "reaction"']]];
-        yield 'member fields' => ['{"type":"follow","id":"n1","note":"x"}', [
-            ['pointer' => '/userId', 'detail' => 'is required'],
-            ['pointer' => '/note', 'detail' => 'is not an accepted field'],
-        ]];
-        yield 'member constraints' => ['{"type":"reaction","id":"n1","note":"x","reaction":""}', [['pointer' => '/reaction', 'detail' => 'must be at least 1 characters long']]];
+        yield 'member fields' => [
+            '{"type":"follow","id":"n1","note":"x"}',
+            [
+                ['pointer' => '/userId', 'detail' => 'is required'],
+                ['pointer' => '/note', 'detail' => 'is not an accepted field'],
+            ],
+        ];
+        yield 'member constraints' => [
+            '{"type":"reaction","id":"n1","note":"x","reaction":""}',
+            [['pointer' => '/reaction', 'detail' => 'must be at least 1 characters long']],
+        ];
         yield 'not an object' => ['[]', [['pointer' => '/', 'detail' => 'must be an object']]];
     }
 

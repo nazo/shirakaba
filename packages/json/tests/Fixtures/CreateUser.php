@@ -18,18 +18,14 @@ final readonly class CreateUser
      * @param list<Address> $previous
      */
     public function __construct(
-        #[Length(min: 1, max: 20)]
-        public string $name,
-        #[Email]
-        public string $email,
+        #[Length(min: 1, max: 20)] public string $name,
+        #[Email] public string $email,
         public Address $address,
-        #[Range(min: 0, max: 150)]
-        public ?int $age = null,
+        #[Range(min: 0, max: 150)] public ?int $age = null,
         public Role $role = Role::Member,
-        #[ListOf('string')] #[Count(max: 3)]
-        public array $tags = [],
-        #[ListOf(Address::class)]
-        public array $previous = [],
+        #[ListOf('string')]
+        #[Count(max: 3)] public array $tags = [],
+        #[ListOf(Address::class)] public array $previous = [],
         public float $score = 0.0,
     ) {
         if ($role === Role::Admin && $age !== null && $age < 18) {

@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Shirakaba\Json\Internal;
 
-use Shirakaba\Core\Http\ProblemCode;
-
 use BackedEnum;
 use InvalidArgumentException;
 use Shirakaba\Core\Description\ConstType;
 use Shirakaba\Core\Description\ObjectType;
 use Shirakaba\Core\Description\Property;
+use Shirakaba\Core\Http\ProblemCode;
 use Shirakaba\Json\Optional;
 use stdClass;
 
@@ -53,7 +52,11 @@ final readonly class ObjectNode implements Node
             if (!array_key_exists($this->tagName, $properties)) {
                 $problems->mapping(Problems::pointer($pointer, $this->tagName), 'is required', ProblemCode::REQUIRED);
             } elseif ($properties[$this->tagName] !== $this->tagValue) {
-                $problems->mapping(Problems::pointer($pointer, $this->tagName), 'must be ' . json_encode($this->tagValue, JSON_THROW_ON_ERROR), ProblemCode::INVALID_CHOICE);
+                $problems->mapping(
+                    Problems::pointer($pointer, $this->tagName),
+                    'must be ' . json_encode($this->tagValue, JSON_THROW_ON_ERROR),
+                    ProblemCode::INVALID_CHOICE,
+                );
             }
             unset($properties[$this->tagName]);
         }
@@ -94,7 +97,7 @@ final readonly class ObjectNode implements Node
         }
 
         try {
-            return new ($this->class)(...$arguments);
+            return new $this->class(...$arguments);
         } catch (InvalidArgumentException) {
             // The DTO rejected the combination; its message is not meant for clients.
             $problems->constraint($pointer, 'is invalid');
@@ -109,18 +112,21 @@ final readonly class ObjectNode implements Node
 
         return new ObjectType(
             $this->class,
-            [...$tag, ...array_map(
-                static fn (Field $field): Property => new Property(
-                    $field->name,
-                    $field->node->type(),
-                    required: !$field->hasDefault,
-                    hasDefault: $field->hasDefault && !$field->optional,
-                    default: $field->default instanceof BackedEnum ? $field->default->value : $field->default,
-                    constraints: $field->constraints,
-                    description: $field->description,
+            [
+                ...$tag,
+                ...array_map(
+                    static fn (Field $field): Property => new Property(
+                        $field->name,
+                        $field->node->type(),
+                        required: !$field->hasDefault,
+                        hasDefault: $field->hasDefault && !$field->optional,
+                        default: $field->default instanceof BackedEnum ? $field->default->value : $field->default,
+                        constraints: $field->constraints,
+                        description: $field->description,
+                    ),
+                    $this->fields,
                 ),
-                $this->fields,
-            )],
+            ],
             $this->allowUnknownFields,
             $this->nullable,
             $this->schemaName,

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The tests Infection runs against mutants: those of the packages in infection.json5. -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="../../tests/bootstrap.php"
+         cacheDirectory="../../.phpunit.cache"
+         requireCoverageMetadata="false"
+         failOnRisky="true"
+         failOnWarning="true">
+    <testsuites>
+        <testsuite name="boundaries">
+            <directory>../../packages/auth/tests</directory>
+            <directory>../../packages/cors/tests</directory>
+            <directory>../../packages/http-client/tests</directory>
+            <directory>../../packages/rate-limit/tests</directory>
+            <directory>../../packages/session/tests</directory>
+            <directory>../../packages/trusted-proxy/tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>../../packages/auth/src</directory>
+            <directory>../../packages/cors/src</directory>
+            <directory>../../packages/http-client/src</directory>
+            <directory>../../packages/rate-limit/src</directory>
+            <directory>../../packages/session/src</directory>
+            <directory>../../packages/trusted-proxy/src</directory>
+        </include>
+    </source>
+</phpunit>

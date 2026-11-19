@@ -19,7 +19,8 @@
         "shirakaba/auth": "^0.1",
         "shirakaba/json": "^0.1",
         "shirakaba/streaming": "^0.1",
-        "shirakaba/validation": "^0.1"
+        "shirakaba/validation": "^0.1",
+        "shirakaba/time": "^0.1"
     },
     "bin": [
         "bin/shirakaba-openapi"

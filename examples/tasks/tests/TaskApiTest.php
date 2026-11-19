@@ -6,17 +6,17 @@ namespace Shirakaba\Examples\Tasks\Tests;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Shirakaba\Core\Testing\ResponseJson;
 use Shirakaba\Core\Testing\TestClient;
-use Shirakaba\Examples\Tasks\TaskQueries;
+use Shirakaba\Examples\Tasks\TaskApi;
 use Shirakaba\Examples\Tasks\TaskCommands;
+use Shirakaba\Examples\Tasks\TaskHandlers;
+use Shirakaba\Examples\Tasks\TaskQueries;
 use Shirakaba\Examples\Tasks\TaskSchema;
 use Shirakaba\Examples\Tasks\TaskView;
-use Shirakaba\Examples\Tasks\TaskApi;
-use Shirakaba\Examples\Tasks\TaskHandlers;
 use Shirakaba\Http\Message\Stream;
 use Shirakaba\Http\Message\UploadedFile;
-use Psr\Http\Message\ResponseInterface;
 
 #[CoversClass(TaskApi::class)]
 #[CoversClass(TaskHandlers::class)]
@@ -100,7 +100,11 @@ final class TaskApiTest extends TestCase
     {
         $this->create('Draft');
 
-        $replaced = $this->client->put('/tasks/1', (string) json_encode(['title' => 'Final', 'description' => 'Done right', 'status' => 'done', 'version' => 1]), ['Content-Type' => 'application/json']);
+        $replaced = $this->client->put(
+            '/tasks/1',
+            (string) json_encode(['title' => 'Final', 'description' => 'Done right', 'status' => 'done', 'version' => 1]),
+            ['Content-Type' => 'application/json'],
+        );
         self::assertSame(['id' => 1, 'title' => 'Final', 'description' => 'Done right', 'status' => 'done', 'version' => 2], self::task($replaced));
 
         self::assertSame(204, $this->client->delete('/tasks/1')->getStatusCode());
@@ -125,7 +129,9 @@ final class TaskApiTest extends TestCase
         $this->create('Shared');
         $this->client->patch('/tasks/1', '{"title":"First writer","version":1}', ['Content-Type' => 'application/json']);
 
-        $stale = $this->client->put('/tasks/1', (string) json_encode(['title' => 'Second writer', 'description' => '', 'status' => 'open', 'version' => 1]), ['Content-Type' => 'application/json']);
+        $stale = $this->client->put('/tasks/1', (string) json_encode(['title' => 'Second writer', 'description' => '', 'status' => 'open', 'version' => 1]), [
+            'Content-Type' => 'application/json',
+        ]);
         self::assertSame(409, $stale->getStatusCode());
         self::assertSame('The task was changed by someone else; reload it and try again.', ResponseJson::at($stale, '/detail'));
         self::assertSame('First writer', ResponseJson::at($this->client->get('/tasks/1'), '/title'));
@@ -143,16 +149,26 @@ final class TaskApiTest extends TestCase
         $completed = $this->client->post('/tasks/complete-all');
         self::assertSame(['completed' => 2], self::json($completed));
         self::assertSame(3, ResponseJson::at($this->client->get('/tasks?status=done'), '/total'));
-        self::assertSame([2, 2, 2], array_map(
-            static fn (mixed $task): mixed => is_array($task) ? $task['version'] ?? null : null,
-            (array) ResponseJson::at($this->client->get('/tasks'), '/items'),
-        ), 'The bulk update increases each version, so older copies are detected.');
+        self::assertSame(
+            [2, 2, 2],
+            array_map(
+                static fn (mixed $task): mixed => is_array($task) ? $task['version'] ?? null : null,
+                (array) ResponseJson::at($this->client->get('/tasks'), '/items'),
+            ),
+            'The bulk update increases each version, so older copies are detected.',
+        );
     }
 
     public function testAcceptsAttachmentsCheckedByContent(): void
     {
         $this->create('With file');
-        $file = static fn (string $content, string $name): UploadedFile => new UploadedFile(Stream::fromString($content), strlen($content), UPLOAD_ERR_OK, $name, 'application/pdf');
+        $file = static fn (string $content, string $name): UploadedFile => new UploadedFile(
+            Stream::fromString($content),
+            strlen($content),
+            UPLOAD_ERR_OK,
+            $name,
+            'application/pdf',
+        );
 
         $accepted = $this->client->form('POST', '/tasks/1/attachments', ['note' => 'spec'], ['file' => $file("%PDF-1.4\n%%EOF\n", 'spec.pdf')]);
         self::assertSame(201, $accepted->getStatusCode());

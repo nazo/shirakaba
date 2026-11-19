@@ -95,7 +95,7 @@ final class Index
     {
         $database = $dialect->name();
         $method = $this->method;
-        if ($method !== null && $method !== 'btree' && !($database === 'pgsql' || ($database === 'mysql' && $method === 'hash'))) {
+        if ($method !== null && $method !== 'btree' && !($database === 'pgsql' || $database === 'mysql' && $method === 'hash')) {
             throw new LogicException(sprintf('Index "%s": %s does not support the %s index method.', $this->name, $database, $method));
         }
         if ($this->operatorClass !== null && $database !== 'pgsql') {
@@ -111,8 +111,22 @@ final class Index
             : implode(', ', array_map(static fn (string $column): string => $dialect->quoteIdentifier($column) . $class, $this->columns));
         $name = $dialect->quoteIdentifier($this->name);
         $statements = [match (true) {
-            $database === 'pgsql' && $method !== null => sprintf('CREATE %sINDEX %s ON %s USING %s (%s)', $this->unique ? 'UNIQUE ' : '', $name, $dialect->quoteIdentifier($table), $method, $keys),
-            $database === 'mysql' && $method !== null => sprintf('CREATE %sINDEX %s ON %s (%s) USING %s', $this->unique ? 'UNIQUE ' : '', $name, $dialect->quoteIdentifier($table), $keys, strtoupper($method)),
+            $database === 'pgsql' && $method !== null => sprintf(
+                'CREATE %sINDEX %s ON %s USING %s (%s)',
+                $this->unique ? 'UNIQUE ' : '',
+                $name,
+                $dialect->quoteIdentifier($table),
+                $method,
+                $keys,
+            ),
+            $database === 'mysql' && $method !== null => sprintf(
+                'CREATE %sINDEX %s ON %s (%s) USING %s',
+                $this->unique ? 'UNIQUE ' : '',
+                $name,
+                $dialect->quoteIdentifier($table),
+                $keys,
+                strtoupper($method),
+            ),
             default => sprintf('CREATE %sINDEX %s ON %s (%s)', $this->unique ? 'UNIQUE ' : '', $name, $dialect->quoteIdentifier($table), $keys),
         }];
         if ($this->statistics !== null) {

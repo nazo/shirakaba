@@ -34,9 +34,15 @@ final readonly class Rfc3339
         $offset = strtoupper($match[8]);
         if (
             !checkdate((int) $month, (int) $day, (int) $year)
-            || (int) $hour > 23 || (int) $minute > 59 || (int) $second > 59
+            || (int) $hour > 23
+            || (int) $minute > 59
+            || (int) $second > 59
             || $offset === '-00:00'
-            || ($offset !== 'Z' && ((int) substr($offset, 1, 2) > 23 || (int) substr($offset, 4, 2) > 59))
+            || $offset !== 'Z'
+            && (
+                (int) substr($offset, 1, 2) > 23
+                || (int) substr($offset, 4, 2) > 59
+            )
         ) {
             return null;
         }

@@ -19,7 +19,7 @@ final readonly class Bounds
         if ($min === null && $max === null) {
             throw new InvalidArgumentException('Give a minimum, a maximum or both.');
         }
-        if (!$allowNegative && (($min !== null && $min < 0) || ($max !== null && $max < 0))) {
+        if (!$allowNegative && ($min !== null && $min < 0 || $max !== null && $max < 0)) {
             throw new InvalidArgumentException('Bounds must not be negative.');
         }
         if ($min !== null && $max !== null && $min > $max) {

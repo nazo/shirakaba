@@ -13,6 +13,7 @@ use OpenTelemetry\SDK\Trace\TracerProvider;
 use PDO;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Shirakaba\Console\ConsoleBuilder;
 use Shirakaba\Console\Testing\ConsoleTester;
 use Shirakaba\Core\Observe\Event;
@@ -24,6 +25,7 @@ use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Core\Scope\ScopedWork;
 use Shirakaba\Database\Connection;
 use Shirakaba\Database\Database;
+use Shirakaba\DatabaseBridge\RequestDatabase;
 use Shirakaba\Migrations\Migrator;
 use Shirakaba\OpenTelemetry\TracingObserver;
 use Shirakaba\Queue\CreateJobsTable;
@@ -33,9 +35,7 @@ use Shirakaba\Queue\Jobs;
 use Shirakaba\Queue\QueueCommands;
 use Shirakaba\Queue\Tests\Fixtures\SendWelcome;
 use Shirakaba\Queue\Worker;
-use RuntimeException;
 use Throwable;
-use Shirakaba\DatabaseBridge\RequestDatabase;
 
 #[CoversClass(Worker::class)]
 #[CoversClass(QueueCommands::class)]
@@ -64,7 +64,7 @@ final class WorkerTest extends TestCase
     {
         $database = $this->database();
         $events = new ArrayObject();
-        $observer = new class ($events) implements Observer {
+        $observer = new class($events) implements Observer {
             /** @param ArrayObject<int, string> $events */
             public function __construct(private ArrayObject $events) {}
 
@@ -72,7 +72,7 @@ final class WorkerTest extends TestCase
             {
                 $this->events->append('begin ' . $request->method);
 
-                return new class ($this->events) implements Observation {
+                return new class($this->events) implements Observation {
                     /** @param ArrayObject<int, string> $events */
                     public function __construct(private ArrayObject $events) {}
 
@@ -104,23 +104,39 @@ final class WorkerTest extends TestCase
         };
         $connections = new ArrayObject();
         $jobs = new Jobs(new DatabaseQueue($database));
-        $jobs->handle(SendWelcome::class, static function (SendWelcome $job, RequestScope $scope) use ($database, $connections): void {
-            $connection = RequestDatabase::connection($database, $scope);
-            $connection->reader()->fetchValue('SELECT 1');
-            $connections->append(spl_object_id($connection));
-            if ($job->userId === 2) {
-                throw new RuntimeException('bounce');
-            }
-        }, name: 'mail.welcome');
+        $jobs->handle(
+            SendWelcome::class,
+            static function (SendWelcome $job, RequestScope $scope) use ($database, $connections): void {
+                $connection = RequestDatabase::connection($database, $scope);
+                $connection->reader()->fetchValue('SELECT 1');
+                $connections->append(spl_object_id($connection));
+                if ($job->userId === 2) {
+                    throw new RuntimeException('bounce');
+                }
+            },
+            name: 'mail.welcome',
+        );
         $writer = $database->connect()->writer();
         $jobs->push(new SendWelcome(1, 'a@example.com'), $writer);
         $jobs->push(new SendWelcome(2, 'b@example.com'), $writer, new \Shirakaba\Queue\PushOptions(maxAttempts: 1));
 
         self::assertSame(2, new JobRunner($jobs, observers: [$observer])->runPending());
-        self::assertSame([
-            'begin JOB', 'matched mail.welcome', 'recorded db.connection', 'recorded db.statement', 'status 200',
-            'begin JOB', 'matched mail.welcome', 'recorded db.connection', 'recorded db.statement', 'failed bounce', 'status 500',
-        ], $events->getArrayCopy());
+        self::assertSame(
+            [
+                'begin JOB',
+                'matched mail.welcome',
+                'recorded db.connection',
+                'recorded db.statement',
+                'status 200',
+                'begin JOB',
+                'matched mail.welcome',
+                'recorded db.connection',
+                'recorded db.statement',
+                'failed bounce',
+                'status 500',
+            ],
+            $events->getArrayCopy(),
+        );
         self::assertCount(2, array_unique($connections->getArrayCopy()), 'Each job leased its own connection.');
     }
 
@@ -157,11 +173,15 @@ final class WorkerTest extends TestCase
         $database = $this->database();
         $queue = new DatabaseQueue($database);
         $jobs = new Jobs($queue);
-        $jobs->handle(SendWelcome::class, static function (SendWelcome $job): void {
-            if ($job->userId === 2) {
-                throw new RuntimeException('bounce');
-            }
-        }, name: 'mail.welcome');
+        $jobs->handle(
+            SendWelcome::class,
+            static function (SendWelcome $job): void {
+                if ($job->userId === 2) {
+                    throw new RuntimeException('bounce');
+                }
+            },
+            name: 'mail.welcome',
+        );
         $writer = $database->connect()->writer();
         $jobs->push(new SendWelcome(1, 'a@example.com'), $writer);
         $jobs->push(new SendWelcome(2, 'b@example.com'), $writer, new \Shirakaba\Queue\PushOptions(maxAttempts: 1));

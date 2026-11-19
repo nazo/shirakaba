@@ -24,17 +24,21 @@ final readonly class TemplateCommands
      */
     public static function register(ConsoleBuilder $cli, Closure $directory, array $declared = [], string $prefix = ''): void
     {
-        $cli->command($prefix . 'templates:check', static function (Output $output) use ($directory, $declared): int {
-            $problems = new TemplateChecker($directory())->check($declared);
-            foreach ($problems as $problem) {
-                $output->line($problem);
-            }
-            if ($problems !== []) {
-                return 1;
-            }
-            $output->line('Every template parses and fits its data.');
+        $cli->command(
+            $prefix . 'templates:check',
+            static function (Output $output) use ($directory, $declared): int {
+                $problems = new TemplateChecker($directory())->check($declared);
+                foreach ($problems as $problem) {
+                    $output->line($problem);
+                }
+                if ($problems !== []) {
+                    return 1;
+                }
+                $output->line('Every template parses and fits its data.');
 
-            return 0;
-        }, 'Parses every template and checks the declared ones against their data classes.');
+                return 0;
+            },
+            'Parses every template and checks the declared ones against their data classes.',
+        );
     }
 }

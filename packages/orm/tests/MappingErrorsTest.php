@@ -25,8 +25,8 @@ final class MappingErrorsTest extends TestCase
 {
     public function testValidEntitiesPassTheCheck(): void
     {
+        $this->expectNotToPerformAssertions();
         Entities::check([Author::class, Post::class, Comment::class, Tag::class]);
-        $this->addToAssertionCount(1);
     }
 
     /**
@@ -74,7 +74,12 @@ final class MappingErrorsTest extends TestCase
         }
         $this->expectException(MappingError::class);
         $this->expectExceptionMessage('has no relation "nope"');
-        Entities::query(Post::class)->with(self::unchecked('nope'))->into(Fixtures\ViewMissingRelation::class, new \Shirakaba\Database\Database(static fn (): \PDO => new \PDO('sqlite::memory:'))->connect()->reader());
+        Entities::query(Post::class)
+            ->with(self::unchecked('nope'))
+            ->into(
+                Fixtures\ViewMissingRelation::class,
+                new \Shirakaba\Database\Database(static fn (): \PDO => new \PDO('sqlite::memory:'))->connect()->reader(),
+            );
     }
 
     /**

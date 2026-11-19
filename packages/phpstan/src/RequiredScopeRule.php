@@ -110,15 +110,23 @@ final readonly class RequiredScopeRule implements Rule
             $calls[] = $expr;
             $expr = $expr->var;
         }
-        if (!$expr instanceof StaticCall || !$expr->class instanceof Name || !$expr->name instanceof Identifier
+        if (
+            !$expr instanceof StaticCall
+            || !$expr->class instanceof Name
+            || !$expr->name instanceof Identifier
             || !in_array($scope->resolveName($expr->class), [self::ENTITIES, self::QUERY], true)
-            || !in_array(strtolower($expr->name->toString()), ['query', 'of'], true)) {
+            || !in_array(strtolower($expr->name->toString()), ['query', 'of'], true)
+        ) {
             return [];
         }
         $errors = [];
         foreach ($required as $class) {
             if (!$this->chainHas($calls, $class, $scope)) {
-                $errors[] = self::error($names[0], $class, sprintf('pass ->scoped(new %s(...)) or ->withoutScope(%s::class) in the query', self::short($class), self::short($class)));
+                $errors[] = self::error(
+                    $names[0],
+                    $class,
+                    sprintf('pass ->scoped(new %s(...)) or ->withoutScope(%s::class) in the query', self::short($class), self::short($class)),
+                );
             }
         }
 
@@ -231,7 +239,10 @@ final readonly class RequiredScopeRule implements Rule
             return [];
         }
         if ($given === 'relation') {
-            $relation = self::single(array_map(static fn ($string): string => $string->getValue(), isset($args[1]) ? $scope->getType($args[1]->value)->getConstantStrings() : []));
+            $relation = self::single(array_map(
+                static fn ($string): string => $string->getValue(),
+                isset($args[1]) ? $scope->getType($args[1]->value)->getConstantStrings() : [],
+            ));
             if ($relation === null) {
                 return [];
             }
@@ -246,7 +257,7 @@ final readonly class RequiredScopeRule implements Rule
         }
         $scopes = null;
         foreach ($args as $index => $arg) {
-            if (($arg->name !== null && $arg->name->toString() === 'scopes') || ($arg->name === null && $index === $position)) {
+            if ($arg->name !== null && $arg->name->toString() === 'scopes' || $arg->name === null && $index === $position) {
                 $scopes = $arg;
             }
             if ($arg->unpack) {
@@ -257,7 +268,11 @@ final readonly class RequiredScopeRule implements Rule
         $errors = [];
         foreach ($required as $class) {
             if ($scopes === null || !$this->listMayHold($scope->getType($scopes->value), $class)) {
-                $errors[] = self::error($entity, $class, sprintf('pass it in $scopes: Entities::%s(..., scopes: [new %s(...)])', $call->name->toString(), self::short($class)));
+                $errors[] = self::error(
+                    $entity,
+                    $class,
+                    sprintf('pass it in $scopes: Entities::%s(..., scopes: [new %s(...)])', $call->name->toString(), self::short($class)),
+                );
             }
         }
 

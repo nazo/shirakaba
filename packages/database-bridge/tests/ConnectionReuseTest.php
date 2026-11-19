@@ -19,7 +19,6 @@ use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Core\Scope\ScopedWork;
 use Shirakaba\Database\Connection;
 use Shirakaba\Database\ConnectionLeased;
-use Shirakaba\DatabaseBridge\RecordedDatabaseEvent;
 use Shirakaba\Database\Database;
 use Shirakaba\Database\Dialect\MySql;
 use Shirakaba\Database\Dialect\PostgreSql;
@@ -27,8 +26,9 @@ use Shirakaba\Database\Dialect\Sqlite;
 use Shirakaba\Database\Internal\ConnectionPool;
 use Shirakaba\Database\Reader;
 use Shirakaba\Database\Testing\TestDatabases;
-use Throwable;
+use Shirakaba\DatabaseBridge\RecordedDatabaseEvent;
 use Shirakaba\DatabaseBridge\RequestDatabase;
+use Throwable;
 
 #[CoversClass(Database::class)]
 #[CoversClass(RequestDatabase::class)]
@@ -64,11 +64,15 @@ final class ConnectionReuseTest extends TestCase
             ? static fn (): PDO => PDO::connect('sqlite:' . $file)
             : static fn (): PDO => $source->connect()->pdo;
 
-        return new Database(static function () use ($connect, $opened): PDO {
-            $opened->append(1);
+        return new Database(
+            static function () use ($connect, $opened): PDO {
+                $opened->append(1);
 
-            return $connect();
-        }, reuse: true, maxUses: $maxUses);
+                return $connect();
+            },
+            reuse: true,
+            maxUses: $maxUses,
+        );
     }
 
     /**
@@ -80,13 +84,13 @@ final class ConnectionReuseTest extends TestCase
     private static function request(\Closure $work): array
     {
         $events = new \ArrayObject();
-        $observer = new class ($events) implements Observer {
+        $observer = new class($events) implements Observer {
             /** @param \ArrayObject<int, Event> $events */
             public function __construct(private \ArrayObject $events) {}
 
             public function begin(RequestSummary $request): Observation
             {
-                return new class ($this->events) implements Observation {
+                return new class($this->events) implements Observation {
                     /** @param \ArrayObject<int, Event> $events */
                     public function __construct(private \ArrayObject $events) {}
 
@@ -200,7 +204,7 @@ final class ConnectionReuseTest extends TestCase
     {
         $opened = new \ArrayObject();
         $database = self::database($name, $opened, maxUses: 2);
-        foreach (range(1, 5) as $ignored) {
+        for ($request = 0; $request < 5; $request++) {
             self::request(static function (RequestScope $scope) use ($database): void {
                 RequestDatabase::connection($database, $scope)->reader()->fetchValue('SELECT 1');
             });
@@ -217,7 +221,7 @@ final class ConnectionReuseTest extends TestCase
 
             return PDO::connect('sqlite::memory:');
         });
-        foreach (range(1, 3) as $ignored) {
+        for ($request = 0; $request < 3; $request++) {
             self::request(static function (RequestScope $scope) use ($database): void {
                 RequestDatabase::connection($database, $scope)->reader()->fetchValue('SELECT 1');
             });

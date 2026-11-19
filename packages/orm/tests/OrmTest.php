@@ -63,7 +63,10 @@ final class OrmTest extends TestCase
         $settings = new \Shirakaba\Orm\Tests\Fixtures\AuthorSettings(true, ['en', 'ja'], \Shirakaba\Time\LocalDate::of(2026, 12, 31));
         $author = Entities::insert(new Author('Ada', 'ada@example.com', new Address('London', 'N1'), $settings), $db);
         self::assertSame(1, $author->id);
-        $post = Entities::insert(new Post(new AuthorId(1), 'Hello', PostStatus::Published, LocalDate::of(2026, 11, 11), ['tags' => ['php'], 'n' => 1.0]), $db, $clock);
+        $post = Entities::insert(new Post(new AuthorId(1), 'Hello', PostStatus::Published, LocalDate::of(2026, 11, 11), [
+            'tags' => ['php'],
+            'n' => 1.0,
+        ]), $db, $clock);
 
         self::assertSame(1, $post->id);
         self::assertSame(1, $post->version);
@@ -85,7 +88,11 @@ final class OrmTest extends TestCase
             Entities::update(Entities::change($read, ['title' => 'Stale']), $db, $clock);
             self::fail('Expected a stale entity.');
         } catch (StaleEntity $e) {
-            self::assertSame('The post was changed by someone else; reload it and try again.', $e->getMessage(), 'Errors use the #[Table] label, not the class.');
+            self::assertSame(
+                'The post was changed by someone else; reload it and try again.',
+                $e->getMessage(),
+                'Errors use the #[Table] label, not the class.',
+            );
         }
 
         self::assertSame(1, Entities::patch(Post::class, 1, ['status' => PostStatus::Draft], $db, $clock));
@@ -93,7 +100,13 @@ final class OrmTest extends TestCase
         self::assertSame(PostStatus::Draft, $patched->status);
         self::assertSame(3, $patched->version, 'patch() increments the version too.');
 
-        self::assertSame(1, Entities::query(Post::class)->where('authorId', '=', new AuthorId(1))->where('publishedOn', '=', LocalDate::of(2026, 11, 11))->count($db));
+        self::assertSame(
+            1,
+            Entities::query(Post::class)
+                ->where('authorId', '=', new AuthorId(1))
+                ->where('publishedOn', '=', LocalDate::of(2026, 11, 11))
+                ->count($db),
+        );
         self::assertSame(['php'], Entities::query(Post::class)->first($db)?->meta['tags'] ?? null);
 
         self::assertTrue(Entities::delete($patched, $db));
@@ -126,11 +139,13 @@ final class OrmTest extends TestCase
         ], $db);
         $php = Entities::insert(new Tag('php'), $db);
         $sql = Entities::insert(new Tag('sql'), $db);
-        Insert::into('orm_post_tags')->rows([
-            ['post_id' => $first->id, 'tag_id' => $php->id, 'position' => 2],
-            ['post_id' => $first->id, 'tag_id' => $sql->id, 'position' => 1],
-            ['post_id' => $second->id, 'tag_id' => $sql->id, 'position' => 1],
-        ])->execute($db);
+        Insert::into('orm_post_tags')
+            ->rows([
+                ['post_id' => $first->id, 'tag_id' => $php->id, 'position' => 2],
+                ['post_id' => $first->id, 'tag_id' => $sql->id, 'position' => 1],
+                ['post_id' => $second->id, 'tag_id' => $sql->id, 'position' => 1],
+            ])
+            ->execute($db);
 
         $before = self::statements($connection);
         $views = Entities::query(Post::class)
@@ -150,10 +165,24 @@ final class OrmTest extends TestCase
 
         self::assertSame(['First'], array_map(
             static fn (Post $post): string => $post->title,
-            Entities::query(Post::class)->whereHas('comments', static fn (EntityQuery $c): EntityQuery => $c->where('approved', '=', true))->fetch($db),
+            Entities::query(Post::class)
+                ->whereHas('comments', static fn (EntityQuery $c): EntityQuery => $c->where('approved', '=', true))
+                ->fetch($db),
         ));
-        self::assertSame(['Third'], array_map(static fn (Post $post): string => $post->title, Entities::query(Post::class)->whereDoesntHave('comments')->fetch($db)));
-        self::assertSame(['First', 'Second'], array_map(static fn (Post $post): string => $post->title, Entities::query(Post::class)->whereHas('tags', static fn (EntityQuery $t): EntityQuery => $t->where('name', '=', 'sql'))->orderBy('id')->fetch($db)));
+        self::assertSame(
+            ['Third'],
+            array_map(static fn (Post $post): string => $post->title, Entities::query(Post::class)->whereDoesntHave('comments')->fetch($db)),
+        );
+        self::assertSame(
+            ['First', 'Second'],
+            array_map(
+                static fn (Post $post): string => $post->title,
+                Entities::query(Post::class)
+                    ->whereHas('tags', static fn (EntityQuery $t): EntityQuery => $t->where('name', '=', 'sql'))
+                    ->orderBy('id')
+                    ->fetch($db),
+            ),
+        );
 
         $before = self::statements($connection);
         $summaries = Entities::query(Post::class)
@@ -164,7 +193,12 @@ final class OrmTest extends TestCase
         self::assertSame(4, self::statements($connection) - $before, 'Posts, filtered comments, and one grouped count per relation.');
         self::assertSame(
             [['First', ['Thanks'], 2, 2], ['Second', [], 1, 1], ['Third', [], 0, 0]],
-            array_map(static fn ($s): array => [$s->post->title, array_map(static fn (Comment $c): string => $c->body, $s->comments), $s->commentsCount, $s->tagsCount], $summaries),
+            array_map(static fn ($s): array => [
+                $s->post->title,
+                array_map(static fn (Comment $c): string => $c->body, $s->comments),
+                $s->commentsCount,
+                $s->tagsCount,
+            ], $summaries),
         );
 
         $before = self::statements($connection);
@@ -175,7 +209,11 @@ final class OrmTest extends TestCase
             ->into(\Shirakaba\Orm\Tests\Fixtures\CommentThread::class, $db);
         self::assertSame(3, self::statements($connection) - $before, 'Comments, posts, and authors of both paths in one statement.');
         self::assertSame(
-            [['Nice', 'Bob', 'Ada'], ['Thanks', 'Ada', 'Ada'], ['Hm', 'Bob', 'Ada']],
+            [
+                ['Nice',   'Bob', 'Ada'],
+                ['Thanks', 'Ada', 'Ada'],
+                ['Hm',     'Bob', 'Ada'],
+            ],
             array_map(static fn ($c): array => [$c->comment->body, $c->author->name, $c->post->author->name], $comments),
         );
 
@@ -196,7 +234,10 @@ final class OrmTest extends TestCase
         self::assertSame(['sql', 'php'], array_map(static fn (Tag $tag): string => $tag->name, $firstTagged->tags));
         self::assertSame(
             [['Nice', ['sql', 'php']], ['Thanks', ['sql', 'php']]],
-            array_map(static fn ($c): array => [$c->comment->body, array_map(static fn (Tag $tag): string => $tag->name, $c->post->tags)], $firstTagged->comments),
+            array_map(static fn ($c): array => [
+                $c->comment->body,
+                array_map(static fn (Tag $tag): string => $tag->name, $c->post->tags),
+            ], $firstTagged->comments),
         );
         self::assertSame(['sql'], array_map(static fn (Tag $tag): string => $tag->name, ($tagged[1] ?? self::fail('No second post.'))->tags));
         self::assertSame([], ($tagged[2] ?? self::fail('No third post.'))->tags);
@@ -213,7 +254,13 @@ final class OrmTest extends TestCase
         $post = Entities::insert(new Post(new AuthorId($author->id ?? 0), 'Hello'), $db, new FrozenClock('2026-11-11T00:00:00Z'));
 
         $view = Entities::into($post, PostTitle::class);
-        self::assertSame([1, 'Hello', PostStatus::Draft, '2026-11-11', 1], [$view->id, $view->title, $view->status, $view->createdAt->format('Y-m-d'), $view->version]);
+        self::assertSame([1, 'Hello', PostStatus::Draft, '2026-11-11', 1], [
+            $view->id,
+            $view->title,
+            $view->status,
+            $view->createdAt->format('Y-m-d'),
+            $view->version,
+        ]);
         self::assertEquals([$view], Entities::query(Post::class)->into(PostTitle::class, $db), 'into() needs no relations.');
 
         $card = Entities::query(Post::class)->with('author')->into(PostCard::class, $db)[0] ?? self::fail('No post was read.');
@@ -250,7 +297,11 @@ final class OrmTest extends TestCase
         $database = new Database(static fn (): \PDO => new \PDO('sqlite::memory:'));
         $db = Schema::create($database)->writer();
         Entities::insert(new Author('Ada', 'ada@example.com'), $db);
-        $post = Entities::insert(new Post(new AuthorId(1), 'x', createdAt: new DateTimeImmutable('2000-01-01T00:00:00Z')), $db, new FrozenClock('2026-01-01T00:00:00Z'));
+        $post = Entities::insert(
+            new Post(new AuthorId(1), 'x', createdAt: new DateTimeImmutable('2000-01-01T00:00:00Z')),
+            $db,
+            new FrozenClock('2026-01-01T00:00:00Z'),
+        );
 
         self::assertSame('2026-01-01', $post->createdAt?->format('Y-m-d'), '#[CreatedAt] comes from the clock.');
     }

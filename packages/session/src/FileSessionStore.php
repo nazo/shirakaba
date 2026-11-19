@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Shirakaba\Session;
 
 use InvalidArgumentException;
-use Shirakaba\Core\Scope\RequestScope;
-use Shirakaba\Time\SystemClock;
 use Psr\Clock\ClockInterface;
 use RuntimeException;
+use Shirakaba\Core\Scope\RequestScope;
+use Shirakaba\Time\SystemClock;
 
 /**
  * Stores each session as a JSON file. Session IDs are validated before they become file
@@ -106,10 +106,10 @@ final readonly class FileSessionStore implements SessionStore
         foreach ($files === false ? [] : $files as $file) {
             if (str_ends_with($file, '.tmp')) {
                 $modified = @filemtime($file);
-                $stale = $modified !== false && $modified < $now - 3600;
+                $stale = $modified !== false && $modified < ($now - 3600);
             } else {
                 $contents = @file_get_contents($file);
-                $expires = $contents === false ? null : (JsonData::decode($contents)['expires'] ?? null);
+                $expires = $contents === false ? null : JsonData::decode($contents)['expires'] ?? null;
                 $stale = $contents !== false && (!is_int($expires) || $expires <= $now);
             }
             if ($stale && @unlink($file)) {

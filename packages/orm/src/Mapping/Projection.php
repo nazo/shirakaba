@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Shirakaba\Orm\Mapping;
 
+use ReflectionClass;
+use ReflectionNamedType;
+use ReflectionProperty;
 use Shirakaba\Orm\Attribute\Computed;
 use Shirakaba\Orm\Attribute\From;
 use Shirakaba\Orm\Attribute\Items;
 use Shirakaba\Orm\MappingError;
-use ReflectionClass;
-use ReflectionNamedType;
-use ReflectionProperty;
 
 /**
  * How a projection class receives an entity and its loaded relations (design/08-database.md): the whole
@@ -89,9 +89,20 @@ final readonly class Projection
             }
             if (!isset($tree[$source])) {
                 if (!array_any($map->fields, static fn (Field $field): bool => $field->property === $source)) {
-                    throw new MappingError($from === null
-                        ? sprintf('%s is neither the %s, one of its properties, nor a relation requested with with(); mark values computed elsewhere #[Computed].', $where, $map->class) . \Shirakaba\Orm\Internal\Messages::see('projection-mismatch')
-                        : sprintf('%s is #[From(\'%s\')], which is neither a property of %s nor a relation requested with with().', $where, $source, $map->class) . \Shirakaba\Orm\Internal\Messages::see('projection-mismatch'));
+                    throw new MappingError(
+                        $from === null
+                            ? sprintf(
+                                '%s is neither the %s, one of its properties, nor a relation requested with with(); mark values computed elsewhere #[Computed].',
+                                $where,
+                                $map->class,
+                            ) . \Shirakaba\Orm\Internal\Messages::see('projection-mismatch')
+                            : sprintf(
+                                '%s is #[From(\'%s\')], which is neither a property of %s nor a relation requested with with().',
+                                $where,
+                                $source,
+                                $map->class,
+                            ) . \Shirakaba\Orm\Internal\Messages::see('projection-mismatch'),
+                    );
                 }
                 self::checkFieldType($where, $type, $map->class, $source);
                 $fields[$name] = [$source, $type->allowsNull()];
@@ -118,7 +129,12 @@ final readonly class Projection
             if ($items !== $relation->entity) {
                 $nested = self::plan($items, EntityMap::of($relation->entity), $subtree);
             } elseif ($subtree !== []) {
-                throw new MappingError(sprintf('%s receives "%s" with nested relations (%s), so it needs a projection class (#[Items] for lists).', $where, $name, implode(', ', array_keys($subtree))));
+                throw new MappingError(sprintf(
+                    '%s receives "%s" with nested relations (%s), so it needs a projection class (#[Items] for lists).',
+                    $where,
+                    $name,
+                    implode(', ', array_keys($subtree)),
+                ));
             }
             $relations[$name] = [$relation->entity, $relation->isList(), $type->allowsNull(), $nested, $source];
         }
@@ -127,7 +143,10 @@ final readonly class Projection
             ...array_diff($countProperties, array_values($receivedCounts)),
         ];
         if ($missing !== []) {
-            throw new MappingError(sprintf('Projection %s has no parameter for the requested relation(s) %s.', $class, implode(', ', $missing)) . \Shirakaba\Orm\Internal\Messages::see('projection-mismatch'));
+            throw new MappingError(
+                sprintf('Projection %s has no parameter for the requested relation(s) %s.', $class, implode(', ', $missing))
+                    . \Shirakaba\Orm\Internal\Messages::see('projection-mismatch'),
+            );
         }
 
         return new self($class, $root, $relations, $receivedCounts, $fields, $computed);
@@ -149,7 +168,7 @@ final readonly class Projection
             return;
         }
         $name = $source->getName();
-        if ($name === $target || ($target === 'float' && $name === 'int') || (!$source->isBuiltin() && is_a($name, $target, true))) {
+        if ($name === $target || $target === 'float' && $name === 'int' || !$source->isBuiltin() && is_a($name, $target, true)) {
             return;
         }
         throw new MappingError(sprintf('%s is %s, but %s::$%s is %s.', $where, $target, $entity, $property, $name));
@@ -225,7 +244,12 @@ final readonly class Projection
         foreach ($this->fields as $name => [$source, $nullable]) {
             $value = EntityMap::property($entity, $source);
             if ($value === null && !$nullable) {
-                throw new \UnexpectedValueException(sprintf('Projection %s requires "%s", but the %s has none; was it stored?', $this->class, $source, $entity::class));
+                throw new \UnexpectedValueException(sprintf(
+                    'Projection %s requires "%s", but the %s has none; was it stored?',
+                    $this->class,
+                    $source,
+                    $entity::class,
+                ));
             }
             $arguments[$name] = $value;
         }
@@ -233,7 +257,13 @@ final readonly class Projection
         foreach ($this->counts as $name => $count) {
             $arguments[$name] = $values[$count] ?? 0;
         }
-        $assembleNested = static fn (self $nested, object $item): object => $nested->assemble($item, $loaded, $nestedComputed[spl_object_id($item)] ?? [], $nestedComputed, false);
+        $assembleNested = static fn (self $nested, object $item): object => $nested->assemble(
+            $item,
+            $loaded,
+            $nestedComputed[spl_object_id($item)] ?? [],
+            $nestedComputed,
+            false,
+        );
         foreach ($this->relations as $name => [, $isList, $nullable, $nested, $source]) {
             $value = $values[$source] ?? ($isList ? [] : null);
             if ($nested !== null) {
@@ -242,11 +272,15 @@ final readonly class Projection
                     : (is_object($value) ? $assembleNested($nested, $value) : null);
             }
             if ($value === null && !$nullable && !$isList) {
-                throw new \UnexpectedValueException(sprintf('Projection %s requires "%s", but the related row is missing; make the parameter nullable.', $this->class, $name));
+                throw new \UnexpectedValueException(sprintf(
+                    'Projection %s requires "%s", but the related row is missing; make the parameter nullable.',
+                    $this->class,
+                    $name,
+                ));
             }
             $arguments[$name] = $value;
         }
 
-        return new ($this->class)(...$arguments);
+        return new $this->class(...$arguments);
     }
 }

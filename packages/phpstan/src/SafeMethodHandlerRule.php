@@ -69,14 +69,16 @@ final readonly class SafeMethodHandlerRule implements Rule
         $errors = [];
         foreach ($type->getCallableParametersAcceptors($scope) as $acceptor) {
             foreach ($acceptor->getParameters() as $parameter) {
-                $via = $this->writerIn($parameter->getType(), $writer, $scope);
+                $via = $this->writerIn($parameter->getType(), $writer);
                 if ($via !== null) {
                     $errors[] = RuleErrorBuilder::message(sprintf(
                         'The route "%s" is a safe method but its handler takes %s ($%s); take a Reader instead (design/13-static-analysis-and-agents.md).',
                         $route,
                         $via,
                         $parameter->getName(),
-                    ))->identifier('shirakaba.safeMethodWrites')->build();
+                    ))
+                        ->identifier('shirakaba.safeMethodWrites')
+                        ->build();
                 }
             }
         }
@@ -87,7 +89,7 @@ final readonly class SafeMethodHandlerRule implements Rule
     /**
      * Describes how a parameter type gives write access, or null when it does not.
      */
-    private function writerIn(\PHPStan\Type\Type $type, ObjectType $writer, Scope $scope): ?string
+    private function writerIn(\PHPStan\Type\Type $type, ObjectType $writer): ?string
     {
         if ($writer->isSuperTypeOf($type)->yes()) {
             return 'a ' . self::WRITER;
@@ -96,9 +98,11 @@ final readonly class SafeMethodHandlerRule implements Rule
             if (!$class->hasConstructor()) {
                 continue;
             }
-            foreach ($class->getConstructor()->getOnlyVariant()->getParameters() as $dependency) {
-                if ($writer->isSuperTypeOf($dependency->getType())->yes()) {
-                    return sprintf('%s, which is built from a %s', $class->getName(), self::WRITER);
+            foreach ($class->getConstructor()->getVariants() as $variant) {
+                foreach ($variant->getParameters() as $dependency) {
+                    if ($writer->isSuperTypeOf($dependency->getType())->yes()) {
+                        return sprintf('%s, which is built from a %s', $class->getName(), self::WRITER);
+                    }
                 }
             }
         }

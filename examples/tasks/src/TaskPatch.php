@@ -22,13 +22,12 @@ final readonly class TaskPatch
      * @param Optional<int> $version
      */
     public function __construct(
-        #[OptionalOf('string')] #[NotBlank] #[Length(max: 200)]
-        public Optional $title = new Optional(),
-        #[OptionalOf('string')] #[Length(max: 2000)]
-        public Optional $description = new Optional(),
-        #[OptionalOf(TaskStatus::class)]
-        public Optional $status = new Optional(),
-        #[OptionalOf('int')]
-        public Optional $version = new Optional(),
+        #[OptionalOf('string')]
+        #[NotBlank]
+        #[Length(max: 200)] public Optional $title = new Optional(),
+        #[OptionalOf('string')]
+        #[Length(max: 2000)] public Optional $description = new Optional(),
+        #[OptionalOf(TaskStatus::class)] public Optional $status = new Optional(),
+        #[OptionalOf('int')] public Optional $version = new Optional(),
     ) {}
 }

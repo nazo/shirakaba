@@ -23,7 +23,7 @@ final readonly class Instants
         // out), take the general path.
         $length = strlen($value);
         $sqlite = $length === 27 && $value[26] === 'Z' && $value[10] === 'T';
-        if ($sqlite || ($length === 26 && $value[10] === ' ' && $value[19] === '.' && ctype_digit(substr($value, 20)))) {
+        if ($sqlite || $length === 26 && $value[10] === ' ' && $value[19] === '.' && ctype_digit(substr($value, 20))) {
             $parsed = DateTimeImmutable::createFromFormat($sqlite ? '!Y-m-d\\TH:i:s.u\\Z' : '!Y-m-d H:i:s.u', $value, new DateTimeZone('UTC'));
             if ($parsed !== false && DateTimeImmutable::getLastErrors() === false) {
                 return $parsed;

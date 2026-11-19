@@ -62,7 +62,11 @@ final class SchemaDiffTest extends TestCase
         self::assertNotNull($source);
         self::assertStringContainsString("\$table->foreign('author_id')->references('orm_authors', 'id');", $source);
         self::assertLessThan(strpos($source, "create('orm_posts'"), strpos($source, "create('orm_authors'"), 'Referenced tables come first.');
-        self::assertStringContainsString("create('orm_posts', static function (Blueprint \$table): void {\n            \$table->id();", $source, 'The key comes first.');
+        self::assertStringContainsString(
+            "create('orm_posts', static function (Blueprint \$table): void {\n            \$table->id();",
+            $source,
+            'The key comes first.',
+        );
         self::assertStringContainsString("\$table->instant('created_at');", $source, 'Timestamps the ORM always writes are NOT NULL.');
 
         new Migrator($connection, ['001' => self::migration($source, $class)])->migrate();
@@ -75,6 +79,9 @@ final class SchemaDiffTest extends TestCase
         $db->execute('CREATE TABLE orm_tags (id INTEGER PRIMARY KEY)');
         $alter = SchemaDiff::migration([Tag::class], $db, 'AddName');
         self::assertNotNull($alter);
-        self::assertStringContainsString("\$schema->alter('orm_tags', static function (Blueprint \$table): void {\n            \$table->string('name');", $alter);
+        self::assertStringContainsString(
+            "\$schema->alter('orm_tags', static function (Blueprint \$table): void {\n            \$table->string('name');",
+            $alter,
+        );
     }
 }

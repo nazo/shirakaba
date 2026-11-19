@@ -6,6 +6,7 @@
     "require": {
         "php": "^8.5",
         "ext-curl": "*",
+        "ext-filter": "*",
         "shirakaba/core": "^0.1",
         "shirakaba/http-message": "^0.1",
         "psr/http-client": "^1.0",

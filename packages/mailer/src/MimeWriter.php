@@ -145,8 +145,8 @@ final readonly class MimeWriter
             for ($i = 0; $i < $length; $i++) {
                 $char = $line[$i];
                 $byte = ord($char);
-                $last = $i === $length - 1;
-                if (($byte >= 33 && $byte <= 126 && $char !== '=') || (($char === ' ' || $char === "\t") && !$last)) {
+                $last = $i === ($length - 1);
+                if ($byte >= 33 && $byte <= 126 && $char !== '=' || ($char === ' ' || $char === "\t") && !$last) {
                     $encoded .= $char;
                 } else {
                     $encoded .= sprintf('=%02X', $byte);

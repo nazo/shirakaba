@@ -6,15 +6,15 @@ namespace Shirakaba\Runtime\FrankenPhp;
 
 use Closure;
 use InvalidArgumentException;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Shirakaba\Core\Application;
 use Shirakaba\Core\Scope\Cancellation;
 use Shirakaba\Core\Scope\RequestOptions;
 use Shirakaba\Http\Message\Response;
 use Shirakaba\Sapi\SapiEmitter;
 use Shirakaba\Sapi\ServerRequestBuilder;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UploadedFileInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 
 /**
@@ -62,8 +62,10 @@ final readonly class FrankenPhpRuntime
      */
     public static function inWorkerMode(): bool
     {
-        return function_exists('frankenphp_handle_request')
-            && (($_SERVER['FRANKENPHP_WORKER'] ?? null) !== null || getenv('FRANKENPHP_WORKER') !== false);
+        return (
+            function_exists('frankenphp_handle_request')
+                && (($_SERVER['FRANKENPHP_WORKER'] ?? null) !== null || getenv('FRANKENPHP_WORKER') !== false)
+        );
     }
 
     public function run(RequestHandlerInterface $application): void

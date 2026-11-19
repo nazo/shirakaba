@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Shirakaba\Core\Extraction;
 
-use Shirakaba\Core\Scope\RequestScope;
 use Psr\Http\Message\ServerRequestInterface;
+use Shirakaba\Core\Scope\RequestScope;
 
 /**
  * What a resolver sees of the request being handled.

@@ -6,9 +6,9 @@ namespace Shirakaba\Http\Message\Tests\Conformance;
 
 use Http\Psr7Test\StreamIntegrationTest;
 use PHPUnit\Framework\Attributes\CoversClass;
-use Shirakaba\Http\Message\Stream;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
+use Shirakaba\Http\Message\Stream;
 
 /**
  * Runs the upstream suite, replacing the four tests that download a file from GitHub

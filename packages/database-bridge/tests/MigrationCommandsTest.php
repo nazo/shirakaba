@@ -43,7 +43,11 @@ final class MigrationCommandsTest extends TestCase
         $bin = dirname(__DIR__) . '/bin/shirakaba-migrate';
         try {
             $run = static function (string $arguments) use ($bin, $config): array {
-                exec(sprintf('%s %s %s --config=%s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($bin), $arguments, escapeshellarg($config)), $output, $status);
+                exec(
+                    sprintf('%s %s %s --config=%s 2>&1', escapeshellarg(PHP_BINARY), escapeshellarg($bin), $arguments, escapeshellarg($config)),
+                    $output,
+                    $status,
+                );
 
                 return [$status, implode("\n", $output)];
             };

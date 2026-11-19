@@ -188,7 +188,7 @@ final readonly class Conditions
             return $this;
         }
 
-        return $this->with($boolean, new class ($inner) implements Condition {
+        return $this->with($boolean, new class($inner) implements Condition {
             public function __construct(private Conditions $inner) {}
 
             public function compile(Output $out): string

@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Shirakaba\Runtime\Fpm;
 
 use InvalidArgumentException;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Shirakaba\Core\Application;
 use Shirakaba\Core\Scope\Cancellation;
 use Shirakaba\Core\Scope\RequestOptions;
 use Shirakaba\Http\Message\Response;
 use Shirakaba\Sapi\SapiEmitter;
 use Shirakaba\Sapi\ServerRequestBuilder;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Runs one request in a classic SAPI (PHP-FPM, Apache mod_php, the built-in server):

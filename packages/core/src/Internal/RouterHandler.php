@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Shirakaba\Core\Internal;
 
-use Shirakaba\Core\Http\Failure;
-use Shirakaba\Core\Observe\RouteSummary;
-use Shirakaba\Core\Routing\MatchStatus;
-use Shirakaba\Core\Routing\Router;
-use Shirakaba\Core\Scope\RequestScope;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Core\Http\Failure;
+use Shirakaba\Core\Observe\RouteSummary;
+use Shirakaba\Core\Routing\MatchStatus;
+use Shirakaba\Core\Routing\Router;
+use Shirakaba\Core\Scope\RequestScope;
 use Throwable;
 
 /**

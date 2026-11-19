@@ -45,7 +45,11 @@ final class EntityErrorsTest extends TestCase
         $response = self::client()->get('/shelves/7');
 
         self::assertSame(404, $response->getStatusCode());
-        self::assertStringContainsString('The requested resource was not found.', (string) $response->getBody(), 'Without a #[Table] label the class name stays internal.');
+        self::assertStringContainsString(
+            'The requested resource was not found.',
+            (string) $response->getBody(),
+            'Without a #[Table] label the class name stays internal.',
+        );
     }
 
     public function testAStaleEntityIsA409(): void

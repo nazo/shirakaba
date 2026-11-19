@@ -37,7 +37,11 @@ final readonly class JsonResponse implements ResponseDeclaration
     public function responseDescription(): ResponseDescription
     {
         // Every field is written, so every field is required in the response.
-        $object = ObjectType::forOutput(new Planner(true, sprintf('Response type %s', $this->type))->root($this->type)->type());
+        $object = ObjectType::forOutput(
+            new Planner(true, sprintf('Response type %s', $this->type))
+                ->root($this->type)
+                ->type(),
+        );
 
         return new ResponseDescription(
             $this->status,

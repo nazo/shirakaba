@@ -15,6 +15,7 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^13.4",
+        "roadrunner/goridge": "^4.6",
         "shirakaba/streaming": "^0.1"
     },
     "autoload": {

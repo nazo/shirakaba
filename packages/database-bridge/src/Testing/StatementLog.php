@@ -32,7 +32,7 @@ final class StatementLog implements Observer
         $index = count($this->requests);
         $this->requests[] = [];
 
-        return new class ($this, $index) implements Observation {
+        return new class($this, $index) implements Observation {
             public function __construct(
                 private readonly StatementLog $log,
                 private readonly int $index,

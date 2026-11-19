@@ -42,7 +42,7 @@ final class InMemoryPubSub implements Publisher, Subscriber
         /** @var SplQueue<Message> $queue */
         $queue = new SplQueue();
         $this->subscriptions[$id] = [Channels::check($channels), $queue];
-        $receiver = new class ($queue, fn () => $this->unsubscribe($id)) implements Receiver {
+        $receiver = new class($queue, fn () => $this->unsubscribe($id)) implements Receiver {
             /**
              * @param SplQueue<Message> $queue
              * @param \Closure(): void $unsubscribe

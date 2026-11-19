@@ -34,11 +34,12 @@ final class DateTimeTest extends TestCase
 
     public function testMapsAndEncodesDatesAndInstants(): void
     {
-        $response = self::client()->post(
-            '/events',
-            '{"title":"Launch","startsAt":"2026-11-11T09:30:00+09:00","day":"2026-11-11","holidays":["2026-11-23"]}',
-            ['Content-Type' => 'application/json'],
-        );
+        $response = self::client()
+            ->post(
+                '/events',
+                '{"title":"Launch","startsAt":"2026-11-11T09:30:00+09:00","day":"2026-11-11","holidays":["2026-11-23"]}',
+                ['Content-Type' => 'application/json'],
+            );
 
         self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
         self::assertSame(
@@ -49,27 +50,34 @@ final class DateTimeTest extends TestCase
 
     public function testRejectsDateTimesWithoutOffsetAndInvalidDates(): void
     {
-        $response = self::client()->post(
-            '/events',
-            '{"title":"Launch","startsAt":"2026-11-11T09:30:00","day":"2026-02-30","endsAt":12}',
-            ['Content-Type' => 'application/json'],
-        );
+        $response = self::client()
+            ->post(
+                '/events',
+                '{"title":"Launch","startsAt":"2026-11-11T09:30:00","day":"2026-02-30","endsAt":12}',
+                ['Content-Type' => 'application/json'],
+            );
 
         self::assertSame(400, $response->getStatusCode());
-        self::assertSame([
-            ['pointer' => '/startsAt', 'detail' => 'must be an RFC 3339 date-time with an offset, such as "2026-11-11T09:30:00Z"'],
-            ['pointer' => '/day', 'detail' => 'must be a date such as "2026-11-11"'],
-            ['pointer' => '/endsAt', 'detail' => 'must be an RFC 3339 date-time with an offset, such as "2026-11-11T09:30:00Z" or null'],
-        ], self::withoutCodes(ResponseJson::at($response, '/errors')));
+        self::assertSame(
+            [
+                ['pointer' => '/startsAt', 'detail' => 'must be an RFC 3339 date-time with an offset, such as "2026-11-11T09:30:00Z"'],
+                ['pointer' => '/day', 'detail' => 'must be a date such as "2026-11-11"'],
+                ['pointer' => '/endsAt', 'detail' => 'must be an RFC 3339 date-time with an offset, such as "2026-11-11T09:30:00Z" or null'],
+            ],
+            self::withoutCodes(ResponseJson::at($response, '/errors')),
+        );
     }
 
     public function testEncodesAnyTimezoneAsUtc(): void
     {
         $app = new AppBuilder();
-        $app->get('/', static fn (): Json => new Json([
-            'at' => new DateTimeImmutable('2026-11-11 09:30:00.5', new DateTimeZone('Asia/Tokyo')),
-            'day' => LocalDate::of(2026, 11, 11),
-        ]));
+        $app->get(
+            '/',
+            static fn (): Json => new Json([
+                'at' => new DateTimeImmutable('2026-11-11 09:30:00.5', new DateTimeZone('Asia/Tokyo')),
+                'day' => LocalDate::of(2026, 11, 11),
+            ]),
+        );
 
         self::assertSame('{"at":"2026-11-11T00:30:00.500000Z","day":"2026-11-11"}', (string) new TestClient($app->build())->get('/')->getBody());
     }

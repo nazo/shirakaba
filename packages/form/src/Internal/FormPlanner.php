@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Shirakaba\Form\Internal;
 
 use BackedEnum;
-use Shirakaba\Core\Description\DocComment;
-use Shirakaba\Core\Extraction\Constraint;
-use Shirakaba\Core\InvalidApplication;
-use Shirakaba\Form\FormList;
 use Psr\Http\Message\UploadedFileInterface;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionEnum;
 use ReflectionNamedType;
+use Shirakaba\Core\Description\DocComment;
+use Shirakaba\Core\Extraction\Constraint;
+use Shirakaba\Core\InvalidApplication;
+use Shirakaba\Form\FormList;
 
 /**
  * Builds the field list of a form DTO from reflection, once, at build time.
@@ -88,7 +88,11 @@ final readonly class FormPlanner
             $type === UploadedFileInterface::class => ['file', null, false],
             $type === \DateTimeImmutable::class => ['instant', null, false],
             $type === \Shirakaba\Time\LocalDate::class => ['date', null, false],
-            is_a($type, \DateTimeInterface::class, true) => throw new InvalidApplication(sprintf('%s is %s; use DateTimeImmutable for instants (design/07-date-and-time.md).', $where, $type)),
+            is_a($type, \DateTimeInterface::class, true) => throw new InvalidApplication(sprintf(
+                '%s is %s; use DateTimeImmutable for instants (design/07-date-and-time.md).',
+                $where,
+                $type,
+            )),
             enum_exists($type) && is_subclass_of($type, BackedEnum::class) => ['enum', $type, (string) new ReflectionEnum($type)->getBackingType() === 'int'],
             default => throw new InvalidApplication(sprintf(
                 '%s has the unsupported type %s; use string, int, float, bool, a backed enum, DateTimeImmutable, LocalDate, UploadedFileInterface or #[FormList] arrays.',

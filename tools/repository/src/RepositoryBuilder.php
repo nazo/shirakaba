@@ -48,8 +48,13 @@ final readonly class RepositoryBuilder
         ksort($metadata);
         foreach ($metadata as &$versions) {
             // Releases in order, then the branch.
-            uksort($versions, static fn (int|string $a, int|string $b): int => [str_starts_with((string) $a, 'dev-'), version_compare((string) $a, (string) $b)]
-                <=> [str_starts_with((string) $b, 'dev-'), 0]);
+            uksort(
+                $versions,
+                static fn (int|string $a, int|string $b): int => (
+                    [str_starts_with((string) $a, 'dev-'), version_compare((string) $a, (string) $b)]
+                    <=> [str_starts_with((string) $b, 'dev-'), 0]
+                ),
+            );
         }
         unset($versions);
 
@@ -133,8 +138,12 @@ final readonly class RepositoryBuilder
         } catch (JsonException $e) {
             throw new RepositoryFailure(sprintf('%s at %s is not valid JSON: %s', $path, $commit, $e->getMessage()), previous: $e);
         }
-        if (!is_array($data) || !isset($data['name']) || !is_string($data['name'])
-            || preg_match('#^[a-z0-9]([_.-]?[a-z0-9]+)*/[a-z0-9](([_.]|-{1,2})?[a-z0-9]+)*$#', $data['name']) !== 1) {
+        if (
+            !is_array($data)
+            || !isset($data['name'])
+            || !is_string($data['name'])
+            || preg_match('#^[a-z0-9]([_.-]?[a-z0-9]+)*/[a-z0-9](([_.]|-{1,2})?[a-z0-9]+)*$#', $data['name']) !== 1
+        ) {
             throw new RepositoryFailure(sprintf('%s at %s has no valid package name.', $path, $commit));
         }
         $manifest = [];
@@ -151,7 +160,11 @@ final readonly class RepositoryBuilder
     {
         $this->directory(dirname($file));
         $this->git->run([
-            'archive', '--format=zip', '--mtime=' . $time, '--output=' . $file, $commit . ':' . $directory,
+            'archive',
+            '--format=zip',
+            '--mtime=' . $time,
+            '--output=' . $file,
+            $commit . ':' . $directory,
         ]);
     }
 

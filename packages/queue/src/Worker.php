@@ -86,9 +86,16 @@ final class Worker
             [$job, $outcome, $error] = $result;
             $rate = $this->rates[$job->queue] ?? null;
             if ($rate !== null) {
-                $this->nextStart[$job->queue] = $now + 1e9 / $rate;
+                $this->nextStart[$job->queue] = $now + (1e9 / $rate);
             }
-            $output?->line(sprintf('%s %s #%s (attempt %d)%s', $outcome->value, $job->type, $job->id, $job->attempt, $error === null ? '' : ': ' . $error->getMessage()));
+            $output?->line(sprintf(
+                '%s %s #%s (attempt %d)%s',
+                $outcome->value,
+                $job->type,
+                $job->id,
+                $job->attempt,
+                $error === null ? '' : ': ' . $error->getMessage(),
+            ));
             gc_collect_cycles();
         }
     }

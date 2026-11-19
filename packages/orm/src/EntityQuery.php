@@ -54,10 +54,13 @@ final readonly class EntityQuery
     {
         $map = EntityMap::of($class);
 
-        return new self($map, Select::from($map->table)->columns(...array_map(
-            static fn (string $column): string => $map->table . '.' . $column,
-            $map->columns(),
-        )));
+        return new self(
+            $map,
+            Select::from($map->table)->columns(...array_map(
+                static fn (string $column): string => $map->table . '.' . $column,
+                $map->columns(),
+            )),
+        );
     }
 
     /**
@@ -67,7 +70,11 @@ final readonly class EntityQuery
      */
     public function where(string $property, string $operator, mixed $value): self
     {
-        return $this->filter(static fn (Select $select, self $query): Select => $select->where($query->column($property), $operator, $query->value($property, $value)));
+        return $this->filter(static fn (Select $select, self $query): Select => $select->where(
+            $query->column($property),
+            $operator,
+            $query->value($property, $value),
+        ));
     }
 
     /**
@@ -119,7 +126,11 @@ final readonly class EntityQuery
      */
     public function whereBetween(string $property, mixed $low, mixed $high): self
     {
-        return $this->filter(static fn (Select $select, self $query): Select => $select->whereBetween($query->column($property), $query->value($property, $low), $query->value($property, $high)));
+        return $this->filter(static fn (Select $select, self $query): Select => $select->whereBetween(
+            $query->column($property),
+            $query->value($property, $low),
+            $query->value($property, $high),
+        ));
     }
 
     /**
@@ -659,7 +670,12 @@ final readonly class EntityQuery
                 $this->column($ownerId->property),
             ),
             'manyToMany' => $select
-                ->join($relation->through ?? '', ($relation->through ?? '') . '.' . $relation->foreignKey, '=', $relatedMap->table . '.' . ($relatedIds[0] ?? $ownerId)->column)
+                ->join(
+                    $relation->through ?? '',
+                    ($relation->through ?? '') . '.' . $relation->foreignKey,
+                    '=',
+                    $relatedMap->table . '.' . ($relatedIds[0] ?? $ownerId)->column,
+                )
                 ->whereColumn(($relation->through ?? '') . '.' . ($relation->localKey ?? ''), '=', $this->column($ownerId->property)),
         };
     }

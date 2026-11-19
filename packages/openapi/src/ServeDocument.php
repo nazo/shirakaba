@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Shirakaba\OpenApi;
 
 use InvalidArgumentException;
-use Shirakaba\Http\Message\HttpFactory;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Http\Message\HttpFactory;
 
 /**
  * Optional middleware that serves a document generated ahead of time (design/06-json-and-openapi.md):
@@ -51,7 +51,8 @@ final readonly class ServeDocument implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        return $this->responses->createResponse()
+        return $this->responses
+            ->createResponse()
             ->withHeader('Content-Type', 'application/json')
             ->withBody($this->streams->createStream($request->getMethod() === 'HEAD' ? '' : $this->document));
     }

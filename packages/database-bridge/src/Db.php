@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Shirakaba\DatabaseBridge;
 
 use Attribute;
+use ReflectionClass;
+use ReflectionNamedType;
 use Shirakaba\Core\Description\DescribesParameter;
 use Shirakaba\Core\Description\MixedType;
 use Shirakaba\Core\Description\ParameterDescription;
@@ -15,8 +17,6 @@ use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Database\Reader;
 use Shirakaba\Database\Writer;
 use Shirakaba\DatabaseBridge\Internal\DbResolver;
-use ReflectionClass;
-use ReflectionNamedType;
 
 /**
  * Gives a handler the request's database access (design/08-database.md):
@@ -72,7 +72,9 @@ final readonly class Db implements ParameterExtractor, DescribesParameter
             return [null, $name === Writer::class, '', []];
         }
 
-        $error = sprintf('%s: #[Db] needs Reader, Writer, or a class whose constructor takes exactly one Reader or Writer.', $parameter->describe()) . \Shirakaba\Core\Messages::see('db-parameter');
+        $error =
+            sprintf('%s: #[Db] needs Reader, Writer, or a class whose constructor takes exactly one Reader or Writer.', $parameter->describe())
+            . \Shirakaba\Core\Messages::see('db-parameter');
         if ($name === null || !class_exists($name)) {
             throw new InvalidApplication($error);
         }
@@ -94,7 +96,7 @@ final readonly class Db implements ParameterExtractor, DescribesParameter
                 $writer = $typeName === Writer::class;
                 continue;
             }
-            if ($typeName === null || (!class_exists($typeName) && !interface_exists($typeName))) {
+            if ($typeName === null || !class_exists($typeName) && !interface_exists($typeName)) {
                 throw new InvalidApplication(sprintf(
                     '%s: %s::__construct() parameter $%s must be typed with a class or interface, so it can be provided from the request scope (Provide middleware).',
                     $parameter->describe(),

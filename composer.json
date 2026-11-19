@@ -5,12 +5,17 @@
     "license": "MIT",
     "require": {
         "php": "^8.5",
-        "composer-runtime-api": "^2.2",
+        "ext-ctype": "*",
         "ext-curl": "*",
         "ext-fileinfo": "*",
+        "ext-filter": "*",
+        "ext-mbstring": "*",
         "ext-openssl": "*",
         "ext-pdo": "*",
+        "ext-uri": "*",
+        "composer-runtime-api": "^2.2",
         "open-telemetry/api": "^1.11",
+        "open-telemetry/context": "^1.6",
         "psr/clock": "^1.0",
         "psr/http-client": "^1.0",
         "psr/http-factory": "^1.1",
@@ -157,6 +162,7 @@
             "Shirakaba\\Tools\\Docs\\Tests\\": "tools/docs/tests/",
             "Shirakaba\\Tools\\Repository\\": "tools/repository/src/",
             "Shirakaba\\Tools\\Repository\\Tests\\": "tools/repository/tests/",
+            "Shirakaba\\Tools\\PHPStan\\": "tools/phpstan/src/",
             "Shirakaba\\PubSub\\Tests\\": "packages/pubsub/tests/",
             "Shirakaba\\HttpClient\\Tests\\": "packages/http-client/tests/",
             "Shirakaba\\RateLimit\\Tests\\": "packages/rate-limit/tests/"
@@ -166,7 +172,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "php-http/discovery": false,
-            "tbachert/spi": false
+            "tbachert/spi": false,
+            "infection/extension-installer": false
         }
     },
     "extra": {
@@ -184,6 +191,7 @@
         "bench": "@php -d opcache.enable_cli=1 -d opcache.jit=off -d zend.assertions=-1 tools/bench/run.php",
         "check": [
             "@monorepo:validate",
+            "@format:check",
             "@analyse",
             "@test"
         ],
@@ -191,9 +199,14 @@
         "repository:build": "php tools/repository/bin/build",
         "test:databases": "sh tools/databases/test.sh",
         "steins": "sh tools/steins/run.sh",
-        "evals:reference": "php tools/evals/bin/run --reference"
+        "evals:reference": "php tools/evals/bin/run --reference",
+        "infection": "infection --configuration=tools/infection/infection.json5 --threads=max",
+        "format": "mago fmt",
+        "format:check": "mago fmt --check"
     },
     "require-dev": {
+        "carthage-software/mago": "^1.60",
+        "infection/infection": "^0.35.12",
         "open-telemetry/sdk": "^1.16",
         "opis/json-schema": "^2.6",
         "php-http/psr7-integration-tests": "^1.5",
@@ -201,6 +214,8 @@
         "phpstan/phpstan-phpunit": "^2.1",
         "phpstan/phpstan-strict-rules": "^2.1",
         "phpunit/phpunit": "^13.4",
+        "shipmonk/composer-dependency-analyser": "^1.8",
+        "shipmonk/dead-code-detector": "^1.4",
         "swoole/ide-helper": "^6.2",
         "typedduck/steins": "0.1.8"
     }

@@ -43,7 +43,10 @@ final class MessagesTest extends TestCase
     {
         $pages = glob(dirname(__DIR__, 3) . '/packages/docs/messages/*.md');
         self::assertIsArray($pages);
-        $codes = array_values(array_filter(array_map(static fn (string $page): string => basename($page, '.md'), $pages), static fn (string $code): bool => $code !== 'README'));
+        $codes = array_values(array_filter(
+            array_map(static fn (string $page): string => basename($page, '.md'), $pages),
+            static fn (string $code): bool => $code !== 'README',
+        ));
         sort($codes);
 
         return $codes;

@@ -23,6 +23,8 @@ they make the design better.
 | `tools/repository/` | The builder of the Composer repository published on GitHub Pages ([principles](packages/docs/design/01-principles.md)) |
 | `tools/databases/` | The Docker setup behind `composer test:databases` |
 | `tools/evals/` | Agent evaluation tasks and their runner; `composer evals:reference` checks the tasks |
+| `tools/phpstan/` | What the dead code detector must treat as used: the packages' public API |
+| `tools/infection/` | The Infection configuration for mutation testing of the security packages |
 
 The root `composer.json` replaces every package and autoloads them all; a new package needs
 its `replace` and `autoload` entries there, and `composer monorepo:validate` says what is missing.
@@ -31,12 +33,17 @@ its `replace` and `autoload` entries there, and `composer monorepo:validate` say
 
 Run both before saying a change is finished:
 
-- `composer check`: the monorepo validator, PHPStan over everything, and PHPUnit.
-- `composer monorepo:standalone`: installs, analyses and tests each package on its own, which
-  catches a dependency a package uses but does not declare. Packages run in parallel, one per
-  CPU; `composer monorepo:standalone -- --jobs=1 <package>` checks one at a time.
+- `composer check`: the monorepo validator, the Mago format check, PHPStan over everything, and
+  PHPUnit. `composer format` fixes the formatting.
+- `composer monorepo:standalone`: installs, analyses and tests each package on its own, and checks
+  its dependencies with composer-dependency-analyser, which catches a dependency (an extension
+  included) a package uses but does not declare, declares but does not use, or puts in the wrong
+  section. Packages run in parallel, one per CPU; `composer monorepo:standalone -- --jobs=1 <package>`
+  checks one at a time.
 
 `composer steins` runs Steins ([static analysis and agents](packages/docs/design/13-static-analysis-and-agents.md)); CI runs it without blocking, but keep it free of errors.
+`composer infection` runs mutation testing of the security packages (it needs pcov or Xdebug); CI
+runs it without blocking.
 
 When public classes or docs change, run `composer docs:generate` to regenerate
 `packages/docs/api.md`, `llms.txt` and `llms-full.txt`; a
@@ -60,7 +67,7 @@ shirakaba/pubsub) run when `FRANKENPHP_BINARY` points at a FrankenPHP binary (a 
 github.com/php/frankenphp) and are skipped otherwise. The RoadRunner conformance tests run when
 `rr` is on the PATH or `RR_BINARY` names it (a release from github.com/roadrunner-server/roadrunner),
 and the Swoole ones when the Swoole extension is loaded or `SWOOLE_PHP_BINARY` names a PHP binary
-that has it. CI runs the Swoole tests in the image of `tools/swoole/Dockerfile` (Swoole from PECL)
+that has it. CI runs the Swoole tests in the image of `tools/swoole/Dockerfile` (Swoole installed with PIE)
 and keeps the extension out of the PHP that runs everything else, because Swoole builds that
 bring their own PDO drivers change what `PDO::connect()` returns.
 

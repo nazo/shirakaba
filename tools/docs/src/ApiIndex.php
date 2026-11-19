@@ -61,13 +61,19 @@ final readonly class ApiIndex
             if (preg_match('/^namespace ([^;]+);/m', $code, $namespace) !== 1) {
                 continue;
             }
-            if (preg_match('/(\/\*\*(?:(?!\*\/).)*\*\/)\s*(?:#\[[^\n]*\]\s*)*(?:final\s+|abstract\s+|readonly\s+)*(class|interface|enum|trait)\s+(\w+)/s', $code, $match) !== 1
-                && preg_match('/^(?:final\s+|abstract\s+|readonly\s+)*(class|interface|enum|trait)\s+(\w+)/m', $code, $bare) !== 1) {
+            if (
+                preg_match(
+                    '/(\/\*\*(?:(?!\*\/).)*\*\/)\s*(?:#\[[^\n]*\]\s*)*(?:final\s+|abstract\s+|readonly\s+)*(class|interface|enum|trait)\s+(\w+)/s',
+                    $code,
+                    $match,
+                ) !== 1
+                && preg_match('/^(?:final\s+|abstract\s+|readonly\s+)*(class|interface|enum|trait)\s+(\w+)/m', $code, $bare) !== 1
+            ) {
                 continue;
             }
             $doc = $match[1] ?? '';
-            $kind = $match[2] ?? ($bare[1] ?? 'class');
-            $name = $match[3] ?? ($bare[2] ?? '');
+            $kind = $match[2] ?? $bare[1] ?? 'class';
+            $name = $match[3] ?? $bare[2] ?? '';
             if ($name === '' || str_contains($doc, '@internal')) {
                 continue;
             }

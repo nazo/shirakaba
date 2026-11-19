@@ -13,12 +13,12 @@ use Shirakaba\Core\Scope\ScopedWork;
 use Shirakaba\Database\Database;
 use Shirakaba\Database\Testing\TestDatabases;
 use Shirakaba\Database\Writer;
+use Shirakaba\DatabaseBridge\RequestDatabase;
 use Shirakaba\PubSub\InMemoryPubSub;
 use Shirakaba\PubSub\Internal\Channels;
 use Shirakaba\PubSub\Message;
 use Shirakaba\PubSub\PostgresPubSub;
 use Shirakaba\PubSub\Subscription;
-use Shirakaba\DatabaseBridge\RequestDatabase;
 
 #[CoversClass(InMemoryPubSub::class)]
 #[CoversClass(PostgresPubSub::class)]

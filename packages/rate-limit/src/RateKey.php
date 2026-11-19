@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Shirakaba\RateLimit;
 
 use Closure;
+use Psr\Http\Message\ServerRequestInterface;
 use Shirakaba\Auth\Authentication;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\TrustedProxy\ClientAddress;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * What a route limit counts by (design/09-security.md). A key of null skips the limit for that request,
@@ -29,7 +29,7 @@ final readonly class RateKey
     public static function address(): self
     {
         return new self(static function (ServerRequestInterface $request): ?string {
-            $address = ClientAddress::of($request) ?? ($request->getServerParams()['REMOTE_ADDR'] ?? null);
+            $address = ClientAddress::of($request) ?? $request->getServerParams()['REMOTE_ADDR'] ?? null;
 
             return is_string($address) && $address !== '' ? $address : null;
         });

@@ -6,17 +6,17 @@ namespace Shirakaba\Json;
 
 use Attribute;
 use InvalidArgumentException;
+use ReflectionNamedType;
 use Shirakaba\Core\Description\DescribesParameter;
 use Shirakaba\Core\Description\ParameterDescription;
 use Shirakaba\Core\Extraction\ArgumentResolver;
 use Shirakaba\Core\Extraction\BodyExtractor;
 use Shirakaba\Core\Extraction\HandlerParameter;
 use Shirakaba\Core\InvalidApplication;
-use Shirakaba\Json\Internal\ObjectNode;
 use Shirakaba\Json\Internal\JsonBodyResolver;
+use Shirakaba\Json\Internal\ObjectNode;
 use Shirakaba\Json\Internal\Planner;
 use Shirakaba\Json\Internal\UnionNode;
-use ReflectionNamedType;
 
 /**
  * Maps a JSON request body into a DTO: `#[JsonBody] CreateUser $input` (design/06-json-and-openapi.md).
@@ -77,8 +77,10 @@ final readonly class JsonBody implements BodyExtractor, DescribesParameter
     {
         $mediaType = strtolower(trim(explode(';', $contentType, 2)[0]));
 
-        return $mediaType === 'application/json'
-            || preg_match('#^[a-z0-9!\#$&^_.+-]+/[a-z0-9!\#$&^_.+-]+\+json$#D', $mediaType) === 1;
+        return (
+            $mediaType === 'application/json'
+                || preg_match('#^[a-z0-9!\#$&^_.+-]+/[a-z0-9!\#$&^_.+-]+\+json$#D', $mediaType) === 1
+        );
     }
 
     private function mapping(HandlerParameter $parameter): ObjectNode|UnionNode

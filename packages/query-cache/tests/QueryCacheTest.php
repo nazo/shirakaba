@@ -34,7 +34,9 @@ final class QueryCacheTest extends TestCase
         $this->connection = new Database(static fn (): PDO => new PDO('sqlite::memory:'))->connect();
         $db = $this->connection->writer();
         $db->execute('CREATE TABLE countries (code TEXT PRIMARY KEY, name TEXT NOT NULL)');
-        Insert::into('countries')->rows([['code' => 'JP', 'name' => 'Japan'], ['code' => 'FR', 'name' => 'France']])->execute($db);
+        Insert::into('countries')
+            ->rows([['code' => 'JP', 'name' => 'Japan'], ['code' => 'FR', 'name' => 'France']])
+            ->execute($db);
         $this->cache = new QueryCache(new ArrayCache(), 'test');
     }
 
@@ -114,7 +116,11 @@ final class QueryCacheTest extends TestCase
         $query = Select::from('countries')->columns('name');
 
         self::assertCount(2, $first->fetchAll($query, $this->connection->writer(), ttl: 60));
-        self::assertSame([['name' => 'Germany']], $second->fetchAll($query, $other, ttl: 60), 'The same SQL against another database is not served from the first.');
+        self::assertSame(
+            [['name' => 'Germany']],
+            $second->fetchAll($query, $other, ttl: 60),
+            'The same SQL against another database is not served from the first.',
+        );
     }
 
     public function testRejectsEmptyNamespaces(): void

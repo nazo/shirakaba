@@ -7,6 +7,9 @@ namespace Shirakaba\Form;
 use Attribute;
 use BackedEnum;
 use InvalidArgumentException;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
+use ReflectionNamedType;
 use Shirakaba\Core\Description\DescribesParameter;
 use Shirakaba\Core\Description\EnumType;
 use Shirakaba\Core\Description\FileType;
@@ -27,9 +30,6 @@ use Shirakaba\Form\Internal\FormBodyResolver;
 use Shirakaba\Form\Internal\FormField;
 use Shirakaba\Form\Internal\FormPlanner;
 use Shirakaba\Form\Internal\Invalid;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UploadedFileInterface;
-use ReflectionNamedType;
 
 /**
  * Maps an HTML form (application/x-www-form-urlencoded or multipart/form-data) into a
@@ -120,13 +120,17 @@ final readonly class FormBody implements BodyExtractor, DescribesParameter
         if ($mediaType === self::URLENCODED) {
             $raw = self::read($request, $maxBytes);
             if (substr_count($raw, '&') >= $maxFields) {
-                throw new HttpFailure(413, sprintf('The form must not have more than %d fields.', $maxFields), extensions: ['code' => ProblemCode::BODY_TOO_LARGE]);
+                throw new HttpFailure(413, sprintf('The form must not have more than %d fields.', $maxFields), extensions: [
+                    'code' => ProblemCode::BODY_TOO_LARGE,
+                ]);
             }
 
             return [self::parseUrlEncoded($raw), []];
         }
         if ($mediaType !== self::MULTIPART) {
-            throw new HttpFailure(415, 'Expected a form body (application/x-www-form-urlencoded or multipart/form-data).', extensions: ['code' => ProblemCode::UNSUPPORTED_MEDIA_TYPE]);
+            throw new HttpFailure(415, 'Expected a form body (application/x-www-form-urlencoded or multipart/form-data).', extensions: [
+                'code' => ProblemCode::UNSUPPORTED_MEDIA_TYPE,
+            ]);
         }
 
         $values = [];
@@ -168,7 +172,9 @@ final readonly class FormBody implements BodyExtractor, DescribesParameter
             if ($field->kind === 'file') {
                 $file = $files[$field->name] ?? null;
                 if ($file instanceof UploadedFileInterface && in_array($file->getError(), [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
-                    throw new HttpFailure(413, sprintf('The file "%s" exceeds the upload size limit.', $field->name), extensions: ['code' => ProblemCode::BODY_TOO_LARGE]);
+                    throw new HttpFailure(413, sprintf('The file "%s" exceeds the upload size limit.', $field->name), extensions: [
+                        'code' => ProblemCode::BODY_TOO_LARGE,
+                    ]);
                 }
                 if (!$file instanceof UploadedFileInterface || $file->getError() === UPLOAD_ERR_NO_FILE) {
                     if (!$field->hasDefault) {
@@ -202,7 +208,7 @@ final readonly class FormBody implements BodyExtractor, DescribesParameter
                     $mapping[] = ['pointer' => $pointer, 'detail' => 'must be ' . self::expectation($field), 'code' => self::code($field)];
                     continue;
                 }
-                $value = $field->list ? $converted : ($converted[0] ?? null);
+                $value = $field->list ? $converted : $converted[0];
             }
 
             foreach ($field->constraints as $constraint) {
@@ -233,7 +239,10 @@ final readonly class FormBody implements BodyExtractor, DescribesParameter
         try {
             return new $class(...$arguments);
         } catch (InvalidArgumentException) {
-            throw new HttpFailure(422, 'The form has invalid values.', extensions: ['code' => ProblemCode::INVALID_VALUES, 'errors' => [['pointer' => '/', 'detail' => 'is invalid', 'code' => ProblemCode::CONSTRAINT]]]);
+            throw new HttpFailure(422, 'The form has invalid values.', extensions: [
+                'code' => ProblemCode::INVALID_VALUES,
+                'errors' => [['pointer' => '/', 'detail' => 'is invalid', 'code' => ProblemCode::CONSTRAINT]],
+            ]);
         }
     }
 
@@ -309,9 +318,13 @@ final readonly class FormBody implements BodyExtractor, DescribesParameter
                 'false', '0', 'off' => false,
                 default => null,
             },
-            'enum' => $enum === null ? null : ($field->intBacked
-                ? (($integer = Scalar::int($value)) === null ? null : $enum::tryFrom($integer))
-                : $enum::tryFrom($value)),
+            'enum' => $enum === null
+                ? null
+                : (
+                    $field->intBacked
+                        ? (($integer = Scalar::int($value)) === null ? null : $enum::tryFrom($integer))
+                        : $enum::tryFrom($value)
+                ),
             'instant' => \Shirakaba\Time\Rfc3339::parse($value),
             'date' => \Shirakaba\Time\LocalDate::parse($value),
             'file' => null,
@@ -329,7 +342,9 @@ final readonly class FormBody implements BodyExtractor, DescribesParameter
             'int' => 'an integer',
             'float' => 'a number',
             'bool' => 'a boolean (true, false, 1, 0, on or off)',
-            'enum' => $enum === null ? 'valid' : 'one of: ' . implode(', ', array_map(static fn (BackedEnum $case): string => (string) $case->value, $enum::cases())),
+            'enum' => $enum === null
+                ? 'valid'
+                : 'one of: ' . implode(', ', array_map(static fn (BackedEnum $case): string => (string) $case->value, $enum::cases())),
             'instant' => 'an RFC 3339 date-time with an offset',
             'date' => 'a date (YYYY-MM-DD)',
             'file' => 'a file',

@@ -21,9 +21,13 @@ final class EmptyJobTest extends TestCase
         $queue = new InMemoryQueue();
         $jobs = new Jobs($queue);
         $ran = 0;
-        $jobs->handle(Prune::class, static function () use (&$ran): void {
-            $ran++;
-        }, name: 'prune');
+        $jobs->handle(
+            Prune::class,
+            static function () use (&$ran): void {
+                $ran++;
+            },
+            name: 'prune',
+        );
         $jobs->push(new Prune(), new Database(static fn (): PDO => PDO::connect('sqlite::memory:'))->connect()->writer());
 
         self::assertSame(1, new JobRunner($jobs)->runPending());

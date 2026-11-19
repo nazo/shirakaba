@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Shirakaba\Core\Http;
 
+use Psr\Http\Message\ResponseInterface;
 use Shirakaba\Core\Description\DescribesResponse;
 use Shirakaba\Core\Description\ResponseDescription;
 use Shirakaba\Core\Description\ScalarType;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * A plain text response.
@@ -23,7 +23,9 @@ final readonly class Text implements ResponseValue, DescribesResponse
 
     public function toResponse(ResponseContext $context): ResponseInterface
     {
-        return $context->responses->createResponse($context->status($this->status))
+        return $context
+            ->responses
+            ->createResponse($context->status($this->status))
             ->withHeader('Content-Type', $this->contentType)
             ->withBody($context->streams->createStream($this->body));
     }

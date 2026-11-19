@@ -8,10 +8,10 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Shirakaba\Http\Message\Stream;
-use Shirakaba\Sapi\ServerRequestBuilder;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use Shirakaba\Http\Message\Stream;
+use Shirakaba\Sapi\ServerRequestBuilder;
 
 #[CoversClass(ServerRequestBuilder::class)]
 final class ServerRequestBuilderTest extends TestCase
@@ -122,7 +122,9 @@ final class ServerRequestBuilderTest extends TestCase
 
     public function testParsedBodyOnlyForFormPosts(): void
     {
-        $form = self::build(['REQUEST_METHOD' => 'POST', 'CONTENT_TYPE' => 'application/x-www-form-urlencoded; charset=utf-8', 'REQUEST_URI' => '/'], ['a' => '1']);
+        $form = self::build(['REQUEST_METHOD' => 'POST', 'CONTENT_TYPE' => 'application/x-www-form-urlencoded; charset=utf-8', 'REQUEST_URI' => '/'], [
+            'a' => '1',
+        ]);
         $json = self::build(['REQUEST_METHOD' => 'POST', 'CONTENT_TYPE' => 'application/json', 'REQUEST_URI' => '/'], ['a' => '1']);
 
         self::assertSame(['a' => '1'], $form->getParsedBody());

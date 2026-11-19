@@ -11,10 +11,10 @@ use Shirakaba\Console\Option;
 use Shirakaba\Console\Output;
 use Shirakaba\Console\UsageError;
 use Shirakaba\Database\Reader;
-use Shirakaba\Orm\SchemaCheck;
 use Shirakaba\Orm\Mapping\EntityMap;
 use Shirakaba\Orm\Mapping\Field;
 use Shirakaba\Orm\Mapping\Relation;
+use Shirakaba\Orm\SchemaCheck;
 
 /**
  * Registers `entities`, `entities:show` and `entities:check`, so people and
@@ -35,51 +35,63 @@ final readonly class EntityCommands
      */
     public static function register(ConsoleBuilder $cli, Closure $entities, ?Closure $reader = null, string $prefix = ''): void
     {
-        $cli->command($prefix . 'entities', static function (Output $output, #[Option('Print JSON instead of a table')] bool $json) use ($entities): int {
-            $maps = array_map(EntityMap::of(...), $entities());
-            if ($json) {
-                $output->line(self::encode(array_map(static fn (EntityMap $map): array => ['class' => $map->class, 'table' => $map->table], $maps)));
+        $cli->command(
+            $prefix . 'entities',
+            static function (Output $output, #[Option('Print JSON instead of a table')] bool $json) use ($entities): int {
+                $maps = array_map(EntityMap::of(...), $entities());
+                if ($json) {
+                    $output->line(self::encode(array_map(static fn (EntityMap $map): array => ['class' => $map->class, 'table' => $map->table], $maps)));
+
+                    return 0;
+                }
+                $width = max([0, ...array_map(static fn (EntityMap $map): int => strlen($map->class), $maps)]);
+                foreach ($maps as $map) {
+                    $output->line(str_pad($map->class, $width) . '  ' . $map->table);
+                }
 
                 return 0;
-            }
-            $width = max([0, ...array_map(static fn (EntityMap $map): int => strlen($map->class), $maps)]);
-            foreach ($maps as $map) {
-                $output->line(str_pad($map->class, $width) . '  ' . $map->table);
-            }
+            },
+            'Lists the entity classes and their tables.',
+        );
 
-            return 0;
-        }, 'Lists the entity classes and their tables.');
+        $cli->command(
+            $prefix . 'entities:show',
+            static function (
+                Output $output,
+                #[Argument('An entity class, its short name or its table')] string $entity,
+                #[Option('Print JSON instead of text')] bool $json,
+            ) use ($entities): int {
+                $map = self::find($entities(), $entity);
+                if ($json) {
+                    $output->line(self::encode(self::details($map)));
 
-        $cli->command($prefix . 'entities:show', static function (
-            Output $output,
-            #[Argument('An entity class, its short name or its table')] string $entity,
-            #[Option('Print JSON instead of text')] bool $json,
-        ) use ($entities): int {
-            $map = self::find($entities(), $entity);
-            if ($json) {
-                $output->line(self::encode(self::details($map)));
+                    return 0;
+                }
+                foreach (self::text($map) as $line) {
+                    $output->line($line);
+                }
 
                 return 0;
-            }
-            foreach (self::text($map) as $line) {
-                $output->line($line);
-            }
-
-            return 0;
-        }, 'Shows one entity: its table, columns, relations and scopes.');
+            },
+            'Shows one entity: its table, columns, relations and scopes.',
+        );
 
         if ($reader !== null) {
-            $cli->command($prefix . 'entities:check', static function (Output $output) use ($entities, $reader): int {
-                $problems = SchemaCheck::entities($entities(), $reader());
-                foreach ($problems as $problem) {
-                    $output->line($problem);
-                }
-                if ($problems === []) {
-                    $output->line('The database matches every entity.');
-                }
+            $cli->command(
+                $prefix . 'entities:check',
+                static function (Output $output) use ($entities, $reader): int {
+                    $problems = SchemaCheck::entities($entities(), $reader());
+                    foreach ($problems as $problem) {
+                        $output->line($problem);
+                    }
+                    if ($problems === []) {
+                        $output->line('The database matches every entity.');
+                    }
 
-                return $problems === [] ? 0 : 1;
-            }, 'Compares the entity mappings with the database and lists the differences.');
+                    return $problems === [] ? 0 : 1;
+                },
+                'Compares the entity mappings with the database and lists the differences.',
+            );
         }
     }
 
@@ -109,15 +121,18 @@ final readonly class EntityCommands
             'class' => $map->class,
             'table' => $map->table,
             'columns' => array_map(self::column(...), self::flatten($map->fields)),
-            'relations' => array_values(array_map(static fn (Relation $relation): array => array_filter([
-                'name' => $relation->name,
-                'kind' => $relation->kind,
-                'entity' => $relation->entity,
-                'foreignKey' => $relation->foreignKey,
-                'through' => $relation->through,
-                'localKey' => $relation->localKey,
-                'orderBy' => $relation->orderBy,
-            ], static fn (mixed $value): bool => $value !== null), $map->relations)),
+            'relations' => array_values(array_map(static fn (Relation $relation): array => array_filter(
+                [
+                    'name' => $relation->name,
+                    'kind' => $relation->kind,
+                    'entity' => $relation->entity,
+                    'foreignKey' => $relation->foreignKey,
+                    'through' => $relation->through,
+                    'localKey' => $relation->localKey,
+                    'orderBy' => $relation->orderBy,
+                ],
+                static fn (mixed $value): bool => $value !== null,
+            ), $map->relations)),
             'defaultScopes' => $map->defaultScopes,
             'requiredScopes' => $map->requiredScopes,
             'softDelete' => $map->softDelete,
@@ -138,7 +153,11 @@ final readonly class EntityCommands
             'id' => $field->id,
             'generated' => $field->generated,
             'managed' => $field->version ? 'version' : ($field->createdAt ? 'createdAt' : ($field->updatedAt ? 'updatedAt' : null)),
-            ...($field->hasDefault ? ['default' => $field->default instanceof \BackedEnum ? $field->default->value : (is_object($field->default) ? null : $field->default)] : []),
+            ...(
+                $field->hasDefault
+                    ? ['default' => $field->default instanceof \BackedEnum ? $field->default->value : (is_object($field->default) ? null : $field->default)]
+                    : []
+            ),
         ];
     }
 
@@ -184,7 +203,9 @@ final readonly class EntityCommands
                 $relation->name,
                 $relation->kind,
                 $relation->entity,
-                $relation->through === null ? $relation->foreignKey : sprintf('%s(%s, %s)', $relation->through, $relation->localKey ?? '', $relation->foreignKey),
+                $relation->through === null
+                    ? $relation->foreignKey
+                    : sprintf('%s(%s, %s)', $relation->through, $relation->localKey ?? '', $relation->foreignKey),
                 $relation->orderBy === null ? '' : ', ordered by ' . $relation->orderBy,
             );
         }

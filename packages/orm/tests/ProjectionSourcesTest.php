@@ -59,7 +59,10 @@ final class ProjectionSourcesTest extends TestCase
             ->into(PostDigest::class, $db, static function (array $posts) use (&$batches): array {
                 $batches++;
 
-                return array_map(static fn (Post $post): array => ['words' => explode(' ', $post->title)] + ($post->title === 'Bye' ? ['starred' => true] : []), $posts);
+                return array_map(
+                    static fn (Post $post): array => ['words' => explode(' ', $post->title)] + ($post->title === 'Bye' ? ['starred' => true] : []),
+                    $posts,
+                );
             });
 
         self::assertSame(1, $batches, 'The callback runs once for the whole result.');
@@ -80,25 +83,32 @@ final class ProjectionSourcesTest extends TestCase
         Entities::insertAll([new Comment($post->id ?? 0, $adaId, 'Nice'), new Comment($post->id ?? 0, $adaId, 'Thanks!')], $db);
 
         $calls = 0;
-        $views = Entities::query(Post::class)->with('comments')->into(ScoredPost::class, $db, static function (array $posts, array $related) use (&$calls): array {
-            $calls++;
-            self::assertContainsOnlyInstancesOf(Post::class, $posts);
-            self::assertContainsOnlyInstancesOf(Comment::class, $related);
+        $views = Entities::query(Post::class)
+            ->with('comments')
+            ->into(ScoredPost::class, $db, static function (array $posts, array $related) use (&$calls): array {
+                $calls++;
+                self::assertContainsOnlyInstancesOf(Post::class, $posts);
+                self::assertContainsOnlyInstancesOf(Comment::class, $related);
 
-            return [
-                ...array_map(static fn (Post $post): array => ['score' => strlen($post->title)], $posts),
-                ...array_map(static fn (Comment $comment): array => ['score' => strlen($comment->body), 'mine' => $comment->body === 'Nice'], $related),
-            ];
-        });
+                return [
+                    ...array_map(static fn (Post $post): array => ['score' => strlen($post->title)], $posts),
+                    ...array_map(static fn (Comment $comment): array => ['score' => strlen($comment->body), 'mine' => $comment->body === 'Nice'], $related),
+                ];
+            });
 
         self::assertSame(1, $calls);
         $view = $views[0] ?? self::fail('No post was read.');
         self::assertSame(5, $view->score);
-        self::assertSame([['Nice', 4, true], ['Thanks!', 7, false]], array_map(static fn (ScoredComment $c): array => [$c->comment->body, $c->score, $c->mine], $view->comments));
+        self::assertSame(
+            [['Nice', 4, true], ['Thanks!', 7, false]],
+            array_map(static fn (ScoredComment $c): array => [$c->comment->body, $c->score, $c->mine], $view->comments),
+        );
 
         $this->expectException(MappingError::class);
         $this->expectExceptionMessage('have no #[Computed] parameter $likes');
-        Entities::query(Post::class)->with('comments')->into(ScoredPost::class, $db, static fn (array $posts): array => [['likes' => 1]]);
+        Entities::query(Post::class)
+            ->with('comments')
+            ->into(ScoredPost::class, $db, static fn (array $posts): array => [['likes' => 1]]);
     }
 
     public function testComputedValuesMustMatchTheParameters(): void
@@ -119,7 +129,7 @@ final class ProjectionSourcesTest extends TestCase
 
     public function testFromMustNameASource(): void
     {
-        $projection = new class ('') {
+        $projection = new class('') {
             public function __construct(#[From('headline')] public string $title) {}
         };
 
@@ -130,7 +140,7 @@ final class ProjectionSourcesTest extends TestCase
 
     public function testAnUnknownParameterSuggestsComputed(): void
     {
-        $projection = new class (0) {
+        $projection = new class(0) {
             public function __construct(public int $score) {}
         };
 

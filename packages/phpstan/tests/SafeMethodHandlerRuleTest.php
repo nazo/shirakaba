@@ -28,12 +28,12 @@ final class SafeMethodHandlerRuleTest extends RuleTestCase
         );
 
         $this->analyse([__DIR__ . '/data/routes/routes.php'], [
-            [$message('GET /closure'), 15],
-            [$message('GET /method'), 16],
-            [$message('HEAD /invokable'), 17],
+            [$message('GET /closure'),                                                                                                         15],
+            [$message('GET /method'),                                                                                                          16],
+            [$message('HEAD /invokable'),                                                                                                      17],
             [$message('GET /commands', 'Shirakaba\PHPStan\Tests\Fixtures\Commands, which is built from a Shirakaba\Database\Writer', 'tasks'), 20],
-            [$message('GET <group root>'), 22],
-            [$message('GET /{id} (relative to its group)'), 23],
+            [$message('GET <group root>'),                                                                                                     22],
+            [$message('GET /{id} (relative to its group)'),                                                                                    23],
         ]);
     }
 }

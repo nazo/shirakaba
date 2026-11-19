@@ -20,7 +20,6 @@ final readonly class Event
         public DateTimeImmutable $startsAt,
         public LocalDate $day,
         public ?DateTimeImmutable $endsAt = null,
-        #[ListOf(LocalDate::class)]
-        public array $holidays = [],
+        #[ListOf(LocalDate::class)] public array $holidays = [],
     ) {}
 }

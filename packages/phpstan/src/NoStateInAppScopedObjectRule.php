@@ -74,7 +74,9 @@ final readonly class NoStateInAppScopedObjectRule implements Rule
                     RuleErrorBuilder::message(sprintf(
                         '%s lives for the whole application; writing to its properties after construction leaks state between requests (design/03-runtimes-and-scopes.md).',
                         $class->getDisplayName(),
-                    ))->identifier('shirakaba.appScopedState')->build(),
+                    ))
+                        ->identifier('shirakaba.appScopedState')
+                        ->build(),
                 ];
             }
         }

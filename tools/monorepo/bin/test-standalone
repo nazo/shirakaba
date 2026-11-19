@@ -7,7 +7,8 @@ declare(strict_types=1);
  * Installs, analyses and tests each package on its own, as a user would get it from its
  * split repository. Internal dependencies come from path repositories pointing at this
  * monorepo; everything else comes from Packagist. A package that uses a dependency it
- * does not declare fails here even though it passes in the monorepo.
+ * does not declare fails here even though it passes in the monorepo, and so does one that
+ * declares a dependency it does not use or puts a dependency in the wrong section.
  *
  * Usage: tools/monorepo/bin/test-standalone [--jobs=N] [package ...]
  *
@@ -18,7 +19,7 @@ declare(strict_types=1);
 $rootDir = dirname(__DIR__, 3);
 $root = json_decode((string) file_get_contents($rootDir . '/composer.json'), true, 512, JSON_THROW_ON_ERROR);
 $version = $root['extra']['branch-alias']['dev-main'] ?? throw new RuntimeException('Root branch alias is missing.');
-$devTools = array_intersect_key($root['require-dev'] ?? [], array_flip(['phpstan/phpstan', 'phpstan/phpstan-strict-rules', 'phpunit/phpunit']));
+$devTools = array_intersect_key($root['require-dev'] ?? [], array_flip(['phpstan/phpstan', 'phpstan/phpstan-strict-rules', 'phpunit/phpunit', 'shipmonk/composer-dependency-analyser']));
 
 $packageDirs = glob($rootDir . '/packages/*', GLOB_ONLYDIR) ?: [];
 $arguments = array_slice($argv, 1);
@@ -111,6 +112,38 @@ $remove = static function (string $path) use (&$remove): void {
     }
 };
 
+// The configuration of composer-dependency-analyser for every package:
+// - Dependencies listed in "suggest" are optional: code uses them behind a check.
+// - Tests run on a PHP build we choose, so the extensions they use need not be declared.
+// - A package adds its own exceptions, with their reasons, in composer-dependency-analyser.package.php,
+//   which returns a function that takes the configuration.
+$analyserConfig = <<<'PHP'
+    <?php
+
+    use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
+    use ShipMonk\ComposerDependencyAnalyser\Config\ErrorType;
+
+    // The extensions ignored in tests below are all the loaded ones, most of which a package never uses.
+    $config = new Configuration()->disableReportingUnmatchedIgnores();
+    $manifest = json_decode((string) file_get_contents(__DIR__ . '/composer.json'), true, 512, JSON_THROW_ON_ERROR);
+    foreach (array_keys($manifest['suggest'] ?? []) as $optional) {
+        str_starts_with($optional, 'ext-')
+            ? $config->ignoreErrorsOnExtension($optional, [ErrorType::SHADOW_DEPENDENCY])
+            : $config->ignoreErrorsOnPackage($optional, [ErrorType::SHADOW_DEPENDENCY, ErrorType::DEV_DEPENDENCY_IN_PROD]);
+    }
+    if (is_dir(__DIR__ . '/tests')) {
+        foreach (get_loaded_extensions() as $extension) {
+            $config->ignoreErrorsOnExtensionAndPath('ext-' . strtolower($extension), __DIR__ . '/tests', [ErrorType::SHADOW_DEPENDENCY]);
+        }
+    }
+    if (is_file(__DIR__ . '/composer-dependency-analyser.package.php')) {
+        (require __DIR__ . '/composer-dependency-analyser.package.php')($config);
+    }
+
+    return $config;
+
+    PHP;
+
 $failures = [];
 try {
     foreach ($packageDirs as $packageDir) {
@@ -134,12 +167,15 @@ try {
             );
             $manifest['minimum-stability'] = 'dev';
             $manifest['prefer-stable'] = true;
-            // The analyser and test runner are added here so packages need not declare PHPStan.
+            // The analysers and test runner are added here so packages need not declare them.
             $manifest['require-dev'] = [...array_diff_key($devTools, $manifest['require'] ?? []), ...$manifest['require-dev'] ?? []];
             file_put_contents("$dir/composer.json", json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
 
             $run('composer validate --strict --no-check-publish', $dir);
             $run('composer install --no-interaction --no-progress', $dir);
+            // Unused, undeclared and misplaced (require versus require-dev) dependencies.
+            file_put_contents("$dir/composer-dependency-analyser.php", $analyserConfig);
+            $run('vendor/bin/composer-dependency-analyser', $dir);
 
             $sources = glob("$dir/src/*.php") ?: [];
             if ($sources !== []) {

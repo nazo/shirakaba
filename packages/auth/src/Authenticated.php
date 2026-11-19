@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Shirakaba\Auth;
 
 use Attribute;
+use ReflectionNamedType;
 use Shirakaba\Core\Description\DescribesParameter;
 use Shirakaba\Core\Description\MixedType;
 use Shirakaba\Core\Description\ParameterDescription;
@@ -12,7 +13,6 @@ use Shirakaba\Core\Extraction\ArgumentResolver;
 use Shirakaba\Core\Extraction\HandlerParameter;
 use Shirakaba\Core\Extraction\ParameterExtractor;
 use Shirakaba\Core\InvalidApplication;
-use ReflectionNamedType;
 
 /**
  * Requires an authenticated principal of the parameter's type:

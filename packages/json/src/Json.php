@@ -7,14 +7,14 @@ namespace Shirakaba\Json;
 use BackedEnum;
 use JsonException;
 use JsonSerializable;
-use Shirakaba\Json\Internal\EncodedMap;
+use Psr\Http\Message\ResponseInterface;
+use ReflectionClass;
 use Shirakaba\Core\Description\DescribesResponse;
 use Shirakaba\Core\Description\MixedType;
 use Shirakaba\Core\Description\ResponseDescription;
 use Shirakaba\Core\Http\ResponseContext;
 use Shirakaba\Core\Http\ResponseValue;
-use Psr\Http\Message\ResponseInterface;
-use ReflectionClass;
+use Shirakaba\Json\Internal\EncodedMap;
 use UnexpectedValueException;
 
 /**
@@ -45,7 +45,9 @@ final readonly class Json implements ResponseValue, DescribesResponse
     {
         $json = self::encode($this->data);
 
-        $response = $context->responses->createResponse($context->status($this->status))
+        $response = $context
+            ->responses
+            ->createResponse($context->status($this->status))
             ->withHeader('Content-Type', 'application/json')
             ->withBody($context->streams->createStream($json));
         foreach ($this->headers as $name => $value) {

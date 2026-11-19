@@ -9,8 +9,9 @@ use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Shirakaba\Core\AppBuilder;
-use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Core\Extraction\ExtractionFailure;
 use Shirakaba\Core\Extraction\Header;
 use Shirakaba\Core\Extraction\Path;
@@ -18,14 +19,13 @@ use Shirakaba\Core\Extraction\Query;
 use Shirakaba\Core\Http\Text;
 use Shirakaba\Core\Internal\HandlerInvoker;
 use Shirakaba\Core\Internal\ScalarConverter;
+use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Core\Testing\TestClient;
 use Shirakaba\Core\Tests\Fixtures\Color;
 use Shirakaba\Core\Tests\Fixtures\Priority;
 use Shirakaba\Time\LocalDate;
 use Shirakaba\Time\Rfc3339;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 #[CoversClass(Path::class)]
 #[CoversClass(Query::class)]
@@ -114,7 +114,10 @@ final class ExtractionTest extends TestCase
     #[DataProvider('queries')]
     public function testQueryParametersComeFromTheRawQueryString(string $target, int $status, string $body): void
     {
-        $client = self::client('/', static fn (#[Query] int $page = 1, #[Query] string $tag = 'none'): Text => new Text(sprintf('page=%d tag=%s', $page, $tag)));
+        $client = self::client(
+            '/',
+            static fn (#[Query] int $page = 1, #[Query] string $tag = 'none'): Text => new Text(sprintf('page=%d tag=%s', $page, $tag)),
+        );
 
         [$actualStatus, $actualBody] = self::call($client, $target);
 
@@ -167,7 +170,10 @@ final class ExtractionTest extends TestCase
 
     public function testBackedEnums(): void
     {
-        $client = self::client('/{color}', static fn (#[Path] Color $color, #[Query] Priority $priority = Priority::Normal): Text => new Text($color->name . ' ' . $priority->name));
+        $client = self::client(
+            '/{color}',
+            static fn (#[Path] Color $color, #[Query] Priority $priority = Priority::Normal): Text => new Text($color->name . ' ' . $priority->name),
+        );
 
         self::assertSame([200, 'Red Normal'], self::call($client, '/red'));
         self::assertSame([200, 'Blue High'], self::call($client, '/blue?priority=2'));
@@ -210,7 +216,13 @@ final class ExtractionTest extends TestCase
 
     public function testCookies(): void
     {
-        $client = self::client('/', static fn (#[\Shirakaba\Core\Extraction\Cookie('theme')] string $theme = 'light', #[\Shirakaba\Core\Extraction\Cookie('visits')] int $visits = 0): Text => new Text($theme . ' ' . $visits));
+        $client = self::client(
+            '/',
+            static fn (
+                #[\Shirakaba\Core\Extraction\Cookie('theme')] string $theme = 'light',
+                #[\Shirakaba\Core\Extraction\Cookie('visits')] int $visits = 0,
+            ): Text => new Text($theme . ' ' . $visits),
+        );
 
         self::assertSame([200, 'dark 3'], self::call($client, '/', ['Cookie' => 'theme=dark; visits=3']));
         self::assertSame([200, 'light 0'], self::call($client, '/'));

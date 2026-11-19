@@ -22,11 +22,13 @@ final readonly class ObservedMailer implements Mailer
     public function send(Email $email): SentEmail
     {
         $started = hrtime(true);
-        $transport = (new \ReflectionClass($this->mailer))->getShortName();
+        $transport = new \ReflectionClass($this->mailer)->getShortName();
         try {
             $sent = $this->mailer->send($email);
         } catch (MailError $e) {
-            $this->scope->record(new EmailSent($transport, count($email->recipients()), 0, (hrtime(true) - $started) / 1e9, $e->retryable ? 'temporary' : 'permanent'));
+            $this->scope->record(
+                new EmailSent($transport, count($email->recipients()), 0, (hrtime(true) - $started) / 1e9, $e->retryable ? 'temporary' : 'permanent'),
+            );
 
             throw $e;
         }

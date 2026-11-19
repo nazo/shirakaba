@@ -9,9 +9,9 @@ use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Database\Connection;
 use Shirakaba\Database\Database;
 use Shirakaba\Database\Writer;
+use Shirakaba\DatabaseBridge\RequestDatabase;
 use Shirakaba\PubSub\Internal\Channels;
 use Shirakaba\PubSub\Internal\Receiver;
-use Shirakaba\DatabaseBridge\RequestDatabase;
 
 /**
  * Publish/subscribe on PostgreSQL LISTEN/NOTIFY (design/11-real-time-events.md). Publishing runs pg_notify() on
@@ -45,7 +45,7 @@ final readonly class PostgresPubSub implements Publisher, Subscriber
         foreach ($channels as $channel) {
             $writer->execute('LISTEN ' . $connection->dialect->quoteIdentifier($channel));
         }
-        $receiver = new class ($connection) implements Receiver {
+        $receiver = new class($connection) implements Receiver {
             private bool $listening = true;
 
             public function __construct(

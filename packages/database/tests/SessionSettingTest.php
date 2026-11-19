@@ -49,25 +49,33 @@ final class SessionSettingTest extends TestCase
             // expected
         }
         $db->fetchValue('SELECT 5');
-        self::assertSame(['app.organization_id=7', 'app.organization_id=', 'app.organization_id='], $dialect->settings, 'A rollback may have undone the setting, so it is set again.');
+        self::assertSame(
+            ['app.organization_id=7', 'app.organization_id=', 'app.organization_id='],
+            $dialect->settings,
+            'A rollback may have undone the setting, so it is set again.',
+        );
         $lease->release();
     }
 
     public function testRefusesBuiltInParametersAndDatabasesWithoutSettings(): void
     {
         $connection = new Database(static fn (): PDO => PDO::connect('sqlite::memory:'), new CountingDialect())->connect();
+        $accepted = [];
         foreach (['search_path', 'App.Tenant', 'app.tenant; DROP TABLE x'] as $name) {
             try {
                 $connection->setSetting($name, 'x');
-                self::fail(sprintf('"%s" must be refused.', $name));
             } catch (InvalidArgumentException) {
-                $this->addToAssertionCount(1);
+                continue;
             }
+            $accepted[] = $name;
         }
+        self::assertSame([], $accepted, 'These settings must be refused.');
 
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('sqlite has no session settings');
-        new Database(static fn (): PDO => PDO::connect('sqlite::memory:'))->connect()->setSetting('app.tenant', '1');
+        new Database(static fn (): PDO => PDO::connect('sqlite::memory:'))
+            ->connect()
+            ->setSetting('app.tenant', '1');
     }
 
     /**
@@ -82,7 +90,11 @@ final class SessionSettingTest extends TestCase
         }
         $user = getenv('SHIRAKABA_TEST_PGSQL_USER');
         $password = getenv('SHIRAKABA_TEST_PGSQL_PASSWORD');
-        $database = new Database(static fn (): PDO => PDO::connect($dsn, is_string($user) ? $user : null, is_string($password) ? $password : null), reuse: true);
+        $database = new Database(static fn (): PDO => PDO::connect(
+            $dsn,
+            is_string($user) ? $user : null,
+            is_string($password) ? $password : null,
+        ), reuse: true);
         $setup = $database->connect()->writer();
         $setup->execute('DROP TABLE IF EXISTS rls_cards');
         $setup->execute("DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'shirakaba_tenant_app') THEN CREATE ROLE shirakaba_tenant_app NOLOGIN; END IF; END $$");
@@ -102,7 +114,11 @@ final class SessionSettingTest extends TestCase
 
         $next = $database->lease();
         self::assertSame($lease->connection->pdo, $next->connection->pdo, 'The connection was reused.');
-        self::assertSame('', $next->connection->reader()->fetchValue("SELECT COALESCE(current_setting('app.organization_id', true), '')"), 'The setting did not outlive its lease.');
+        self::assertSame(
+            '',
+            $next->connection->reader()->fetchValue("SELECT COALESCE(current_setting('app.organization_id', true), '')"),
+            'The setting did not outlive its lease.',
+        );
         $next->connection->writer()->execute('SET ROLE shirakaba_tenant_app');
         self::assertSame([], $next->connection->reader()->fetchAll('SELECT body FROM rls_cards'), 'Without the setting no row is visible.');
         $next->release();

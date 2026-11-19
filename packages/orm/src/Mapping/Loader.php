@@ -54,7 +54,10 @@ final readonly class Loader
                     $through = $relation->through ?? '';
                     $local = $relation->localKey ?? '';
                     $relatedId = self::singleId($related);
-                    $select = EntityQuery::of($related->class)->scoped(...$scopes)->withoutScope(...$without)->select()
+                    $select = EntityQuery::of($related->class)
+                        ->scoped(...$scopes)
+                        ->withoutScope(...$without)
+                        ->select()
                         ->join($through, $through . '.' . $relation->foreignKey, '=', $related->table . '.' . $relatedId->column)
                         ->whereIn($through . '.' . $local, $chunk);
                     $group = $through . '.' . $local;
@@ -63,7 +66,8 @@ final readonly class Loader
                     $select = EntityQuery::of($related->class)->scoped(...$scopes)->withoutScope(...$without)->select()->whereIn($foreign, $chunk);
                     $group = $foreign;
                 }
-                $rows = $select->reselect()
+                $rows = $select
+                    ->reselect()
                     ->column($group, 'owner_key')
                     ->column(\Shirakaba\Query\Sql::raw('COUNT(*)'), 'total')
                     ->groupBy($group)
@@ -110,8 +114,16 @@ final readonly class Loader
      * @param array<class-string, list<array{EntityMap<object>, Relation, list<object>, string}>> $deferred
      *        related class => leaf belongs-to loads to merge
      */
-    private static function walk(EntityMap $map, array $owners, array $tree, Reader $db, array &$loaded, ?EntityQuery $context, string $prefix, array &$deferred): void
-    {
+    private static function walk(
+        EntityMap $map,
+        array $owners,
+        array $tree,
+        Reader $db,
+        array &$loaded,
+        ?EntityQuery $context,
+        string $prefix,
+        array &$deferred,
+    ): void {
         foreach ($tree as $name => $subtree) {
             $path = $prefix . $name;
             /** @var array<string, array<string, mixed>> $subtree */
@@ -220,7 +232,7 @@ final readonly class Loader
                     }
                     $values[$entry][$index] = $list;
                 } else {
-                    $values[$entry][$index] = $value === null ? null : ($byId[self::key($value)] ?? null);
+                    $values[$entry][$index] = $value === null ? null : $byId[self::key($value)] ?? null;
                 }
             }
         }
@@ -282,7 +294,7 @@ final readonly class Loader
         $values = [];
         foreach ($keys as $entry => $ownerKeys) {
             foreach ($ownerKeys as $index => $value) {
-                $values[$entry][$index] = $value === null ? null : ($byId[self::key($value)] ?? null);
+                $values[$entry][$index] = $value === null ? null : $byId[self::key($value)] ?? null;
             }
         }
 
@@ -312,7 +324,7 @@ final readonly class Loader
         $values = [];
         foreach ($keys as $index => $value) {
             $group = $groups[self::key($value)] ?? [];
-            $values[$index] = $relation->kind === 'hasOne' ? ($group[0] ?? null) : $group;
+            $values[$index] = $relation->kind === 'hasOne' ? $group[0] ?? null : $group;
         }
 
         return $values;
@@ -366,7 +378,7 @@ final readonly class Loader
             $without = $scope[1];
             $entityQuery = EntityQuery::of($map->class)->scoped(...$scope[0])->withoutScope(...$without);
             if ($scope[2] !== null) {
-                $entityQuery = ($scope[2])($entityQuery);
+                $entityQuery = $scope[2]($entityQuery);
             }
             $query = $entityQuery
                 ->whereColumns(static fn (Conditions $c): Conditions => $c->whereIn($map->table . '.' . $column, $chunk))

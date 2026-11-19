@@ -25,8 +25,7 @@ final readonly class Described
          */
         public ?Owner $owner,
         /** @var list<string> */
-        #[ListOf('string')]
-        public array $tags = [],
+        #[ListOf('string')] public array $tags = [],
         public int $count = 0,
     ) {
         $this->title = $title === '' ? 'untitled' : $title;

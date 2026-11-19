@@ -14,13 +14,13 @@ use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Core\Scope\ScopedWork;
 use Shirakaba\Core\Testing\TestClient;
 use Shirakaba\Database\Database;
+use Shirakaba\Database\Reader;
+use Shirakaba\Database\Writer;
 use Shirakaba\DatabaseBridge\DatabaseMiddleware;
 use Shirakaba\DatabaseBridge\Databases;
 use Shirakaba\DatabaseBridge\Db;
 use Shirakaba\DatabaseBridge\Internal\DbResolver;
 use Shirakaba\DatabaseBridge\Internal\ScopedConnections;
-use Shirakaba\Database\Reader;
-use Shirakaba\Database\Writer;
 use Shirakaba\DatabaseBridge\RequestDatabase;
 
 #[CoversClass(Database::class)]
@@ -82,7 +82,10 @@ final class MultipleDatabasesTest extends TestCase
     {
         $app = new AppBuilder();
         $app->middleware(new DatabaseMiddleware($this->database('main'), ['analytics' => $this->database('analytics')]));
-        $app->get('/both', static fn (#[Db] Reader $main, #[Db('analytics')] Reader $analytics): Text => new Text(self::label($main) . ' ' . self::label($analytics)));
+        $app->get(
+            '/both',
+            static fn (#[Db] Reader $main, #[Db('analytics')] Reader $analytics): Text => new Text(self::label($main) . ' ' . self::label($analytics)),
+        );
         $app->get('/unknown', static fn (#[Db('missing')] Reader $db): Text => new Text(self::label($db)));
         $client = new TestClient($app->build());
 

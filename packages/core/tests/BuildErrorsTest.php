@@ -8,6 +8,7 @@ use Closure;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Extraction\Header;
 use Shirakaba\Core\Extraction\Path;
@@ -18,7 +19,6 @@ use Shirakaba\Core\Http\Text;
 use Shirakaba\Core\Internal\HandlerInvoker;
 use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Core\Tests\Fixtures\JsonBody;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * The boot-time errors listed in design/04-routing-and-handlers.md.
@@ -33,11 +33,15 @@ final class BuildErrorsTest extends TestCase
     public static function invalidHandlers(): iterable
     {
         yield 'no way to resolve' => [static fn (int $id): Text => new Text(''), 'add an extractor attribute'];
-        yield 'two extractors' => [static fn (#[Path] #[Query] int $id): Text => new Text(''), 'only one extractor attribute'];
+        yield 'two extractors' => [static fn (#[Path]
+            #[Query] int $id): Text => new Text(''), 'only one extractor attribute'];
         yield 'variadic' => [static fn (#[Query] string ...$tags): Text => new Text(''), 'variadic'];
-        yield 'by reference' => [static function (#[Query] string &$tag): Text {
-            return new Text('');
-        }, 'by-reference'];
+        yield 'by reference' => [
+            static function (#[Query] string &$tag): Text {
+                return new Text('');
+            },
+            'by-reference',
+        ];
         yield 'union type' => [static fn (#[Path] int|string $id): Text => new Text(''), 'needs a single declared type'];
         yield 'untyped' => [static fn (#[Path] $id): Text => new Text(''), 'needs a single declared type'];
         yield 'unsupported type' => [static fn (#[Path] array $id): Text => new Text(''), 'does not support the type array'];
@@ -86,10 +90,10 @@ final class BuildErrorsTest extends TestCase
     #[DataProvider('validReturnTypes')]
     public function testAcceptsValidHandlers(Closure $handler): void
     {
+        $this->expectNotToPerformAssertions();
         $app = new AppBuilder();
         $app->post('/', $handler);
 
         $app->build();
-        $this->addToAssertionCount(1);
     }
 }

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Shirakaba\Streaming;
 
 use Generator;
+use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 use Shirakaba\Core\Description\DescribesResponse;
 use Shirakaba\Core\Description\ResponseDescription;
 use Shirakaba\Core\Description\ScalarType;
 use Shirakaba\Core\Http\ResponseContext;
 use Shirakaba\Core\Http\ResponseValue;
-use Psr\Http\Message\ResponseInterface;
-use RuntimeException;
 
 /**
  * A Server-Sent Events response (text/event-stream). Yield SseEvent objects, or null to
@@ -28,7 +28,9 @@ final readonly class Sse implements ResponseValue, DescribesResponse
 
     public function toResponse(ResponseContext $context): ResponseInterface
     {
-        return $context->responses->createResponse(200)
+        return $context
+            ->responses
+            ->createResponse(200)
             ->withHeader('Content-Type', 'text/event-stream; charset=utf-8')
             ->withHeader('Cache-Control', 'no-cache')
             // Tells nginx not to buffer the stream.

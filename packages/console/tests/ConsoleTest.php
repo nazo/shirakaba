@@ -32,27 +32,31 @@ final class ConsoleTest extends TestCase
     private static function tester(): ConsoleTester
     {
         $cli = new ConsoleBuilder('app', 'Tools for the example.');
-        $cli->command('users:import', static function (
-            Output $output,
-            #[Argument('CSV file to read')] string $file,
-            #[Option('Report what would change')] bool $dryRun,
-            #[Option('Rows per transaction')] int $batch = 500,
-            #[Option(short: 'l')] Level $level = Level::Info,
-            #[Option] ?LocalDate $since = null,
-            #[Option] array $tag = [],
-        ): int {
-            $output->line(sprintf(
-                '%s dry=%s batch=%d level=%s since=%s tags=%s',
-                $file,
-                var_export($dryRun, true),
-                $batch,
-                $level->value,
-                $since?->toString() ?? '-',
-                implode(',', array_map(strval(...), array_filter($tag, is_string(...)))),
-            ));
+        $cli->command(
+            'users:import',
+            static function (
+                Output $output,
+                #[Argument('CSV file to read')] string $file,
+                #[Option('Report what would change')] bool $dryRun,
+                #[Option('Rows per transaction')] int $batch = 500,
+                #[Option(short: 'l')] Level $level = Level::Info,
+                #[Option] ?LocalDate $since = null,
+                #[Option] array $tag = [],
+            ): int {
+                $output->line(sprintf(
+                    '%s dry=%s batch=%d level=%s since=%s tags=%s',
+                    $file,
+                    var_export($dryRun, true),
+                    $batch,
+                    $level->value,
+                    $since?->toString() ?? '-',
+                    implode(',', array_map(strval(...), array_filter($tag, is_string(...)))),
+                ));
 
-            return $file === 'broken.csv' ? 3 : 0;
-        }, 'Imports users from a CSV file.');
+                return $file === 'broken.csv' ? 3 : 0;
+            },
+            'Imports users from a CSV file.',
+        );
         $cli->command('cat', static function (Output $output, #[Argument] string ...$files): void {
             $output->line(implode('|', $files));
         });
@@ -151,6 +155,7 @@ final class ConsoleTest extends TestCase
 
     public function testRejectsUnmappableCommandsWhenBuilt(): void
     {
+        $accepted = [];
         foreach ([
             static fn (string $plain): int => 0,
             static fn (#[Option] \stdClass $object): int => 0,
@@ -161,12 +166,11 @@ final class ConsoleTest extends TestCase
             $cli->command('broken', $handler);
             try {
                 $cli->build();
-                if ($index !== 3) {
-                    self::fail(sprintf('Handler %d was accepted.', $index));
-                }
             } catch (InvalidApplication) {
-                $this->addToAssertionCount(1);
+                continue;
             }
+            $accepted[] = $index;
         }
+        self::assertSame([3], $accepted, 'Only the fourth handler can be mapped.');
     }
 }

@@ -6,9 +6,9 @@ namespace Shirakaba\Http\Message\Tests\Conformance;
 
 use Http\Psr7Test\UploadedFileIntegrationTest;
 use PHPUnit\Framework\Attributes\CoversClass;
+use Psr\Http\Message\UploadedFileInterface;
 use Shirakaba\Http\Message\Stream;
 use Shirakaba\Http\Message\UploadedFile;
-use Psr\Http\Message\UploadedFileInterface;
 
 #[CoversClass(UploadedFile::class)]
 final class UploadedFileConformanceTest extends UploadedFileIntegrationTest

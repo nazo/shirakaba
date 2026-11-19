@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Shirakaba\Cors;
 
 use InvalidArgumentException;
-use Shirakaba\Http\Message\HttpFactory;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Http\Message\HttpFactory;
 
 /**
  * Cross-Origin Resource Sharing, configured in PHP:

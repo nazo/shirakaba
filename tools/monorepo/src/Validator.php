@@ -94,8 +94,15 @@ final readonly class Validator
                     $dependencyDirectory = substr($dependency, strlen(self::VENDOR) + 1);
                     if (!isset($packages[$dependencyDirectory])) {
                         $errors[] = sprintf('%s: depends on unknown internal package "%s".', $label, $dependency);
-                    } elseif (in_array($directory, self::LIBRARIES, true) && !in_array($dependencyDirectory, [...self::LIBRARIES, ...self::LIBRARY_DEPENDENCIES], true)) {
-                        $errors[] = sprintf('%s: must be usable without the framework, so it cannot require "%s"; move the integration to shirakaba/database-bridge (design/08-database.md).', $label, $dependency);
+                    } elseif (
+                        in_array($directory, self::LIBRARIES, true)
+                        && !in_array($dependencyDirectory, [...self::LIBRARIES, ...self::LIBRARY_DEPENDENCIES], true)
+                    ) {
+                        $errors[] = sprintf(
+                            '%s: must be usable without the framework, so it cannot require "%s"; move the integration to shirakaba/database-bridge (design/08-database.md).',
+                            $label,
+                            $dependency,
+                        );
                     } elseif ($internalConstraint !== null && $constraint !== $internalConstraint) {
                         $errors[] = sprintf('%s: internal dependency "%s" must use "%s".', $label, $dependency, $internalConstraint);
                     }
@@ -139,7 +146,7 @@ final readonly class Validator
         if ($expectedReplace !== $actualReplace) {
             $errors[] = sprintf(
                 'Root composer.json "replace" must be exactly %s.',
-                json_encode($expectedReplace, JSON_UNESCAPED_SLASHES),
+                json_encode($expectedReplace, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
             );
         }
 

@@ -20,16 +20,26 @@ final class MapSchemaTest extends TestCase
     {
         $app = new AppBuilder();
         $app->get('/tally', #[JsonResponse(200, Tally::class)] static fn (): Json => new Json(new Tally([], [])));
-        $json = json_decode(new Generator(new Info('Tally', '1'))->generate($app->describe())->toJson(), true, 512, JSON_THROW_ON_ERROR);
+        $json = json_decode(
+            new Generator(new Info('Tally', '1'))
+                ->generate($app->describe())
+                ->toJson(),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
         self::assertIsArray($json);
         self::assertIsArray($json['components'] ?? null);
         self::assertIsArray($json['components']['schemas'] ?? null);
         $tally = $json['components']['schemas']['Tally'] ?? null;
         self::assertIsArray($tally);
 
-        self::assertSame([
-            'reactions' => ['type' => 'object', 'additionalProperties' => ['type' => 'integer']],
-            'users' => ['type' => 'object', 'additionalProperties' => ['$ref' => '#/components/schemas/Followed']],
-        ], $tally['properties'] ?? null);
+        self::assertSame(
+            [
+                'reactions' => ['type' => 'object', 'additionalProperties' => ['type' => 'integer']],
+                'users' => ['type' => 'object', 'additionalProperties' => ['$ref' => '#/components/schemas/Followed']],
+            ],
+            $tally['properties'] ?? null,
+        );
     }
 }

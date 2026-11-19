@@ -47,8 +47,8 @@ final class CompilationTest extends TestCase
         $mysql = $query->toSql(new MySql());
         self::assertSame(
             'SELECT DISTINCT `t`.`id`, `t`.`title`, COUNT(c.id) AS `comments` FROM `tasks` AS `t` LEFT JOIN `comments` AS `c` ON `c`.`task_id` = `t`.`id`'
-            . ' WHERE `t`.`status` = ? AND (`t`.`priority` > ? OR `t`.`due_on` IS NULL) AND `t`.`owner_id` IN (?, ?)'
-            . ' GROUP BY `t`.`id`, `t`.`title` HAVING COUNT(c.id) >= ? ORDER BY `t`.`id` DESC LIMIT 10 OFFSET 20',
+                . ' WHERE `t`.`status` = ? AND (`t`.`priority` > ? OR `t`.`due_on` IS NULL) AND `t`.`owner_id` IN (?, ?)'
+                . ' GROUP BY `t`.`id`, `t`.`title` HAVING COUNT(c.id) >= ? ORDER BY `t`.`id` DESC LIMIT 10 OFFSET 20',
             $mysql->sql,
         );
         self::assertSame(['open', 3, 1, 2, 2], $mysql->parameters);
@@ -64,14 +64,25 @@ final class CompilationTest extends TestCase
         self::assertSame('SELECT * FROM "tasks" LIMIT -1 OFFSET 5', $offsetOnly->toSql(new Sqlite())->sql, 'SQLite has no row locks.');
 
         $upsert = Insert::into('users')->values(['email' => 'a@example.com', 'name' => 'A'])->onConflict(['email'], ['name']);
-        self::assertSame('INSERT INTO `users` (`email`, `name`) VALUES (?, ?) AS excluded ON DUPLICATE KEY UPDATE `name` = excluded.`name`', $upsert->toSql(new MySql())->sql);
-        self::assertSame('INSERT INTO "users" ("email", "name") VALUES (?, ?) ON CONFLICT ("email") DO UPDATE SET "name" = excluded."name"', $upsert->toSql(new PostgreSql())->sql);
+        self::assertSame(
+            'INSERT INTO `users` (`email`, `name`) VALUES (?, ?) AS excluded ON DUPLICATE KEY UPDATE `name` = excluded.`name`',
+            $upsert->toSql(new MySql())->sql,
+        );
+        self::assertSame(
+            'INSERT INTO "users" ("email", "name") VALUES (?, ?) ON CONFLICT ("email") DO UPDATE SET "name" = excluded."name"',
+            $upsert->toSql(new PostgreSql())->sql,
+        );
 
-        $counter = Insert::into('counts')->values(['key' => 'a', 'n' => 1])->onConflict(['key'], ['n' => Sql::raw('counts.n + ?', [5])]);
+        $counter = Insert::into('counts')
+            ->values(['key' => 'a', 'n' => 1])
+            ->onConflict(['key'], ['n' => Sql::raw('counts.n + ?', [5])]);
         $compiled = $counter->toSql(new PostgreSql());
         self::assertSame('INSERT INTO "counts" ("key", "n") VALUES (?, ?) ON CONFLICT ("key") DO UPDATE SET "n" = counts.n + ?', $compiled->sql);
         self::assertSame(['a', 1, 5], $compiled->parameters);
-        self::assertSame('INSERT INTO `counts` (`key`, `n`) VALUES (?, ?) AS excluded ON DUPLICATE KEY UPDATE `n` = counts.n + ?', $counter->toSql(new MySql())->sql);
+        self::assertSame(
+            'INSERT INTO `counts` (`key`, `n`) VALUES (?, ?) AS excluded ON DUPLICATE KEY UPDATE `n` = counts.n + ?',
+            $counter->toSql(new MySql())->sql,
+        );
     }
 
     public function testEmptyInListsAreValidSql(): void
@@ -93,16 +104,25 @@ final class CompilationTest extends TestCase
 
         self::assertSame(
             'WITH "recent" AS (SELECT "id" FROM "tasks" WHERE "created_at" > ?) SELECT * FROM "recent"'
-            . ' WHERE EXISTS (SELECT * FROM "comments" WHERE "comments"."task_id" = "recent"."id") AND "id" > ?'
-            . ' UNION ALL SELECT "id" FROM "archived" ORDER BY "id" ASC',
+                . ' WHERE EXISTS (SELECT * FROM "comments" WHERE "comments"."task_id" = "recent"."id") AND "id" > ?'
+                . ' UNION ALL SELECT "id" FROM "archived" ORDER BY "id" ASC',
             $compiled->sql,
         );
         self::assertSame(['2026-01-01', 10], $compiled->parameters);
-        self::assertStringContainsString('("created_at", "id") < (?, ?)', Select::from('t')->orderBy('created_at', 'desc')->orderBy('id', 'desc')->after(['created_at' => 'x', 'id' => 1])->toSql(new Sqlite())->sql);
+        self::assertStringContainsString(
+            '("created_at", "id") < (?, ?)',
+            Select::from('t')
+                ->orderBy('created_at', 'desc')
+                ->orderBy('id', 'desc')
+                ->after(['created_at' => 'x', 'id' => 1])
+                ->toSql(new Sqlite())
+                ->sql,
+        );
     }
 
     public function testRejectsUnsafeNamesAndOperators(): void
     {
+        $accepted = [];
         foreach ([
             static fn () => Select::from('tasks; DROP TABLE users')->toSql(new Sqlite()),
             static fn () => Select::from('tasks')->orderBy('id desc')->toSql(new Sqlite()),
@@ -112,18 +132,23 @@ final class CompilationTest extends TestCase
         ] as $index => $unsafe) {
             try {
                 $unsafe();
-                self::fail(sprintf('Case %d was accepted.', $index));
             } catch (InvalidArgumentException) {
-                $this->addToAssertionCount(1);
+                continue;
             }
+            $accepted[] = $index;
         }
+        self::assertSame([], $accepted, 'These cases must be refused.');
     }
 
     public function testUpdatesAndDeletesNeedAWhereClause(): void
     {
         self::assertSame(
             'UPDATE "tasks" SET "done" = ?, "hits" = hits + 1 WHERE "id" = ?',
-            Update::table('tasks')->set(['done' => true, 'hits' => Sql::raw('hits + 1')])->where('id', '=', 5)->toSql(new Sqlite())->sql,
+            Update::table('tasks')
+                ->set(['done' => true, 'hits' => Sql::raw('hits + 1')])
+                ->where('id', '=', 5)
+                ->toSql(new Sqlite())
+                ->sql,
         );
         self::assertSame('DELETE FROM "tasks"', Delete::from('tasks')->everyRow()->toSql(new Sqlite())->sql);
 

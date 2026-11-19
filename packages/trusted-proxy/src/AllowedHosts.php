@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Shirakaba\TrustedProxy;
 
 use InvalidArgumentException;
-use Shirakaba\Core\Http\HttpFailure;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Core\Http\HttpFailure;
 
 /**
  * Answers 400 to requests for a host the application does not serve (design/03-runtimes-and-scopes.md):

@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Core\Testing\TestClient;
@@ -16,7 +17,6 @@ use Shirakaba\Streaming\GeneratorStream;
 use Shirakaba\Streaming\Sse;
 use Shirakaba\Streaming\SseEvent;
 use Shirakaba\Streaming\Streamed;
-use RuntimeException;
 
 #[CoversClass(GeneratorStream::class)]
 #[CoversClass(Streamed::class)]
@@ -104,11 +104,13 @@ final class StreamingTest extends TestCase
     public function testProducerFailureReleasesAndPropagates(): void
     {
         $released = false;
-        $stream = new GeneratorStream((static function (): Generator {
-            yield 'a';
+        $stream = new GeneratorStream(
+            (static function (): Generator {
+                yield 'a';
 
-            throw new LogicException('producer broke');
-        })());
+                throw new LogicException('producer broke');
+            })(),
+        );
         $stream->adoptScope(static function () use (&$released): void {
             $released = true;
         });

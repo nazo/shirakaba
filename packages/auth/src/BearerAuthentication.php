@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Shirakaba\Auth;
 
-use Shirakaba\Core\Http\HttpFailure;
-use Shirakaba\Core\Scope\RequestScope;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Core\Http\HttpFailure;
+use Shirakaba\Core\Scope\RequestScope;
 
 /**
  * Verifies `Authorization: Bearer` credentials (RFC 6750, design/09-security.md). A valid token

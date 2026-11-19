@@ -7,6 +7,10 @@ namespace Shirakaba\Core\Tests;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\Application;
 use Shirakaba\Core\Extraction\Path;
@@ -18,10 +22,6 @@ use Shirakaba\Core\Internal\SafeObservation;
 use Shirakaba\Core\Testing\TestClient;
 use Shirakaba\Core\Tests\Fixtures\HtmlErrors;
 use Shirakaba\Core\Tests\Fixtures\RecordingObserver;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Problem Details (design/05-errors-and-observability.md) and observer events (design/05-errors-and-observability.md).
@@ -87,8 +87,15 @@ final class ErrorHandlingTest extends TestCase
         $app->get('/failure', static fn (): Text => throw new HttpFailure(418, 'Teapot.'));
         $client = new TestClient($app->build());
 
-        self::assertSame(['type' => 'about:blank', 'title' => 'Not Found', 'status' => 404, 'detail' => 'No such widget.'], self::problem($client->get('/missing')));
-        self::assertSame(['type' => 'about:blank', 'title' => 'Conflict', 'status' => 409, 'detail' => 'Out of stock.'], self::problem($client->get('/stock')), 'Global middleware that translates is applied without registering it.');
+        self::assertSame(
+            ['type' => 'about:blank', 'title' => 'Not Found', 'status' => 404, 'detail' => 'No such widget.'],
+            self::problem($client->get('/missing')),
+        );
+        self::assertSame(
+            ['type' => 'about:blank', 'title' => 'Conflict', 'status' => 409, 'detail' => 'Out of stock.'],
+            self::problem($client->get('/stock')),
+            'Global middleware that translates is applied without registering it.',
+        );
         self::assertSame(500, $client->get('/other')->getStatusCode(), 'Untranslated exceptions stay a bare 500.');
         self::assertSame(418, $client->get('/failure')->getStatusCode(), 'An HttpFailure is not translated.');
     }
@@ -96,42 +103,54 @@ final class ErrorHandlingTest extends TestCase
     public function testHttpFailureIsRenderedWithItsMembersAndHeaders(): void
     {
         $app = new AppBuilder();
-        $app->get('/', static fn (): Text => throw new HttpFailure(
-            401,
-            'The token has expired.',
-            'https://example.com/problems/expired-token',
-            'Expired token',
-            ['WWW-Authenticate' => 'Bearer error="invalid_token"'],
-        ));
+        $app->get(
+            '/',
+            static fn (): Text => throw new HttpFailure(
+                401,
+                'The token has expired.',
+                'https://example.com/problems/expired-token',
+                'Expired token',
+                ['WWW-Authenticate' => 'Bearer error="invalid_token"'],
+            ),
+        );
 
         $response = new TestClient($app->build())->get('/');
 
         self::assertSame(401, $response->getStatusCode());
         self::assertSame('Bearer error="invalid_token"', $response->getHeaderLine('WWW-Authenticate'));
-        self::assertSame([
-            'type' => 'https://example.com/problems/expired-token',
-            'title' => 'Expired token',
-            'status' => 401,
-            'detail' => 'The token has expired.',
-        ], self::problem($response));
+        self::assertSame(
+            [
+                'type' => 'https://example.com/problems/expired-token',
+                'title' => 'Expired token',
+                'status' => 401,
+                'detail' => 'The token has expired.',
+            ],
+            self::problem($response),
+        );
     }
 
     public function testExtensionMembersAreAddedWithoutOverridingRfcMembers(): void
     {
         $app = new AppBuilder();
-        $app->get('/', static fn (): Text => throw new HttpFailure(
-            422,
-            'Invalid fields.',
-            extensions: ['errors' => [['pointer' => '/name', 'detail' => 'is required']], 'status' => 200, 'title' => 'x'],
-        ));
+        $app->get(
+            '/',
+            static fn (): Text => throw new HttpFailure(
+                422,
+                'Invalid fields.',
+                extensions: ['errors' => [['pointer' => '/name', 'detail' => 'is required']], 'status' => 200, 'title' => 'x'],
+            ),
+        );
 
-        self::assertSame([
-            'type' => 'about:blank',
-            'title' => 'Unprocessable Content',
-            'status' => 422,
-            'detail' => 'Invalid fields.',
-            'errors' => [['pointer' => '/name', 'detail' => 'is required']],
-        ], self::problem(new TestClient($app->build())->get('/')));
+        self::assertSame(
+            [
+                'type' => 'about:blank',
+                'title' => 'Unprocessable Content',
+                'status' => 422,
+                'detail' => 'Invalid fields.',
+                'errors' => [['pointer' => '/name', 'detail' => 'is required']],
+            ],
+            self::problem(new TestClient($app->build())->get('/')),
+        );
     }
 
     public function testCustomRendererHandlesEveryErrorPath(): void
@@ -207,11 +226,14 @@ final class ErrorHandlingTest extends TestCase
 
         self::assertSame(429, $response->getStatusCode());
         self::assertSame('Slow down.', self::problem($response)['detail'] ?? null);
-        self::assertSame([
-            'begin GET HTTP/1.1',
-            'failed Shirakaba\Core\Http\HttpFailure: Slow down.',
-            'responseReady 429',
-        ], $observer->events);
+        self::assertSame(
+            [
+                'begin GET HTTP/1.1',
+                'failed Shirakaba\Core\Http\HttpFailure: Slow down.',
+                'responseReady 429',
+            ],
+            $observer->events,
+        );
     }
 
     public function testObserverSeesEventsInOrder(): void
@@ -229,26 +251,29 @@ final class ErrorHandlingTest extends TestCase
         $client->get('/missing');
         $client->head('/users/1');
 
-        self::assertSame([
-            'begin GET HTTP/1.1',
-            'matched GET /users/{id} users.show',
-            'handlerFinished',
-            'responseReady 200',
-            'begin GET HTTP/1.1',
-            'matched GET /users/{id} users.show',
-            'failed Shirakaba\Core\Extraction\ExtractionFailure: Invalid path parameter "id": expected an integer.',
-            'responseReady 400',
-            'begin GET HTTP/1.1',
-            'matched GET /boom -',
-            'failed LogicException: boom',
-            'responseReady 500',
-            'begin GET HTTP/1.1',
-            'responseReady 404',
-            'begin HEAD HTTP/1.1',
-            'matched GET /users/{id} users.show',
-            'handlerFinished',
-            'responseReady 200',
-        ], $observer->events);
+        self::assertSame(
+            [
+                'begin GET HTTP/1.1',
+                'matched GET /users/{id} users.show',
+                'handlerFinished',
+                'responseReady 200',
+                'begin GET HTTP/1.1',
+                'matched GET /users/{id} users.show',
+                'failed Shirakaba\Core\Extraction\ExtractionFailure: Invalid path parameter "id": expected an integer.',
+                'responseReady 400',
+                'begin GET HTTP/1.1',
+                'matched GET /boom -',
+                'failed LogicException: boom',
+                'responseReady 500',
+                'begin GET HTTP/1.1',
+                'responseReady 404',
+                'begin HEAD HTTP/1.1',
+                'matched GET /users/{id} users.show',
+                'handlerFinished',
+                'responseReady 200',
+            ],
+            $observer->events,
+        );
     }
 
     public function testSeveralObserversAllReceiveEvents(): void
@@ -282,7 +307,7 @@ final class ErrorHandlingTest extends TestCase
 
     private static function headerMiddleware(string $name, string $value): MiddlewareInterface
     {
-        return new readonly class ($name, $value) implements MiddlewareInterface {
+        return new readonly class($name, $value) implements MiddlewareInterface {
             public function __construct(private string $name, private string $value) {}
 
             public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Shirakaba\Core\Testing;
 
-use Shirakaba\Http\Message\HttpFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Shirakaba\Http\Message\HttpFactory;
 
 /**
  * Calls an application in-process, without a server or superglobals.
@@ -66,7 +66,8 @@ final readonly class TestClient
      */
     public function form(string $method, string $target, array $fields, array $files = [], array $headers = []): ResponseInterface
     {
-        $request = $this->requests->createServerRequest($method, $this->baseUri . $target)
+        $request = $this->requests
+            ->createServerRequest($method, $this->baseUri . $target)
             ->withHeader('Content-Type', 'multipart/form-data; boundary=shirakaba-test-client')
             ->withParsedBody($fields)
             ->withUploadedFiles($files);

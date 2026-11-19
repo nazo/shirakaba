@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Shirakaba\Sapi;
 
 use InvalidArgumentException;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Shirakaba\Http\Message\ServerRequest;
 use Shirakaba\Http\Message\Stream;
 use Shirakaba\Http\Message\UploadedFile;
 use Shirakaba\Http\Message\Uri;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamInterface;
 
 /**
  * Builds a PSR-7 server request from the values a classic SAPI provides.
@@ -115,7 +115,7 @@ final readonly class ServerRequestBuilder
     private static function uri(array $server, ?string $hostHeader): Uri
     {
         $https = strtolower(self::string($server, 'HTTPS') ?? '');
-        $scheme = ($https !== '' && $https !== 'off') ? 'https' : 'http';
+        $scheme = $https !== '' && $https !== 'off' ? 'https' : 'http';
 
         $uri = new Uri()->withScheme($scheme);
 

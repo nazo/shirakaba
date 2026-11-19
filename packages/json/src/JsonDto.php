@@ -6,8 +6,8 @@ namespace Shirakaba\Json;
 
 use Attribute;
 use LogicException;
-use Shirakaba\Json\Internal\EncodedMap;
 use ReflectionClass;
+use Shirakaba\Json\Internal\EncodedMap;
 
 /**
  * Lets Json encode a class from its constructor fields, the same fields #[JsonResponse]

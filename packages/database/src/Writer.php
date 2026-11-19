@@ -63,7 +63,7 @@ final class Writer extends Reader
     public function transaction(Closure $work, int $retries = 0): mixed
     {
         $outermost = !$this->connection->inTransaction();
-        for ($attempt = 0; ; $attempt++) {
+        for ($attempt = 0;; $attempt++) {
             try {
                 return $this->connection->transaction($work, $this);
             } catch (TransientFailure $e) {

@@ -30,10 +30,12 @@ final readonly class Databases
             return $this->default;
         }
 
-        return $this->named[$name] ?? throw new LogicException(sprintf(
-            'No database is named "%s"; name it in DatabaseMiddleware: new DatabaseMiddleware($default, [%s => $database]).',
-            $name,
-            var_export($name, true),
-        ));
+        return (
+            $this->named[$name] ?? throw new LogicException(sprintf(
+                'No database is named "%s"; name it in DatabaseMiddleware: new DatabaseMiddleware($default, [%s => $database]).',
+                $name,
+                var_export($name, true),
+            ))
+        );
     }
 }

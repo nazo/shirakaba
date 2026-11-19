@@ -26,11 +26,14 @@ final class OptionalTest extends TestCase
     private static function client(): TestClient
     {
         $app = new AppBuilder();
-        $app->patch('/', static fn (#[JsonBody] Patch $patch): Json => new Json([
-            'nickname' => $patch->nickname->isPresent() ? ['sent' => $patch->nickname->get()] : 'absent',
-            'age' => $patch->age->or('absent'),
-            'role' => $patch->role->isPresent() ? $patch->role->get()->value : 'absent',
-        ]));
+        $app->patch(
+            '/',
+            static fn (#[JsonBody] Patch $patch): Json => new Json([
+                'nickname' => $patch->nickname->isPresent() ? ['sent' => $patch->nickname->get()] : 'absent',
+                'age' => $patch->age->or('absent'),
+                'role' => $patch->role->isPresent() ? $patch->role->get()->value : 'absent',
+            ]),
+        );
 
         return new TestClient($app->build());
     }
@@ -41,7 +44,10 @@ final class OptionalTest extends TestCase
         $patch = static fn (string $body) => $client->patch('/', $body, ['Content-Type' => 'application/json']);
 
         self::assertSame(['nickname' => 'absent', 'age' => 'absent', 'role' => 'absent'], ResponseJson::decode($patch('{}')));
-        self::assertSame(['nickname' => ['sent' => null], 'age' => 3, 'role' => 'admin'], ResponseJson::decode($patch('{"nickname":null,"age":3,"role":"admin"}')));
+        self::assertSame(
+            ['nickname' => ['sent' => null], 'age' => 3, 'role' => 'admin'],
+            ResponseJson::decode($patch('{"nickname":null,"age":3,"role":"admin"}')),
+        );
         self::assertSame(400, $patch('{"age":null}')->getStatusCode(), 'Null is accepted only for nullable optionals.');
         self::assertSame(422, $patch('{"age":-1}')->getStatusCode(), 'Constraints apply to the value.');
     }

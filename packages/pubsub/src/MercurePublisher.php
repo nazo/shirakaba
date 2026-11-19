@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Shirakaba\PubSub;
 
-use Shirakaba\Database\Writer;
-use Shirakaba\PubSub\Internal\Channels;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use Shirakaba\Database\Writer;
+use Shirakaba\PubSub\Internal\Channels;
 
 /**
  * Publishes to a Mercure 1.0 hub (design/11-real-time-events.md), such as the one built into FrankenPHP,
@@ -91,7 +91,8 @@ final readonly class MercurePublisher implements Publisher
             $fields[] = 'type=' . rawurlencode($event);
         }
         $token = $this->token instanceof MercureTokens ? $this->token->publisher() : $this->token;
-        $request = $this->requests->createRequest('POST', $this->hub)
+        $request = $this->requests
+            ->createRequest('POST', $this->hub)
             ->withHeader('Authorization', 'Bearer ' . $token)
             ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
             ->withBody($this->streams->createStream(implode('&', $fields)));

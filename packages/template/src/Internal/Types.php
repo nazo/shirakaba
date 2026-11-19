@@ -23,8 +23,13 @@ final readonly class Types
     {
         $declared = $property->getType();
         $names = match (true) {
-            $declared instanceof ReflectionNamedType => [$declared->getName(), ...($declared->allowsNull() && $declared->getName() !== 'null' && $declared->getName() !== 'mixed' ? ['null'] : [])],
-            $declared instanceof ReflectionUnionType => array_map(static fn ($type): string => $type instanceof ReflectionNamedType ? $type->getName() : 'mixed', $declared->getTypes()),
+            $declared instanceof ReflectionNamedType => [
+                $declared->getName(),
+                ...($declared->allowsNull() && $declared->getName() !== 'null' && $declared->getName() !== 'mixed' ? ['null'] : []),
+            ],
+            $declared instanceof ReflectionUnionType => array_map(static fn ($type): string => $type instanceof ReflectionNamedType
+                ? $type->getName()
+                : 'mixed', $declared->getTypes()),
             default => ['mixed'],
         };
         $atoms = [];
@@ -70,7 +75,7 @@ final readonly class Types
             $member = trim($member);
             $atoms[] = match (true) {
                 in_array($member, ['string', 'int', 'bool', 'float', 'null'], true) => ['scalar', $member],
-                default => (($class = self::resolveClass($member, $property->getDeclaringClass())) === null ? ['mixed', ''] : ['class', $class]),
+                default => ($class = self::resolveClass($member, $property->getDeclaringClass())) === null ? ['mixed', ''] : ['class', $class],
             };
         }
 

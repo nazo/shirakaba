@@ -124,7 +124,7 @@ final class DatabaseSessionStoreTest extends TestCase
             Session::of($scope)->set('user', 'alice');
             try {
                 RequestDatabase::writer($database, $scope)->transaction(static function (Writer $db): never {
-                    $db->execute("DELETE FROM shirakaba_sessions");
+                    $db->execute('DELETE FROM shirakaba_sessions');
                     throw new RuntimeException('rolled back');
                 });
             } catch (RuntimeException) {

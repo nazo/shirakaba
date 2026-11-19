@@ -20,11 +20,15 @@ $file = $argv[1] ?? '';
 $log = $argv[2] ?? '';
 $database = new Database(static fn (): PDO => new PDO('sqlite:' . $file));
 $jobs = new Jobs(new DatabaseQueue($database));
-$jobs->handle(SendWelcome::class, static function (SendWelcome $job) use ($log): void {
-    file_put_contents($log, "start {$job->userId}\n", FILE_APPEND);
-    usleep(700_000);
-    file_put_contents($log, "end {$job->userId}\n", FILE_APPEND);
-}, name: 'mail.welcome');
+$jobs->handle(
+    SendWelcome::class,
+    static function (SendWelcome $job) use ($log): void {
+        file_put_contents($log, "start {$job->userId}\n", FILE_APPEND);
+        usleep(700_000);
+        file_put_contents($log, "end {$job->userId}\n", FILE_APPEND);
+    },
+    name: 'mail.welcome',
+);
 
 $cli = new ConsoleBuilder('worker');
 QueueCommands::register($cli, static fn (): JobRunner => new JobRunner($jobs));

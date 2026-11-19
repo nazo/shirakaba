@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Shirakaba\Session;
 
+use Psr\Clock\ClockInterface;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Time\SystemClock;
-use Psr\Clock\ClockInterface;
 
 /**
  * Keeps sessions in process memory: for tests, or a single worker process.

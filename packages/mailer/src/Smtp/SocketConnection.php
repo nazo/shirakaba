@@ -26,7 +26,7 @@ final class SocketConnection implements SmtpConnection
         private readonly string $host,
         int $port,
         bool $implicitTls,
-        private readonly float $timeout,
+        float $timeout,
         array $ssl = [],
     ) {
         $context = stream_context_create(['ssl' => [
@@ -77,7 +77,10 @@ final class SocketConnection implements SmtpConnection
         // Anything already read from the socket arrived before TLS, so it did not come from the
         // verified server. Left in the buffer, it would be taken for replies sent inside TLS.
         if (stream_get_meta_data($this->stream)['unread_bytes'] > 0) {
-            throw new MailError(sprintf('%s sent data after its STARTTLS reply and before TLS started; the connection is not trusted.', $this->host), retryable: true);
+            throw new MailError(
+                sprintf('%s sent data after its STARTTLS reply and before TLS started; the connection is not trusted.', $this->host),
+                retryable: true,
+            );
         }
         $result = @stream_socket_enable_crypto($this->stream, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT);
         if ($result !== true) {

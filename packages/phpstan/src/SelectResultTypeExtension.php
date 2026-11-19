@@ -17,11 +17,11 @@ use PHPStan\Type\Constant\ConstantArrayTypeBuilder;
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\IntegerType;
+use PHPStan\Type\IntersectionType;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\NullType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
-use PHPStan\Type\IntersectionType;
 
 /**
  * Types the rows of `Select::fetchAll()` and `fetchOne()` as array shapes when the query is
@@ -59,9 +59,11 @@ final readonly class SelectResultTypeExtension implements DynamicMethodReturnTyp
         }
         $shape = $row->getArray();
 
-        return $methodReflection->getName() === 'fetchAll'
-            ? new IntersectionType([new ArrayType(new IntegerType(), $shape), new AccessoryArrayListType()])
-            : TypeCombinator::union($shape, new NullType());
+        return (
+            $methodReflection->getName() === 'fetchAll'
+                ? new IntersectionType([new ArrayType(new IntegerType(), $shape), new AccessoryArrayListType()])
+                : TypeCombinator::union($shape, new NullType())
+        );
     }
 
     /**
@@ -93,7 +95,7 @@ final readonly class SelectResultTypeExtension implements DynamicMethodReturnTyp
                         }
                         $names = $scope->getType($arg->value)->getConstantStrings();
                         if (count($names) !== 1) {
-                            return null;   // Sql or a variable: the key is not known.
+                            return null; // Sql or a variable: the key is not known.
                         }
                         $key = self::key($names[0]->getValue());
                         if ($key === null) {
@@ -110,7 +112,8 @@ final readonly class SelectResultTypeExtension implements DynamicMethodReturnTyp
             }
             $expression = $expression->var;
         }
-        $isFrom = $expression instanceof StaticCall
+        $isFrom =
+            $expression instanceof StaticCall
             && $expression->class instanceof Name
             && $scope->resolveName($expression->class) === self::SELECT
             && $expression->name instanceof Identifier

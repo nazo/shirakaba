@@ -12,7 +12,6 @@ final readonly class Address
 {
     public function __construct(
         public string $city,
-        #[Pattern('^[0-9]{3}-[0-9]{4}$', 'must look like 123-4567')]
-        public string $zip,
+        #[Pattern('^[0-9]{3}-[0-9]{4}$', 'must look like 123-4567')] public string $zip,
     ) {}
 }

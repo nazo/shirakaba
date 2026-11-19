@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Shirakaba\Streaming;
 
+use Psr\Http\Message\ResponseInterface;
 use Shirakaba\Core\Description\DescribesResponse;
 use Shirakaba\Core\Description\ResponseDescription;
 use Shirakaba\Core\Description\ScalarType;
 use Shirakaba\Core\Http\ResponseContext;
 use Shirakaba\Core\Http\ResponseValue;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * A response whose body is produced chunk by chunk, such as a large export:
@@ -31,7 +31,9 @@ final readonly class Streamed implements ResponseValue, DescribesResponse
 
     public function toResponse(ResponseContext $context): ResponseInterface
     {
-        $response = $context->responses->createResponse($this->status)
+        $response = $context
+            ->responses
+            ->createResponse($this->status)
             ->withHeader('Content-Type', $this->contentType)
             ->withBody(new GeneratorStream($this->chunks));
         foreach ($this->headers as $name => $value) {

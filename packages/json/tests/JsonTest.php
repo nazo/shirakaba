@@ -38,7 +38,10 @@ final class JsonTest extends TestCase
     public function testEncodesJsonDtosFromTheirConstructorFields(): void
     {
         $app = new AppBuilder();
-        $app->get('/', static fn (): Json => new Json(new \Shirakaba\Json\Tests\Fixtures\Card('Ada', Role::Admin, [new \Shirakaba\Json\Tests\Fixtures\Address('Tokyo', '100-0001')])));
+        $app->get('/', static fn (): Json => new Json(new \Shirakaba\Json\Tests\Fixtures\Card('Ada', Role::Admin, [new \Shirakaba\Json\Tests\Fixtures\Address(
+            'Tokyo',
+            '100-0001',
+        )])));
 
         self::assertSame(
             '{"display_name":"Ada","role":"admin","addresses":[{"city":"Tokyo","zip":"100-0001"}]}',
@@ -59,8 +62,12 @@ final class JsonTest extends TestCase
     public function testStatusDefaultsToTheDeclaredSuccessStatus(): void
     {
         $app = new AppBuilder();
-        $app->post('/one', #[\Shirakaba\Json\JsonResponse(201, Address::class)] static fn (): Json => new Json(new \Shirakaba\Json\Tests\Fixtures\Card('a', Role::Member)));
-        $app->post('/two', #[\Shirakaba\Core\Http\Responds(200)] #[\Shirakaba\Core\Http\Responds(202)] static fn (): Json => new Json(null));
+        $app->post(
+            '/one',
+            #[\Shirakaba\Json\JsonResponse(201, Address::class)] static fn (): Json => new Json(new \Shirakaba\Json\Tests\Fixtures\Card('a', Role::Member)),
+        );
+        $app->post('/two', #[\Shirakaba\Core\Http\Responds(200)]
+        #[\Shirakaba\Core\Http\Responds(202)] static fn (): Json => new Json(null));
         $app->post('/none', static fn (): Json => new Json(null));
         $client = new TestClient($app->build());
 
@@ -90,7 +97,11 @@ final class JsonTest extends TestCase
     public function testJsonNameRenamesFieldsInRequestsAndDescriptions(): void
     {
         $app = new AppBuilder();
-        $app->post('/', #[\Shirakaba\Json\JsonResponse(201, \Shirakaba\Json\Tests\Fixtures\Paging::class, list: true)] static fn (#[JsonBody] \Shirakaba\Json\Tests\Fixtures\Paging $input): Json => new Json([$input->perPage], 201));
+        $app->post(
+            '/',
+            #[\Shirakaba\Json\JsonResponse(201, \Shirakaba\Json\Tests\Fixtures\Paging::class, list: true)]
+            static fn (#[JsonBody] \Shirakaba\Json\Tests\Fixtures\Paging $input): Json => new Json([$input->perPage], 201),
+        );
         $client = new TestClient($app->build());
 
         self::assertSame('[5]', (string) $client->post('/', '{"per_page":5}', ['Content-Type' => 'application/json'])->getBody());

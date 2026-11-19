@@ -30,8 +30,10 @@ final readonly class TaskHandlers
     #[JsonResponse(200, TaskPage::class)]
     public function list(
         #[Db] TaskQueries $tasks,
-        #[Query] #[Range(min: 1)] int $page = 1,
-        #[Query('per_page')] #[Range(min: 1, max: 100)] int $perPage = 20,
+        #[Query]
+        #[Range(min: 1)] int $page = 1,
+        #[Query('per_page')]
+        #[Range(min: 1, max: 100)] int $perPage = 20,
         #[Query] ?TaskStatus $status = null,
     ): Json {
         return new Json(new TaskPage($tasks->list(($page - 1) * $perPage, $perPage, $status), $page, $perPage, $tasks->count($status)));

@@ -7,8 +7,8 @@ namespace Shirakaba\Http\Message\Tests;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Shirakaba\Http\Message\Stream;
 use RuntimeException;
+use Shirakaba\Http\Message\Stream;
 
 #[CoversClass(Stream::class)]
 final class StreamTest extends TestCase

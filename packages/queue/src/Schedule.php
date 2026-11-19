@@ -8,12 +8,12 @@ use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use Psr\Clock\ClockInterface;
 use Shirakaba\Database\Error\UniqueViolation;
 use Shirakaba\Database\Writer;
 use Shirakaba\Query\Insert;
 use Shirakaba\Query\Select;
 use Shirakaba\Time\SystemClock;
-use Psr\Clock\ClockInterface;
 
 /**
  * Recurring work as jobs (design/10-background-work.md). The schedule is PHP code; system cron runs
@@ -104,7 +104,12 @@ final class Schedule
      */
     public function lastRun(string $name, Writer $db): ?DateTimeImmutable
     {
-        $value = Select::from($this->table)->columns('slot')->where('task', '=', $name)->orderBy('slot', 'desc')->limit(1)->fetchValue($db);
+        $value = Select::from($this->table)
+            ->columns('slot')
+            ->where('task', '=', $name)
+            ->orderBy('slot', 'desc')
+            ->limit(1)
+            ->fetchValue($db);
 
         return is_string($value) ? $db->dialect()->parseInstant($value) : null;
     }

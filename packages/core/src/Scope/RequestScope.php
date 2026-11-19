@@ -6,9 +6,9 @@ namespace Shirakaba\Core\Scope;
 
 use Closure;
 use LogicException;
+use Psr\Http\Message\ServerRequestInterface;
 use Shirakaba\Core\Internal\SafeObservation;
 use Shirakaba\Core\Observe\Event;
-use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 
 /**

@@ -21,8 +21,7 @@ final readonly class TaskView
         public string $title,
         public string $description,
         public TaskStatus $status,
-        #[JsonName('created_at')]
-        public DateTimeImmutable $createdAt,
+        #[JsonName('created_at')] public DateTimeImmutable $createdAt,
         public int $version,
     ) {}
 }

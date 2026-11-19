@@ -15,10 +15,8 @@ final readonly class Card
      * @param list<Address> $addresses
      */
     public function __construct(
-        #[JsonName('display_name')]
-        public string $name,
+        #[JsonName('display_name')] public string $name,
         public Role $role,
-        #[ListOf(Address::class)]
-        public array $addresses = [],
+        #[ListOf(Address::class)] public array $addresses = [],
     ) {}
 }

@@ -13,13 +13,13 @@ use Shirakaba\Database\Writer;
 use Shirakaba\Orm\Entities;
 use Shirakaba\Orm\EntityQuery;
 use Shirakaba\Orm\NotDeleted;
+use Shirakaba\Orm\Scope;
 use Shirakaba\Orm\ScopeMissing;
+use Shirakaba\Orm\ScopeViolation;
 use Shirakaba\Orm\Tests\Fixtures\InTeam;
 use Shirakaba\Orm\Tests\Fixtures\Issue;
 use Shirakaba\Orm\Tests\Fixtures\Project;
 use Shirakaba\Orm\Tests\Fixtures\ProjectView;
-use Shirakaba\Orm\ScopeViolation;
-use Shirakaba\Orm\Scope;
 
 #[CoversClass(EntityQuery::class)]
 #[CoversClass(NotDeleted::class)]
@@ -77,10 +77,14 @@ final class ScopeTest extends TestCase
         $mine = Entities::insert(new Project(1, 'Mine'), $db, scopes: [new InTeam(1)]);
         $theirs = Entities::insert(new Project(2, 'Theirs'), $db, scopes: [new InTeam(2)]);
         $gone = Entities::insert(new Project(1, 'Gone'), $db, scopes: [new InTeam(1)]);
-        Entities::insertAll([
-            new Issue(1, $mine->id ?? 0, 'Open'),
-            new Issue(1, $mine->id ?? 0, 'Closed'),
-        ], $db, scopes: [new InTeam(1)]);
+        Entities::insertAll(
+            [
+                new Issue(1, $mine->id ?? 0, 'Open'),
+                new Issue(1, $mine->id ?? 0, 'Closed'),
+            ],
+            $db,
+            scopes: [new InTeam(1)],
+        );
         Entities::insertAll([new Issue(2, $theirs->id ?? 0, 'Elsewhere')], $db, scopes: [new InTeam(2)]);
         $team = new InTeam(1);
         Entities::delete($gone, $db, scopes: [$team]);
@@ -89,12 +93,19 @@ final class ScopeTest extends TestCase
         Entities::delete($closed, $db, scopes: [$team]);
 
         self::assertSame(['Mine'], self::names(Entities::query(Project::class)->scoped($team)->orderBy('id')->fetch($db)));
-        self::assertSame(['Mine', 'Gone'], self::names(Entities::query(Project::class)->scoped($team)->withoutScope(NotDeleted::class)->orderBy('id')->fetch($db)));
+        self::assertSame(
+            ['Mine', 'Gone'],
+            self::names(Entities::query(Project::class)->scoped($team)->withoutScope(NotDeleted::class)->orderBy('id')->fetch($db)),
+        );
         self::assertSame(['Mine', 'Theirs'], self::names(Entities::query(Project::class)->withoutScope(InTeam::class)->orderBy('id')->fetch($db)));
         self::assertNull(Entities::find(Project::class, $theirs->id, $db, [$team]), 'Another team\'s project is invisible.');
 
         $views = Entities::query(Project::class)->scoped($team)->with('issues')->into(ProjectView::class, $db);
-        self::assertSame(['Open'], array_map(static fn (Issue $issue): string => $issue->title, ($views[0] ?? null)->issues ?? []), 'Related entities get the scopes too.');
+        self::assertSame(
+            ['Open'],
+            array_map(static fn (Issue $issue): string => $issue->title, ($views[0] ?? null)->issues ?? []),
+            'Related entities get the scopes too.',
+        );
         self::assertSame(1, Entities::query(Project::class)->scoped($team)->whereHas('issues')->count($db));
 
         self::assertSame(1, Entities::query(Issue::class)->scoped($team)->delete($db), 'A bulk delete is soft and stays in the team.');
@@ -156,7 +167,11 @@ final class ScopeTest extends TestCase
 
         $issues = Entities::load([$project], 'issues', $db, [new InTeam(1)])[0] ?? [];
         self::assertIsArray($issues);
-        self::assertSame(['Open'], array_map(static fn (mixed $issue): string => $issue instanceof Issue ? $issue->title : '?', $issues), 'The other team\'s issue stays out.');
+        self::assertSame(
+            ['Open'],
+            array_map(static fn (mixed $issue): string => $issue instanceof Issue ? $issue->title : '?', $issues),
+            'The other team\'s issue stays out.',
+        );
 
         $this->expectException(ScopeMissing::class);
         Entities::load([$project], 'issues', $db, self::forgotten());

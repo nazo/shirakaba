@@ -9,11 +9,11 @@ use LogicException;
 use Shirakaba\Core\Scope\RequestScope;
 use Shirakaba\Database\Database;
 use Shirakaba\Database\Writer;
+use Shirakaba\DatabaseBridge\RequestDatabase;
 use Shirakaba\Query\Delete;
 use Shirakaba\Query\Insert;
 use Shirakaba\Query\Select;
 use Shirakaba\Query\Sql;
-use Shirakaba\DatabaseBridge\RequestDatabase;
 
 /**
  * Counts hits in a table shared by every process (design/09-security.md): one upsert per hit on the

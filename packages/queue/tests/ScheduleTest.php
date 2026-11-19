@@ -60,7 +60,10 @@ final class ScheduleTest extends TestCase
 
         self::assertTrue($sixInTokyo->matches(new DateTimeImmutable('2026-11-11T21:00:00Z'), new DateTimeZone('Asia/Tokyo')));
         self::assertFalse($sixInTokyo->matches(new DateTimeImmutable('2026-11-12T06:00:00Z'), new DateTimeZone('Asia/Tokyo')));
-        self::assertEquals(new DateTimeImmutable('2026-11-12T21:00:00Z'), $sixInTokyo->next(new DateTimeImmutable('2026-11-11T21:00:30Z'), new DateTimeZone('Asia/Tokyo')));
+        self::assertEquals(
+            new DateTimeImmutable('2026-11-12T21:00:00Z'),
+            $sixInTokyo->next(new DateTimeImmutable('2026-11-11T21:00:30Z'), new DateTimeZone('Asia/Tokyo')),
+        );
     }
 
     /**
@@ -108,9 +111,13 @@ final class ScheduleTest extends TestCase
         $jobs = new Jobs($queue);
         $jobs->handle(SendWelcome::class, static function (): void {}, name: 'mail.welcome');
         $schedule = new Schedule($jobs, new DateTimeZone('Asia/Tokyo'))
-            ->job('welcome.quarterly', '*/15 * * * *', static fn (DateTimeImmutable $slot): object => new SendWelcome((int) $slot->format('i'), 'x@example.com'))
+            ->job(
+                'welcome.quarterly',
+                '*/15 * * * *',
+                static fn (DateTimeImmutable $slot): object => new SendWelcome((int) $slot->format('i'), 'x@example.com'),
+            )
             ->job('welcome.morning', '0 9 * * *', static fn (): object => new SendWelcome(9, 'y@example.com'));
-        $clock = new FrozenClock('2026-11-12T00:00:20Z');   // 09:00 in Tokyo
+        $clock = new FrozenClock('2026-11-12T00:00:20Z'); // 09:00 in Tokyo
 
         self::assertSame(['welcome.quarterly', 'welcome.morning'], $schedule->run($db, $clock));
         $clock->advance(30);

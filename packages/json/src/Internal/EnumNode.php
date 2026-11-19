@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Shirakaba\Json\Internal;
 
-use Shirakaba\Core\Http\ProblemCode;
-
 use BackedEnum;
 use Shirakaba\Core\Description\EnumType;
 use Shirakaba\Core\Description\Type;
+use Shirakaba\Core\Http\ProblemCode;
 
 /**
  * @internal

@@ -41,18 +41,21 @@ final class IndexTest extends TestCase
 
     public function testTrigramSearchIndexOnPostgreSql(): void
     {
-        self::assertSame([
-            'CREATE EXTENSION IF NOT EXISTS "pg_trgm"',
-            'CREATE INDEX "notes_search" ON "notes" USING gin (' . self::SEARCH . ' gin_trgm_ops)',
-            'ALTER INDEX "notes_search" ALTER COLUMN 1 SET STATISTICS 1000',
-            'CREATE UNIQUE INDEX "notes_tag_unique" ON "notes" USING btree ("tag" text_pattern_ops)',
-        ], self::statements(new PostgreSql(), static function (Schema $schema): void {
-            $schema->extension('pg_trgm');
-            $schema->alter('notes', static function (Blueprint $table): void {
-                $table->expressionIndex('notes_search', self::SEARCH)->using('gin')->operatorClass('gin_trgm_ops')->statistics(1000);
-                $table->unique(['tag'], 'notes_tag_unique')->using('btree')->operatorClass('text_pattern_ops');
-            });
-        }));
+        self::assertSame(
+            [
+                'CREATE EXTENSION IF NOT EXISTS "pg_trgm"',
+                'CREATE INDEX "notes_search" ON "notes" USING gin (' . self::SEARCH . ' gin_trgm_ops)',
+                'ALTER INDEX "notes_search" ALTER COLUMN 1 SET STATISTICS 1000',
+                'CREATE UNIQUE INDEX "notes_tag_unique" ON "notes" USING btree ("tag" text_pattern_ops)',
+            ],
+            self::statements(new PostgreSql(), static function (Schema $schema): void {
+                $schema->extension('pg_trgm');
+                $schema->alter('notes', static function (Blueprint $table): void {
+                    $table->expressionIndex('notes_search', self::SEARCH)->using('gin')->operatorClass('gin_trgm_ops')->statistics(1000);
+                    $table->unique(['tag'], 'notes_tag_unique')->using('btree')->operatorClass('text_pattern_ops');
+                });
+            }),
+        );
     }
 
     public function testExpressionIndexesOnMySqlAndSqlite(): void
@@ -64,14 +67,20 @@ final class IndexTest extends TestCase
             });
         };
 
-        self::assertSame([
-            'CREATE UNIQUE INDEX `users_email_lower` ON `users` ((lower(email)))',
-            'CREATE INDEX `users_name_index` ON `users` (`name`) USING BTREE',
-        ], self::statements(new MySql(), $define));
-        self::assertSame([
-            'CREATE UNIQUE INDEX "users_email_lower" ON "users" (lower(email))',
-            'CREATE INDEX "users_name_index" ON "users" ("name")',
-        ], self::statements(new Sqlite(), $define));
+        self::assertSame(
+            [
+                'CREATE UNIQUE INDEX `users_email_lower` ON `users` ((lower(email)))',
+                'CREATE INDEX `users_name_index` ON `users` (`name`) USING BTREE',
+            ],
+            self::statements(new MySql(), $define),
+        );
+        self::assertSame(
+            [
+                'CREATE UNIQUE INDEX "users_email_lower" ON "users" (lower(email))',
+                'CREATE INDEX "users_name_index" ON "users" ("name")',
+            ],
+            self::statements(new Sqlite(), $define),
+        );
     }
 
     /**

@@ -52,6 +52,8 @@ planned; the reasons behind each part are in the [design documents](../packages/
 - Documentation for coding agents (`shirakaba/docs`, `agents:sync`, `llms.txt`, error and problem
   pages, Skills, introspection commands) and agent evaluation tasks (`tools/evals/`)
 - Steins as a pinned, non-blocking CI job
+- PHPStan bleeding edge and unused code detection, dependency checks of every package, mutation
+  testing of the security packages as a non-blocking CI job, and Mago as the formatter
 - A Composer repository on GitHub Pages until the packages are published on Packagist
 
 ## Planned

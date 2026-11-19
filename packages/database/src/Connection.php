@@ -167,7 +167,10 @@ final class Connection
     public function setSetting(string $name, ?string $value): void
     {
         if (preg_match('/\A[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*\z/', $name) !== 1) {
-            throw new \InvalidArgumentException(sprintf('"%s" is not a custom setting; use "prefix.name" in lower case, such as "app.organization_id".', $name));
+            throw new \InvalidArgumentException(sprintf(
+                '"%s" is not a custom setting; use "prefix.name" in lower case, such as "app.organization_id".',
+                $name,
+            ));
         }
         if ($this->dialect->sessionSetting() === null) {
             throw new \LogicException(sprintf('%s has no session settings for row-level security; filter with ORM scopes instead.', $this->dialect->name()));

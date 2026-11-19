@@ -8,6 +8,7 @@ use Closure;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use Shirakaba\Core\AppBuilder;
 use Shirakaba\Core\InvalidApplication;
 use Shirakaba\Core\Testing\ResponseJson;
@@ -25,7 +26,6 @@ use Shirakaba\Json\Tests\Fixtures\Address;
 use Shirakaba\Json\Tests\Fixtures\CreateUser;
 use Shirakaba\Json\Tests\Fixtures\Recursive;
 use Shirakaba\Json\Tests\Fixtures\UntypedList;
-use Psr\Http\Message\ResponseInterface;
 
 #[CoversClass(JsonBody::class)]
 #[CoversClass(JsonBodyFailure::class)]
@@ -42,9 +42,12 @@ final class JsonBodyTest extends TestCase
     private static function client(?JsonBody $body = null): TestClient
     {
         $app = new AppBuilder();
-        $app->post('/users', $body === null
-            ? static fn (#[JsonBody] CreateUser $input): Json => new Json(self::summary($input))
-            : static fn (#[JsonBody(maxBytes: 200)] CreateUser $input): Json => new Json(self::summary($input)));
+        $app->post(
+            '/users',
+            $body === null
+                ? static fn (#[JsonBody] CreateUser $input): Json => new Json(self::summary($input))
+                : static fn (#[JsonBody(maxBytes: 200)] CreateUser $input): Json => new Json(self::summary($input)),
+        );
 
         return new TestClient($app->build());
     }
@@ -130,34 +133,70 @@ final class JsonBodyTest extends TestCase
         yield 'malformed' => ['{"name":', 'application/json', 400, 'not valid JSON', null];
         yield 'invalid utf-8' => ["{\"name\":\"\xff\"}", 'application/json', 400, 'not valid JSON', null];
         yield 'array instead of object' => ['[]', 'application/json', 400, 'expected structure', [['pointer' => '/', 'detail' => 'must be an object']]];
-        yield 'missing and mistyped fields' => ['{"name":1,"address":{"city":"Tokyo"},"age":"30","extra":true}', 'application/json', 400, 'expected structure', [
-            ['pointer' => '/name', 'detail' => 'must be a string'],
-            ['pointer' => '/email', 'detail' => 'is required'],
-            ['pointer' => '/address/zip', 'detail' => 'is required'],
-            ['pointer' => '/age', 'detail' => 'must be an integer or null'],
-            ['pointer' => '/extra', 'detail' => 'is not an accepted field'],
-        ]];
-        yield 'float for int' => ['{"name":"A","email":"a@example.com","address":{"city":"T","zip":"100-0001"},"age":1.5}', 'application/json', 400, 'expected structure', [
-            ['pointer' => '/age', 'detail' => 'must be an integer or null'],
-        ]];
-        yield 'bad enum and list item' => ['{"name":"A","email":"a@example.com","address":{"city":"T","zip":"100-0001"},"role":"root","tags":["a",2],"previous":{}}', 'application/json', 400, 'expected structure', [
-            ['pointer' => '/role', 'detail' => 'must be one of: "member", "admin"'],
-            ['pointer' => '/tags/1', 'detail' => 'must be a string'],
-            ['pointer' => '/previous', 'detail' => 'must be an array'],
-        ]];
-        yield 'escaped pointer' => ['{"name":"A","email":"a@example.com","address":{"city":"T","zip":"100-0001"},"a/b~c":1}', 'application/json', 400, 'expected structure', [
-            ['pointer' => '/a~1b~0c', 'detail' => 'is not an accepted field'],
-        ]];
-        yield 'constraint violations' => ['{"name":"","email":"nope","address":{"city":"T","zip":"1000001"},"age":200,"tags":["a","b","c","d"]}', 'application/json', 422, 'invalid values', [
-            ['pointer' => '/name', 'detail' => 'must be at least 1 characters long'],
-            ['pointer' => '/email', 'detail' => 'must be an e-mail address'],
-            ['pointer' => '/address/zip', 'detail' => 'must look like 123-4567'],
-            ['pointer' => '/age', 'detail' => 'must be at most 150'],
-            ['pointer' => '/tags', 'detail' => 'must have at most 3 items'],
-        ]];
-        yield 'dto invariant' => ['{"name":"A","email":"a@example.com","address":{"city":"T","zip":"100-0001"},"age":10,"role":"admin"}', 'application/json', 422, 'invalid values', [
-            ['pointer' => '/', 'detail' => 'is invalid'],
-        ]];
+        yield 'missing and mistyped fields' => [
+            '{"name":1,"address":{"city":"Tokyo"},"age":"30","extra":true}',
+            'application/json',
+            400,
+            'expected structure',
+            [
+                ['pointer' => '/name', 'detail' => 'must be a string'],
+                ['pointer' => '/email', 'detail' => 'is required'],
+                ['pointer' => '/address/zip', 'detail' => 'is required'],
+                ['pointer' => '/age', 'detail' => 'must be an integer or null'],
+                ['pointer' => '/extra', 'detail' => 'is not an accepted field'],
+            ],
+        ];
+        yield 'float for int' => [
+            '{"name":"A","email":"a@example.com","address":{"city":"T","zip":"100-0001"},"age":1.5}',
+            'application/json',
+            400,
+            'expected structure',
+            [
+                ['pointer' => '/age', 'detail' => 'must be an integer or null'],
+            ],
+        ];
+        yield 'bad enum and list item' => [
+            '{"name":"A","email":"a@example.com","address":{"city":"T","zip":"100-0001"},"role":"root","tags":["a",2],"previous":{}}',
+            'application/json',
+            400,
+            'expected structure',
+            [
+                ['pointer' => '/role', 'detail' => 'must be one of: "member", "admin"'],
+                ['pointer' => '/tags/1', 'detail' => 'must be a string'],
+                ['pointer' => '/previous', 'detail' => 'must be an array'],
+            ],
+        ];
+        yield 'escaped pointer' => [
+            '{"name":"A","email":"a@example.com","address":{"city":"T","zip":"100-0001"},"a/b~c":1}',
+            'application/json',
+            400,
+            'expected structure',
+            [
+                ['pointer' => '/a~1b~0c', 'detail' => 'is not an accepted field'],
+            ],
+        ];
+        yield 'constraint violations' => [
+            '{"name":"","email":"nope","address":{"city":"T","zip":"1000001"},"age":200,"tags":["a","b","c","d"]}',
+            'application/json',
+            422,
+            'invalid values',
+            [
+                ['pointer' => '/name', 'detail' => 'must be at least 1 characters long'],
+                ['pointer' => '/email', 'detail' => 'must be an e-mail address'],
+                ['pointer' => '/address/zip', 'detail' => 'must look like 123-4567'],
+                ['pointer' => '/age', 'detail' => 'must be at most 150'],
+                ['pointer' => '/tags', 'detail' => 'must have at most 3 items'],
+            ],
+        ];
+        yield 'dto invariant' => [
+            '{"name":"A","email":"a@example.com","address":{"city":"T","zip":"100-0001"},"age":10,"role":"admin"}',
+            'application/json',
+            422,
+            'invalid values',
+            [
+                ['pointer' => '/', 'detail' => 'is invalid'],
+            ],
+        ];
     }
 
     /**

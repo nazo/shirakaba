@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Shirakaba\Migrations;
 
 use LogicException;
+use Psr\Clock\ClockInterface;
 use Shirakaba\Database\Connection;
 use Shirakaba\Database\Error\DatabaseError;
 use Shirakaba\Database\Writer;
@@ -12,7 +13,6 @@ use Shirakaba\Query\Delete;
 use Shirakaba\Query\Insert;
 use Shirakaba\Query\Select;
 use Shirakaba\Time\SystemClock;
-use Psr\Clock\ClockInterface;
 
 /**
  * Applies and rolls back migrations on one connection.
@@ -82,7 +82,9 @@ final readonly class Migrator
                 $done[$id] = $schema->statements();
                 if (!$dryRun) {
                     $now = $this->clock->now();
-                    $this->run($schema->statements(), static fn (Writer $db) => Insert::into(self::TABLE)->values(['id' => $id, 'applied_at' => $now])->execute($db));
+                    $this->run($schema->statements(), static fn (Writer $db) => Insert::into(self::TABLE)
+                        ->values(['id' => $id, 'applied_at' => $now])
+                        ->execute($db));
                 }
             }
 
@@ -162,8 +164,7 @@ final readonly class Migrator
             $instant,
         ));
         $applied = [];
-        foreach (Select::from(self::TABLE)->columns('id')->fetchAll($db) as $row) {
-            $id = $row['id'] ?? null;
+        foreach (array_column(Select::from(self::TABLE)->columns('id')->fetchAll($db), 'id') as $id) {
             if (is_string($id)) {
                 $applied[$id] = true;
             }

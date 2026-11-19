@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Shirakaba\Core;
 
 use Closure;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Shirakaba\Core\Description\ApplicationDescription;
 use Shirakaba\Core\Description\ResponseDeclaration;
 use Shirakaba\Core\Description\RouteDescription;
@@ -22,9 +25,6 @@ use Shirakaba\Core\Routing\PathTemplate;
 use Shirakaba\Core\Routing\Route;
 use Shirakaba\Core\Routing\Router;
 use Shirakaba\Http\Message\HttpFactory;
-use Psr\Http\Message\ResponseFactoryInterface;
-use Psr\Http\Message\StreamFactoryInterface;
-use Psr\Http\Server\MiddlewareInterface;
 
 /**
  * Assembles an application in plain PHP (design/01-principles.md): global middleware, observers and
@@ -173,9 +173,17 @@ final class AppBuilder
      */
     public function build(bool $lazy = false): Application
     {
-        $translators = [...$this->translators, ...array_values(array_filter($this->middleware, static fn (MiddlewareInterface $middleware): bool => $middleware instanceof TranslatesFailures))];
+        $translators = [
+            ...$this->translators,
+            ...array_values(array_filter($this->middleware, static fn (MiddlewareInterface $middleware): bool => $middleware instanceof TranslatesFailures)),
+        ];
         $errors = new ErrorResponder($this->errorRenderer ?? new ProblemDetails($this->context), $translators);
-        $router = new RouterHandler(Router::build($this->plan(describe: false, lazy: $lazy)['routes']), $errors, $this->context->streams, $this->context->responses);
+        $router = new RouterHandler(
+            Router::build($this->plan(describe: false, lazy: $lazy)['routes']),
+            $errors,
+            $this->context->streams,
+            $this->context->responses,
+        );
 
         return new Application(MiddlewareNode::wrap($this->middleware, $router), $errors, $this->observers);
     }
@@ -216,7 +224,12 @@ final class AppBuilder
             foreach ($definition->methods as $method) {
                 $label = $method . ' ' . $path;
                 if ($lazy) {
-                    $routes[] = new Route($method, $template, MiddlewareNode::wrap($middleware, new LazyInvoker($definition->handler, $label, $template->parameterNames(), $this->context)), $name);
+                    $routes[] = new Route(
+                        $method,
+                        $template,
+                        MiddlewareNode::wrap($middleware, new LazyInvoker($definition->handler, $label, $template->parameterNames(), $this->context)),
+                        $name,
+                    );
                     continue;
                 }
                 $plan = HandlerInvoker::plan($definition->handler, $label, $template->parameterNames(), $this->context, $describe);
@@ -233,7 +246,9 @@ final class AppBuilder
                         ...$plan->declaredResponses,
                         // Route middleware may answer too, such as a rate limit's 429.
                         ...array_map(
-                            static fn (ResponseDeclaration $declaration): \Shirakaba\Core\Description\ResponseDescription => $declaration->responseDescription(),
+                            static fn (
+                                ResponseDeclaration $declaration,
+                            ): \Shirakaba\Core\Description\ResponseDescription => $declaration->responseDescription(),
                             array_values(array_filter($middleware, static fn (object $layer): bool => $layer instanceof ResponseDeclaration)),
                         ),
                     ],

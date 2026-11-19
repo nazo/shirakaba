@@ -7,8 +7,8 @@ namespace Shirakaba\Form;
 use Attribute;
 use finfo;
 use InvalidArgumentException;
-use Shirakaba\Core\Extraction\Constraint;
 use Psr\Http\Message\UploadedFileInterface;
+use Shirakaba\Core\Extraction\Constraint;
 
 /**
  * Restricts an uploaded file to media types detected from its content. The media type the

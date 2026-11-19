@@ -6,8 +6,8 @@ namespace Shirakaba\Http\Message\Tests\Conformance;
 
 use Http\Psr7Test\ServerRequestIntegrationTest;
 use PHPUnit\Framework\Attributes\CoversClass;
-use Shirakaba\Http\Message\ServerRequest;
 use Psr\Http\Message\ServerRequestInterface;
+use Shirakaba\Http\Message\ServerRequest;
 
 #[CoversClass(ServerRequest::class)]
 final class ServerRequestConformanceTest extends ServerRequestIntegrationTest
