@@ -52,16 +52,16 @@
         },
         {
             "name": "open-telemetry/api",
-            "version": "1.11.0",
+            "version": "1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/api.git",
-                "reference": "bc169d9ecd11858e941657770dc708c6a15fc5f4"
+                "reference": "b0884741f3f9d5dc60477784c8671bd2acef4ceb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/bc169d9ecd11858e941657770dc708c6a15fc5f4",
-                "reference": "bc169d9ecd11858e941657770dc708c6a15fc5f4",
+                "url": "https://api.github.com/repos/opentelemetry-php/api/zipball/b0884741f3f9d5dc60477784c8671bd2acef4ceb",
+                "reference": "b0884741f3f9d5dc60477784c8671bd2acef4ceb",
                 "shasum": ""
             },
             "require": {
@@ -88,7 +88,7 @@
                     ]
                 },
                 "branch-alias": {
-                    "dev-main": "1.11.x-dev"
+                    "dev-main": "1.12.x-dev"
                 }
             },
             "autoload": {
@@ -125,7 +125,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-11-05T11:54:49+00:00"
+            "time": "2026-11-19T08:10:15+00:00"
         },
         {
             "name": "open-telemetry/context",
@@ -183,8 +183,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-11-05T11:54:49+00:00",
-            "published-time": "2026-11-05T12:00:45+00:00"
+            "time": "2026-11-05T11:54:49+00:00"
         },
         {
             "name": "psr/clock",
@@ -1244,8 +1243,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-16T02:22:34+00:00",
-            "published-time": "2026-11-16T02:23:00+00:00"
+            "time": "2026-11-16T02:22:34+00:00"
         },
         {
             "name": "colinodell/json5",
@@ -1333,8 +1331,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2024-02-09T13:06:12+00:00",
-            "published-time": "2024-02-09T13:06:43+00:00"
+            "time": "2024-02-09T13:06:12+00:00"
         },
         {
             "name": "composer/pcre",
@@ -1410,8 +1407,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-07T11:47:49+00:00",
-            "published-time": "2026-06-11T12:12:37+00:00"
+            "time": "2026-06-07T11:47:49+00:00"
         },
         {
             "name": "composer/semver",
@@ -1554,8 +1550,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-05-06T16:37:16+00:00",
-            "published-time": "2024-05-06T17:01:42+00:00"
+            "time": "2024-05-06T16:37:16+00:00"
         },
         {
             "name": "fidry/cpu-core-counter",
@@ -1617,8 +1612,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-09-29T22:11:39+00:00",
-            "published-time": "2026-09-29T22:12:43+00:00"
+            "time": "2026-09-29T22:11:39+00:00"
         },
         {
             "name": "infection/abstract-testframework-adapter",
@@ -1675,8 +1669,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2026-05-28T19:10:29+00:00",
-            "published-time": "2026-05-28T19:12:08+00:00"
+            "time": "2026-05-28T19:10:29+00:00"
         },
         {
             "name": "infection/extension-installer",
@@ -1742,8 +1735,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2021-10-20T22:08:34+00:00",
-            "published-time": "2022-01-17T16:32:15+00:00"
+            "time": "2021-10-20T22:08:34+00:00"
         },
         {
             "name": "infection/include-interceptor",
@@ -1799,8 +1791,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2024-05-03T21:48:06+00:00",
-            "published-time": "2026-05-06T22:52:27+00:00"
+            "time": "2024-05-03T21:48:06+00:00"
         },
         {
             "name": "infection/infection",
@@ -1940,8 +1931,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2026-11-17T08:40:57+00:00",
-            "published-time": "2026-11-17T08:52:15+00:00"
+            "time": "2026-11-17T08:40:57+00:00"
         },
         {
             "name": "infection/mutator",
@@ -1994,8 +1984,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2025-04-29T08:19:52+00:00",
-            "published-time": "2025-04-29T08:21:00+00:00"
+            "time": "2025-04-29T08:19:52+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
@@ -2060,8 +2049,7 @@
                 "issues": "https://github.com/jsonrainbow/json-schema/issues",
                 "source": "https://github.com/jsonrainbow/json-schema/tree/6.14.0"
             },
-            "time": "2026-10-24T08:53:34+00:00",
-            "published-time": "2026-10-24T08:53:38+00:00"
+            "time": "2026-10-24T08:53:34+00:00"
         },
         {
             "name": "marc-mabe/php-enum",
@@ -2134,8 +2122,7 @@
                 "issues": "https://github.com/marc-mabe/php-enum/issues",
                 "source": "https://github.com/marc-mabe/php-enum/tree/v4.7.2"
             },
-            "time": "2025-09-14T11:18:39+00:00",
-            "published-time": "2025-09-14T11:32:17+00:00"
+            "time": "2025-09-14T11:18:39+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -2396,21 +2383,20 @@
                 "issues": "https://github.com/OndraM/ci-detector/issues",
                 "source": "https://github.com/OndraM/ci-detector/tree/4.2.0"
             },
-            "time": "2024-03-12T13:22:30+00:00",
-            "published-time": "2024-03-12T13:23:38+00:00"
+            "time": "2024-03-12T13:22:30+00:00"
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.16.1",
+            "version": "1.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "51ebca2563dd580d682d4f32b1611c1779424dac"
+                "reference": "5b823e465b0fabdf5019aef6aa2e430285949e7b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/51ebca2563dd580d682d4f32b1611c1779424dac",
-                "reference": "51ebca2563dd580d682d4f32b1611c1779424dac",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/5b823e465b0fabdf5019aef6aa2e430285949e7b",
+                "reference": "5b823e465b0fabdf5019aef6aa2e430285949e7b",
                 "shasum": ""
             },
             "require": {
@@ -2452,17 +2438,19 @@
                         "OpenTelemetry\\API\\Instrumentation\\AutoInstrumentation\\ExtensionHookManager"
                     ]
                 },
+                "spi-config": {
+                    "autoload-files": [
+                        "_register.php"
+                    ]
+                },
                 "branch-alias": {
-                    "dev-main": "1.16.x-dev"
+                    "dev-main": "1.17.x-dev"
                 }
             },
             "autoload": {
                 "files": [
                     "Common/Util/functions.php",
-                    "Logs/Exporter/_register.php",
-                    "Metrics/MetricExporter/_register.php",
-                    "Propagation/_register.php",
-                    "Trace/SpanExporter/_register.php",
+                    "_register.php",
                     "Common/Dev/Compatibility/_load.php",
                     "_autoload.php"
                 ],
@@ -2496,7 +2484,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-11-06T02:25:35+00:00"
+            "time": "2026-11-19T08:10:15+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
@@ -3060,8 +3048,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-03T12:14:22+00:00",
-            "published-time": "2026-11-03T12:14:36+00:00"
+            "time": "2026-11-03T12:14:22+00:00"
         },
         {
             "name": "phpstan/phpstan-phpunit",
@@ -3698,8 +3685,7 @@
                 "issues": "https://github.com/php-fig/container/issues",
                 "source": "https://github.com/php-fig/container/tree/2.0.2"
             },
-            "time": "2021-11-05T16:47:00+00:00",
-            "published-time": "2021-11-05T16:53:27+00:00"
+            "time": "2021-11-05T16:47:00+00:00"
         },
         {
             "name": "ramsey/collection",
@@ -3779,16 +3765,16 @@
         },
         {
             "name": "ramsey/uuid",
-            "version": "4.9.4",
+            "version": "4.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ramsey/uuid.git",
-                "reference": "75d73f48d02797c2c285a7e9f348fadc0102ffe2"
+                "reference": "f9aa3efc8015fcbc013d84d699583b268ccb593a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ramsey/uuid/zipball/75d73f48d02797c2c285a7e9f348fadc0102ffe2",
-                "reference": "75d73f48d02797c2c285a7e9f348fadc0102ffe2",
+                "url": "https://api.github.com/repos/ramsey/uuid/zipball/f9aa3efc8015fcbc013d84d699583b268ccb593a",
+                "reference": "f9aa3efc8015fcbc013d84d699583b268ccb593a",
                 "shasum": ""
             },
             "require": {
@@ -3800,23 +3786,22 @@
                 "rhumsaa/uuid": "self.version"
             },
             "require-dev": {
-                "captainhook/captainhook": "^5.25",
-                "captainhook/plugin-composer": "^5.3",
-                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
-                "ergebnis/composer-normalize": "^2.47",
-                "mockery/mockery": "^1.6",
-                "paragonie/random-lib": "^2",
-                "php-mock/php-mock": "^2.6",
-                "php-mock/php-mock-mockery": "^1.5",
+                "captainhook/captainhook": "^5.29.3",
+                "captainhook/plugin-composer": "^5.3.3",
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.2.1",
+                "mockery/mockery": "^1.6.15",
+                "paragonie/random-lib": "^2.0.3",
+                "php-mock/php-mock": "^2.7.0",
+                "php-mock/php-mock-mockery": "^1.5.0",
                 "php-parallel-lint/php-parallel-lint": "^1.4.0",
                 "phpbench/phpbench": "^1.2.14",
-                "phpstan/extension-installer": "^1.4",
-                "phpstan/phpstan": "^2.1",
-                "phpstan/phpstan-mockery": "^2.0",
-                "phpstan/phpstan-phpunit": "^2.0",
-                "phpunit/phpunit": "^9.6",
-                "slevomat/coding-standard": "^8.18",
-                "squizlabs/php_codesniffer": "^3.13"
+                "phpstan/extension-installer": "^1.4.3",
+                "phpstan/phpstan": "^2.3.5",
+                "phpstan/phpstan-mockery": "^2.0.0",
+                "phpstan/phpstan-phpunit": "^2.1.2",
+                "phpunit/phpunit": "^9.6.39",
+                "slevomat/coding-standard": "^8.31.3",
+                "squizlabs/php_codesniffer": "^4.0.4"
             },
             "suggest": {
                 "ext-bcmath": "Enables faster math with arbitrary-precision integers using BCMath.",
@@ -3851,9 +3836,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ramsey/uuid/issues",
-                "source": "https://github.com/ramsey/uuid/tree/4.9.4"
+                "source": "https://github.com/ramsey/uuid/tree/4.10.0"
             },
-            "time": "2026-09-16T11:39:30+00:00"
+            "time": "2026-11-14T23:23:20+00:00"
         },
         {
             "name": "revolt/event-loop",
@@ -3925,8 +3910,7 @@
                 "issues": "https://github.com/revoltphp/event-loop/issues",
                 "source": "https://github.com/revoltphp/event-loop/tree/v1.0.9"
             },
-            "time": "2026-05-16T17:55:38+00:00",
-            "published-time": "2026-05-16T18:04:08+00:00"
+            "time": "2026-05-16T17:55:38+00:00"
         },
         {
             "name": "sanmai/di-container",
@@ -4005,8 +3989,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-09T10:32:19+00:00",
-            "published-time": "2026-11-09T10:34:41+00:00"
+            "time": "2026-11-09T10:32:19+00:00"
         },
         {
             "name": "sanmai/duoclock",
@@ -4069,8 +4052,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-17T23:41:42+00:00",
-            "published-time": "2026-11-17T23:42:09+00:00"
+            "time": "2026-11-17T23:41:42+00:00"
         },
         {
             "name": "sanmai/later",
@@ -4134,8 +4116,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-29T07:24:33+00:00",
-            "published-time": "2026-07-29T07:33:40+00:00"
+            "time": "2026-06-29T07:24:33+00:00"
         },
         {
             "name": "sanmai/pipeline",
@@ -4202,8 +4183,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-09-30T13:46:33+00:00",
-            "published-time": "2026-09-30T13:48:53+00:00"
+            "time": "2026-09-30T13:46:33+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -5375,8 +5355,7 @@
                 "issues": "https://github.com/shipmonk-rnd/composer-dependency-analyser/issues",
                 "source": "https://github.com/shipmonk-rnd/composer-dependency-analyser/tree/1.8.4"
             },
-            "time": "2025-11-25T14:38:16+00:00",
-            "published-time": "2025-11-25T14:59:44+00:00"
+            "time": "2025-11-25T14:38:16+00:00"
         },
         {
             "name": "shipmonk/dead-code-detector",
@@ -5465,8 +5444,7 @@
                 "issues": "https://github.com/shipmonk-rnd/dead-code-detector/issues",
                 "source": "https://github.com/shipmonk-rnd/dead-code-detector/tree/1.4.2"
             },
-            "time": "2026-09-18T07:50:08+00:00",
-            "published-time": "2026-09-21T13:58:14+00:00"
+            "time": "2026-09-18T07:50:08+00:00"
         },
         {
             "name": "staabm/side-effects-detector",
@@ -5650,8 +5628,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-04T07:07:11+00:00",
-            "published-time": "2026-11-04T11:31:39+00:00"
+            "time": "2026-11-04T07:07:11+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -5722,8 +5699,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-16T14:15:10+00:00",
-            "published-time": "2026-11-04T11:25:34+00:00"
+            "time": "2026-09-16T14:15:10+00:00"
         },
         {
             "name": "symfony/filesystem",
@@ -5794,8 +5770,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-04T08:39:20+00:00",
-            "published-time": "2026-11-04T11:32:01+00:00"
+            "time": "2026-11-04T08:39:20+00:00"
         },
         {
             "name": "symfony/finder",
@@ -5863,8 +5838,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-02T10:58:30+00:00",
-            "published-time": "2026-11-04T11:31:20+00:00"
+            "time": "2026-11-02T10:58:30+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -5947,8 +5921,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-10T16:19:22+00:00",
-            "published-time": "2026-04-26T14:44:50+00:00"
+            "time": "2026-04-10T16:19:22+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -6030,8 +6003,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-15T09:18:53+00:00",
-            "published-time": "2026-10-28T10:07:44+00:00"
+            "time": "2026-10-15T09:18:53+00:00"
         },
         {
             "name": "symfony/polyfill-intl-normalizer",
@@ -6116,8 +6088,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-23T22:02:09+00:00",
-            "published-time": "2026-09-30T10:23:47+00:00"
+            "time": "2026-09-23T22:02:09+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -6282,8 +6253,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-30T15:20:09+00:00",
-            "published-time": "2026-11-15T14:20:22+00:00"
+            "time": "2026-10-30T15:20:09+00:00"
         },
         {
             "name": "symfony/process",
@@ -6348,8 +6318,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-25T14:40:25+00:00",
-            "published-time": "2026-10-28T18:25:20+00:00"
+            "time": "2026-10-25T14:40:25+00:00"
         },
         {
             "name": "symfony/service-contracts",
@@ -6436,8 +6405,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-20T17:38:25+00:00",
-            "published-time": "2026-11-04T11:25:33+00:00"
+            "time": "2026-10-20T17:38:25+00:00"
         },
         {
             "name": "symfony/string",
@@ -6527,8 +6495,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-23T17:06:53+00:00",
-            "published-time": "2026-10-28T18:24:27+00:00"
+            "time": "2026-10-23T17:06:53+00:00"
         },
         {
             "name": "tbachert/spi",
@@ -6723,8 +6690,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-04T18:08:13+00:00",
-            "published-time": "2026-02-15T15:48:29+00:00"
+            "time": "2026-02-04T18:08:13+00:00"
         },
         {
             "name": "typedduck/steins",
@@ -6884,8 +6850,7 @@
                 "issues": "https://github.com/webmozarts/assert/issues",
                 "source": "https://github.com/webmozarts/assert/tree/2.5.1"
             },
-            "time": "2026-11-15T13:41:13+00:00",
-            "published-time": "2026-11-15T13:41:42+00:00"
+            "time": "2026-11-15T13:41:13+00:00"
         }
     ],
     "aliases": [],
@@ -6906,5 +6871,5 @@
         "composer-runtime-api": "^2.2"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.11.0"
+    "plugin-api-version": "2.9.0"
 }
